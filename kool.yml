@@ -1,0 +1,20 @@
+scripts:
+  setup:
+    - sh -c 'test -f .env || cp .env.dist .env'
+    - git config core.hooksPath .githooks
+    - kool start
+    - kool exec app yarn install
+  yarn:
+    - kool exec app yarn
+  dev:
+    - kool exec app yarn dev --hostname 0.0.0.0 --port 3000
+  build:
+    - kool exec app yarn build
+  test:
+    - docker compose run --rm --no-deps -T app yarn test
+  quality:
+    - docker compose run --rm --no-deps -T app yarn format:check
+    - docker compose run --rm --no-deps -T app yarn types:check
+    - docker compose run --rm --no-deps -T app yarn lint:check
+  format:
+    - sh -c 'CHANGED=$(git diff --cached --name-only --diff-filter=ACMR 2>/dev/null | grep -E "\.(ts|tsx|js|jsx|mjs|css|json|md)$" || true); if [ -n "$CHANGED" ]; then docker compose run --rm --no-deps -T app yarn prettier --write $CHANGED && git add $CHANGED; fi; true'

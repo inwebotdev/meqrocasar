@@ -1,0 +1,14 @@
+services:
+  app:
+    image: node:22-bookworm
+    working_dir: /app
+    volumes:
+      - .:/app
+    ports:
+      - "${APP_PORT:-3000}:3000"
+    environment:
+      - NEXT_TELEMETRY_DISABLED=1
+      - WATCHPACK_POLLING=true
+      - CHOKIDAR_USEPOLLING=true
+    command: ["tail", "-f", "/dev/null"]
+    tty: true
