@@ -23,9 +23,6 @@ const CONTENT_HEIGHT = CANVAS_HEIGHT - OUTER_PADDING * 2; // 582
 const LEFT_WIDTH = 700;
 const RIGHT_WIDTH = CONTENT_WIDTH - LEFT_WIDTH; // 452
 
-const HERO_HEIGHT = 390;
-const TYPOGRAPHY_CARD_HEIGHT = CONTENT_HEIGHT - HERO_HEIGHT - GUTTER; // 176
-
 const DETAIL_PHOTO_HEIGHT = (CONTENT_HEIGHT - GUTTER) / 2; // 283
 
 const RADIUS_LG = 24;
@@ -36,6 +33,18 @@ const DEEP_BURGUNDY = "#4A1525";
 const AMBER = "#E9A844";
 
 const TITLE_MAX_CHARS = 70;
+
+// The typography card's internal sizing is computed (not eyeballed) so a
+// truncated, 2-line title never overlaps the palette/zone row below it.
+const CARD_PADDING = 28;
+const TITLE_FONT_SIZE = 38;
+const TITLE_LINE_HEIGHT = 1.1;
+const TITLE_BOX_HEIGHT = Math.ceil(TITLE_FONT_SIZE * TITLE_LINE_HEIGHT * 2); // 2 lines, 84
+const TITLE_ROW2_GAP = 14;
+const ROW2_HEIGHT = 68; // 34px swatch circle + 6px gap + 2 label lines
+
+const TYPOGRAPHY_CARD_HEIGHT = CARD_PADDING * 2 + TITLE_BOX_HEIGHT + TITLE_ROW2_GAP + ROW2_HEIGHT; // 222
+const HERO_HEIGHT = CONTENT_HEIGHT - TYPOGRAPHY_CARD_HEIGHT - GUTTER; // 344
 
 export interface MoodboardTemplateProps {
   params: MoodboardParams;
@@ -295,29 +304,41 @@ export function MoodboardTemplate({ params, images }: MoodboardTemplateProps) {
           style={{
             display: "flex",
             flexDirection: "column",
-            justifyContent: "space-between",
             width: LEFT_WIDTH,
             height: TYPOGRAPHY_CARD_HEIGHT,
             marginTop: GUTTER,
             backgroundColor: DEEP_BURGUNDY,
             borderRadius: RADIUS_LG,
-            padding: 28,
+            padding: CARD_PADDING,
           }}
         >
           <div
             style={{
               display: "flex",
+              alignItems: "flex-start",
+              width: LEFT_WIDTH - CARD_PADDING * 2,
+              height: TITLE_BOX_HEIGHT,
+              overflow: "hidden",
               fontFamily: "Playfair Display",
               fontWeight: 700,
-              fontSize: 38,
-              lineHeight: 1.1,
+              fontSize: TITLE_FONT_SIZE,
+              lineHeight: TITLE_LINE_HEIGHT,
               color: "#FAF8F5",
             }}
           >
             {title}
           </div>
 
-          <div style={{ display: "flex", flexDirection: "row", justifyContent: "space-between" }}>
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "row",
+              alignItems: "center",
+              justifyContent: "space-between",
+              height: ROW2_HEIGHT,
+              marginTop: TITLE_ROW2_GAP,
+            }}
+          >
             <div style={{ display: "flex", flexDirection: "row", gap: 12 }}>
               {params.palette.map((color) => (
                 <PaletteSwatch key={color.hex} hex={color.hex} name={color.name} />
@@ -327,7 +348,6 @@ export function MoodboardTemplate({ params, images }: MoodboardTemplateProps) {
             <div
               style={{
                 display: "flex",
-                alignItems: "flex-end",
                 fontFamily: "Plus Jakarta Sans",
                 fontWeight: 600,
                 fontSize: 12,
