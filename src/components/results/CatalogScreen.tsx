@@ -33,6 +33,7 @@ export function CatalogScreen({ venues, zones }: CatalogScreenProps) {
         eyebrow="Catálogo SECTUR"
         title="Recintos y Zonas de Querétaro"
         icon="castle"
+        level="h1"
       />
 
       <div className="-mx-margin flex gap-space-xs overflow-x-auto px-margin pb-1">

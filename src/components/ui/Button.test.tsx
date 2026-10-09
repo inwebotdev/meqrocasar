@@ -55,4 +55,14 @@ describe("Button", () => {
 
     expect(onClick).toHaveBeenCalledTimes(1);
   });
+
+  it("has a visible focus ring", () => {
+    render(<Button>Continuar</Button>);
+
+    expect(screen.getByRole("button", { name: "Continuar" })).toHaveClass(
+      "focus-visible:outline-2",
+      "focus-visible:outline-amber-bernal/60",
+      "focus-visible:outline-offset-2",
+    );
+  });
 });

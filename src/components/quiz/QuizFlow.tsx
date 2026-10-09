@@ -103,6 +103,9 @@ export function QuizFlow() {
                     className="flex flex-col items-center gap-y-3 overflow-hidden py-1 select-none"
                     onKeyDown={handleStageKeyDown}
                   >
+                    <span aria-live="polite" className="sr-only">
+                      {`Opción ${quiz.state.activeOptionIndex + 1} de ${quiz.step.options.length}: ${quiz.activeOption.title}`}
+                    </span>
                     <CardDeck
                       options={quiz.step.options}
                       activeIndex={quiz.state.activeOptionIndex}

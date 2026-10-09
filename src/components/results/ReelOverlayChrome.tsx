@@ -12,7 +12,7 @@ export function ReelTopBar({ timeLabel, muted, onToggleMute }: ReelTopBarProps) 
   return (
     <div className="absolute inset-x-0 top-0 z-20 flex items-center justify-between bg-gradient-to-b from-black/80 via-black/40 to-transparent p-space-md">
       <div className="flex items-center gap-1.5 rounded-full bg-black/50 px-3 py-1 font-label-sm text-label-sm text-on-primary backdrop-blur-md">
-        <span className="h-2 w-2 animate-ping rounded-full bg-error" />
+        <span className="h-2 w-2 animate-ping rounded-full bg-error motion-reduce:animate-none" />
         <span className="font-bold">{timeLabel}</span>
       </div>
       <div className="flex items-center gap-2">

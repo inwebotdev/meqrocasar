@@ -19,7 +19,7 @@ export function DeckDots({ total, activeIndex, onSelect }: DeckDotsProps) {
             aria-pressed={active}
             onClick={() => onSelect(index)}
             className={cn(
-              "h-2 rounded-full transition-all",
+              "h-2 rounded-full transition-all focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-bernal/60",
               active ? "w-6 bg-primary" : "w-2 bg-surface-variant hover:bg-secondary",
             )}
           />

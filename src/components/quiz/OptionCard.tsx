@@ -58,7 +58,7 @@ export function OptionCard({ option, selected, onSelect, onNext }: OptionCardPro
       whileTap={{ scale: 0.98 }}
       style={{ x, rotate: reducedMotion ? 0 : rawRotate }}
       className={cn(
-        "absolute inset-0 h-full w-full cursor-grab overflow-hidden rounded-xl bg-surface-container shadow-xl outline-none active:cursor-grabbing",
+        "absolute inset-0 h-full w-full cursor-grab overflow-hidden rounded-xl bg-surface-container shadow-xl outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-bernal/60 active:cursor-grabbing",
         selected && "ring-[3px] ring-bougainvillea",
       )}
     >

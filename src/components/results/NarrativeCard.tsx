@@ -15,9 +15,9 @@ export function NarrativeCard({ title, narrative }: NarrativeCardProps) {
           <span className="font-label-sm text-label-sm font-bold tracking-wider text-secondary uppercase">
             Estilo Matrimonial Curado
           </span>
-          <h2 className="font-headline-lg-mobile text-headline-lg-mobile font-bold text-primary">
+          <h3 className="font-headline-lg-mobile text-headline-lg-mobile font-bold text-primary">
             {title}
-          </h2>
+          </h3>
         </div>
         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/5">
           <Icon name="local_florist" filled size={20} className="text-primary" />

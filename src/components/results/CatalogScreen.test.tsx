@@ -10,7 +10,7 @@ describe("CatalogScreen", () => {
   it("shows every catalog venue by default", () => {
     render(<CatalogScreen venues={VENUES} zones={ZONES} />);
 
-    const headings = screen.getAllByRole("heading", { level: 4 });
+    const headings = screen.getAllByRole("heading", { level: 3 });
     expect(headings).toHaveLength(VENUES.length);
   });
 
@@ -23,7 +23,7 @@ describe("CatalogScreen", () => {
 
     await user.click(screen.getByRole("button", { name: targetZone }));
 
-    const headings = screen.getAllByRole("heading", { level: 4 });
+    const headings = screen.getAllByRole("heading", { level: 3 });
     expect(headings).toHaveLength(expectedVenues.length);
 
     for (const venue of expectedVenues) {

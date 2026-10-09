@@ -31,7 +31,7 @@ export function QuickStrip({ options, activeIndex, selectedId, onSelect }: Quick
               aria-pressed={option.id === selectedId}
               onClick={() => onSelect(index)}
               className={cn(
-                "flex flex-col items-center gap-1 rounded-lg p-2 text-center transition-colors",
+                "flex flex-col items-center gap-1 rounded-lg p-2 text-center transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-bernal/60",
                 isActiveOrSelected
                   ? "bg-surface-container-lowest font-bold text-primary shadow-sm"
                   : "bg-surface-container text-on-surface-variant hover:bg-surface-container-high",

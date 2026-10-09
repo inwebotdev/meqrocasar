@@ -160,6 +160,20 @@ describe("QuizFlow", () => {
     expect(screen.getByRole("heading", { name: first.title })).toBeInTheDocument();
   });
 
+  it("announces the active option in an aria-live region that updates on next", async () => {
+    const user = userEvent.setup();
+    renderQuiz();
+
+    const [first, second] = QUIZ_STEPS[0].options;
+
+    expect(screen.getByText(`Opción 1 de 4: ${first.title}`)).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Explorar siguiente opción" }));
+
+    expect(screen.getByText(`Opción 2 de 4: ${second.title}`)).toBeInTheDocument();
+    expect(screen.queryByText(`Opción 1 de 4: ${first.title}`)).not.toBeInTheDocument();
+  });
+
   it("quick strip jumps the active option without selecting it", async () => {
     const user = userEvent.setup();
     renderQuiz();

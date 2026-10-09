@@ -70,7 +70,7 @@ export function VenueCard({ venue, role, reason }: VenueCardProps) {
       </div>
       <div className="space-y-space-sm p-space-md">
         <div>
-          <h4 className="font-headline-sm text-headline-sm font-bold text-primary">{venue.name}</h4>
+          <h3 className="font-headline-sm text-headline-sm font-bold text-primary">{venue.name}</h3>
           <p className="font-body-sm text-body-sm text-on-surface-variant">
             {venue.subtitle} • Capacidad: {venue.capacityApprox ? "~" : ""}
             {venue.capacity} invitados

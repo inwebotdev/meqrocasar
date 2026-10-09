@@ -32,7 +32,7 @@ export function LinkButton({
   return (
     <a
       className={cn(
-        "inline-flex items-center justify-center gap-2 rounded-full outline-amber-bernal/30 transition-transform focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2",
+        "inline-flex items-center justify-center gap-2 rounded-full transition-transform focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-bernal/60",
         BUTTON_VARIANT_CLASSES[variant],
         BUTTON_SIZE_CLASSES[variant][size],
         fullWidth && "w-full",

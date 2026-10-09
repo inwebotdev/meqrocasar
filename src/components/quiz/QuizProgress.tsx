@@ -16,7 +16,7 @@ export function QuizProgress({ stepIndex, total, step }: QuizProgressProps) {
     <section className="flex flex-col gap-y-2.5 pt-1">
       <div className="flex items-center justify-between">
         <div className="inline-flex items-center gap-1.5 rounded-full bg-secondary-container/30 px-3 py-1 text-on-secondary-container">
-          <Icon name="bolt" filled size={15} className="animate-pulse" />
+          <Icon name="bolt" filled size={15} className="animate-pulse motion-reduce:animate-none" />
           <span className="font-label-sm text-label-sm font-bold tracking-wider uppercase">
             Modo Swipe Activo
           </span>
