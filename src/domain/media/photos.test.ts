@@ -1,5 +1,6 @@
-import { describe, expect, it } from "vitest";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
+import { server } from "../../../test/msw/server";
 import { findPhotos, getPhoto, PHOTOS } from "./photos";
 
 describe("PHOTOS registry", () => {
@@ -65,6 +66,15 @@ describe("findPhotos", () => {
 
 describe("opt-in Unsplash URL check (PHOTO_URL_CHECK=1)", () => {
   const shouldRun = process.env.PHOTO_URL_CHECK === "1";
+
+  // The shared MSW server errors on any unhandled request; this check must hit the real CDN.
+  beforeAll(() => {
+    if (shouldRun) server.close();
+  });
+
+  afterAll(() => {
+    if (shouldRun) server.listen({ onUnhandledFrame: "error" });
+  });
 
   it.runIf(shouldRun)(
     "every photo URL resolves with HTTP 200",
