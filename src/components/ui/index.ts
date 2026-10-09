@@ -1,4 +1,5 @@
 export { Button, type ButtonProps, type ButtonVariant, type ButtonSize } from "./Button";
+export { LinkButton, type LinkButtonProps } from "./LinkButton";
 export { Pill, type PillProps, type PillTone } from "./Pill";
 export { Chip, type ChipProps, type ChipTone } from "./Chip";
 export { Card, type CardProps, type CardPadding } from "./Card";
