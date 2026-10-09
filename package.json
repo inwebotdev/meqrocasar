@@ -15,11 +15,13 @@
     "test:watch": "vitest"
   },
   "dependencies": {
+    "@remotion/player": "4.0.340",
     "clsx": "^2.1.1",
     "framer-motion": "^14.1.0",
     "next": "15.5.27",
     "react": "19.1.0",
     "react-dom": "19.1.0",
+    "remotion": "4.0.340",
     "server-only": "^0.0.1",
     "tailwind-merge": "^3.7.0",
     "zod": "^4.6.5"

@@ -583,6 +583,13 @@
   resolved "https://registry.yarnpkg.com/@oxc-project/types/-/types-0.153.0.tgz#ac7cd0095a6db231a892d41310ddf2e1b2329bfc"
   integrity sha512-jSNrRIyvPVLL5E1z/tS5zLAprosGz/FuI1PWwEOz59j3E4TTTzSpqKb/RDGqJhhW0QHYISGXxq582wGx6T11Tw==
 
+"@remotion/player@4.0.340":
+  version "4.0.340"
+  resolved "https://registry.yarnpkg.com/@remotion/player/-/player-4.0.340.tgz#0841b8964e6f8d413d42d0ae80b543f397fc88a2"
+  integrity sha512-0+1NXOcheVXiEHNkU5nCAKn+IlQCdrK9/bxOvY52OnraKI9XwZboW5KgPcmEfS1OEEB3ompDocW2X8JxmehMEw==
+  dependencies:
+    remotion "4.0.340"
+
 "@rolldown/binding-android-arm-eabi@1.2.13":
   version "1.2.13"
   resolved "https://registry.yarnpkg.com/@rolldown/binding-android-arm-eabi/-/binding-android-arm-eabi-1.2.13.tgz#db571caa4f4cedec7bea5fb9d6750804fd21cfcb"
@@ -3276,6 +3283,11 @@ regexp.prototype.flags@^1.5.4:
     get-proto "^1.0.1"
     gopd "^1.2.0"
     set-function-name "^2.0.2"
+
+remotion@4.0.340:
+  version "4.0.340"
+  resolved "https://registry.yarnpkg.com/remotion/-/remotion-4.0.340.tgz#e7433c1b0851894d2e5a1d678d708bcea0bef8b7"
+  integrity sha512-AqfJCUFSVYoi0Hfepo9c6THOdu19GskMFxegdy8PRsn7H1pUUlkXiqPPQvL5v6I9qt8TYwlfbZRwY7cihzy27g==
 
 require-from-string@^2.0.2:
   version "2.0.2"
