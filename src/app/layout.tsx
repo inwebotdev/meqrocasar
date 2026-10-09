@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Playfair_Display, Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
+import { ToastProvider } from "@/components/ui";
 
 const playfairDisplay = Playfair_Display({
   variable: "--font-playfair",
@@ -45,7 +46,7 @@ export default function RootLayout({
         />
       </head>
       <body className="bg-surface font-sans text-body-md text-on-surface antialiased">
-        {children}
+        <ToastProvider>{children}</ToastProvider>
       </body>
     </html>
   );
