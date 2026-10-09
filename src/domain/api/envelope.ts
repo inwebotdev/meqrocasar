@@ -5,7 +5,8 @@ export interface ApiOk<T> {
 }
 
 /** Error codes returned by this app's API routes. */
-export type ApiErrorCode = "invalid_json" | "invalid_answers" | "internal";
+export type ApiErrorCode =
+  "invalid_json" | "invalid_answers" | "internal" | "invalid_params" | "render_failed";
 
 /** Failed API response envelope. */
 export interface ApiError {
