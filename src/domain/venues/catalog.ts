@@ -1,4 +1,4 @@
-import type { Venue, Zone } from "./types";
+import { ZONE_VALUES, type Venue, type Zone } from "./types";
 
 /**
  * Real, verified Querétaro venues and zones (see scratchpad venue research).
@@ -180,16 +180,7 @@ export const VENUES: readonly Venue[] = [
   },
 ];
 
-export const ZONES: readonly Zone[] = [
-  "Centro Histórico",
-  "Huimilpan",
-  "Ezequiel Montes",
-  "Bernal",
-  "Tequisquiapan",
-  "San Juan del Río",
-  "Colón",
-  "El Marqués",
-];
+export const ZONES: readonly Zone[] = ZONE_VALUES;
 
 export function getVenue(id: string): Venue | undefined {
   return VENUES.find((venue) => venue.id === id);

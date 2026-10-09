@@ -1,38 +1,46 @@
 import type { PhotoId } from "@/domain/media/photos";
 
-export type Zone =
-  | "Centro Histórico"
-  | "Huimilpan"
-  | "Ezequiel Montes"
-  | "Bernal"
-  | "Tequisquiapan"
-  | "San Juan del Río"
-  | "Colón"
-  | "El Marqués";
+/** Every venue zone, as a runtime tuple so both the `Zone` type and the Zod schema derive from one source. */
+export const ZONE_VALUES = [
+  "Centro Histórico",
+  "Huimilpan",
+  "Ezequiel Montes",
+  "Bernal",
+  "Tequisquiapan",
+  "San Juan del Río",
+  "Colón",
+  "El Marqués",
+] as const;
 
-export type VenueTag =
-  | "colonial"
-  | "casona"
-  | "hacienda"
-  | "vineyard"
-  | "wine_cellar"
-  | "garden"
-  | "chapel"
-  | "lodging"
-  | "modern"
-  | "boho"
-  | "desert"
-  | "night"
-  | "sunset"
-  | "day"
-  | "intimate"
-  | "grand"
-  | "weekend"
-  | "wine_tasting"
-  | "fireworks"
-  | "gourmet"
-  | "callejoneada"
-  | "pueblo_magico";
+export type Zone = (typeof ZONE_VALUES)[number];
+
+/** Every venue tag, as a runtime tuple so both the `VenueTag` type and the Zod schema derive from one source. */
+export const VENUE_TAG_VALUES = [
+  "colonial",
+  "casona",
+  "hacienda",
+  "vineyard",
+  "wine_cellar",
+  "garden",
+  "chapel",
+  "lodging",
+  "modern",
+  "boho",
+  "desert",
+  "night",
+  "sunset",
+  "day",
+  "intimate",
+  "grand",
+  "weekend",
+  "wine_tasting",
+  "fireworks",
+  "gourmet",
+  "callejoneada",
+  "pueblo_magico",
+] as const;
+
+export type VenueTag = (typeof VENUE_TAG_VALUES)[number];
 
 export interface Venue {
   id: string;

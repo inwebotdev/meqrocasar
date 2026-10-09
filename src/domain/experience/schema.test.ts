@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
+import type { z } from "zod";
 
-import { LLM_EXPERIENCE_JSON_SCHEMA, LlmExperienceSchema } from "./schema";
+import type { ExperienceResult } from "@/domain/experience/types";
+
+import { ExperienceResultSchema, LLM_EXPERIENCE_JSON_SCHEMA, LlmExperienceSchema } from "./schema";
 
 describe("LLM_EXPERIENCE_JSON_SCHEMA", () => {
   it("is an object schema requiring all six LLM response keys", () => {
@@ -69,5 +72,15 @@ describe("LlmExperienceSchema", () => {
         reelTagline: "Tagline válido",
       }),
     ).toThrow();
+  });
+});
+
+describe("ExperienceResultSchema", () => {
+  it("infers a type assignable to ExperienceResult (no `as ExperienceResult` cast needed)", () => {
+    // Compile-time assertion: if `venues[].zone` or `tags` ever widen back to
+    // `string`, this line stops compiling.
+    const _check: ExperienceResult = {} as z.infer<typeof ExperienceResultSchema>;
+
+    expect(_check).toBeDefined();
   });
 });

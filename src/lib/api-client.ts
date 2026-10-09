@@ -72,8 +72,5 @@ export async function generateExperience(
     });
   }
 
-  // ExperienceResultSchema validates `venues[].zone` as a non-empty string
-  // rather than the narrower `Zone` union, so the inferred type needs an
-  // assertion back to the domain `ExperienceResult` shape.
-  return parsed.data as ExperienceResult;
+  return parsed.data;
 }

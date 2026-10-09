@@ -1,6 +1,8 @@
 import { z } from "zod";
 
+import { PHOTO_ID_VALUES } from "@/domain/media/photos";
 import { QuizAnswersSchema } from "@/domain/quiz/schema";
+import { VENUE_TAG_VALUES, ZONE_VALUES } from "@/domain/venues/types";
 
 /**
  * Shape the LLM (OpenRouter) must return. Passed to `response_format` via
@@ -45,15 +47,15 @@ const PaletteColorSchema = z.object({
 const ExperienceVenueSchema = z.object({
   id: z.string().min(1),
   name: z.string().min(1),
-  zone: z.string().min(1),
+  zone: z.enum(ZONE_VALUES),
   municipality: z.string().min(1),
   subtitle: z.string().min(1),
   capacity: z.number().positive(),
   capacityApprox: z.boolean(),
   features: z.tuple([z.string(), z.string(), z.string()]),
   priceCategory: z.enum(["Medio", "Medio-Alto", "Exclusivo"]),
-  tags: z.array(z.string()),
-  photoId: z.string().min(1),
+  tags: z.array(z.enum(VENUE_TAG_VALUES)),
+  photoId: z.enum(PHOTO_ID_VALUES),
   aliases: z.array(z.string()),
   website: z.string().optional(),
   reason: z.string().min(1),

@@ -30,33 +30,37 @@ export type PhotoTag =
   | "courtyard"
   | "chapel";
 
-export type PhotoId =
-  | "patio-cantera-rosa"
-  | "banca-palmeras-buganvilia"
-  | "patio-arcos-buganvilia"
-  | "puerta-azul-buganvilia"
-  | "callejon-balcon-amarillo"
-  | "entrada-vinedo-barril"
-  | "pareja-vinedo-abrazo"
-  | "pareja-vinedo-atardecer"
-  | "cava-barricas-roble"
-  | "jardin-atardecer-recien-casados"
-  | "ceremonia-jardin-luz-dorada"
-  | "candelabro-sala-oscura"
-  | "evento-nocturno-luces-calidas"
-  | "pareja-muro-concreto"
-  | "candelabros-blancos-florales"
-  | "cactus-semidesierto-cielo"
-  | "planta-solitaria-desierto"
-  | "formacion-rocosa-luz-dorada"
-  | "monolito-desierto-atardecer"
-  | "arco-flores-silvestres"
-  | "fuegos-artificiales-multicolor"
-  | "fuegos-artificiales-rojo-amarillo"
-  | "calle-empedrada-banderas"
-  | "capilla-blanca-campanario"
-  | "mesa-larga-velas-flores"
-  | "recepcion-nocturna-palmeras";
+/** Every photo id, as a runtime tuple so both the `PhotoId` type and the Zod schema derive from one source. */
+export const PHOTO_ID_VALUES = [
+  "patio-cantera-rosa",
+  "banca-palmeras-buganvilia",
+  "patio-arcos-buganvilia",
+  "puerta-azul-buganvilia",
+  "callejon-balcon-amarillo",
+  "entrada-vinedo-barril",
+  "pareja-vinedo-abrazo",
+  "pareja-vinedo-atardecer",
+  "cava-barricas-roble",
+  "jardin-atardecer-recien-casados",
+  "ceremonia-jardin-luz-dorada",
+  "candelabro-sala-oscura",
+  "evento-nocturno-luces-calidas",
+  "pareja-muro-concreto",
+  "candelabros-blancos-florales",
+  "cactus-semidesierto-cielo",
+  "planta-solitaria-desierto",
+  "formacion-rocosa-luz-dorada",
+  "monolito-desierto-atardecer",
+  "arco-flores-silvestres",
+  "fuegos-artificiales-multicolor",
+  "fuegos-artificiales-rojo-amarillo",
+  "calle-empedrada-banderas",
+  "capilla-blanca-campanario",
+  "mesa-larga-velas-flores",
+  "recepcion-nocturna-palmeras",
+] as const;
+
+export type PhotoId = (typeof PHOTO_ID_VALUES)[number];
 
 export interface Photo {
   id: PhotoId;
