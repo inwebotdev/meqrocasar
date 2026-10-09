@@ -39,7 +39,7 @@ const validResult: ExperienceResult = {
       capacityApprox: true,
       features: ["Viñedo", "Cava", "Terraza"],
       priceCategory: "Medio-Alto",
-      tags: ["vineyard", "wine"],
+      tags: ["vineyard", "wine_cellar"],
       photoId: "entrada-vinedo-barril",
       aliases: [],
       reason: "Coincide con el estilo rústico de viñedo elegido.",

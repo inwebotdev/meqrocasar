@@ -60,7 +60,12 @@ export function loadResult(): ExperienceResult | undefined {
   }
 
   const parsed = ExperienceResultSchema.safeParse(json);
-  return parsed.success ? parsed.data : undefined;
+
+  // ExperienceResultSchema validates `venues[].zone` as a non-empty string
+  // rather than the narrower `Zone` union (same looseness the API route
+  // already relies on), so the inferred type needs an assertion back to
+  // the domain `ExperienceResult` shape.
+  return parsed.success ? (parsed.data as ExperienceResult) : undefined;
 }
 
 export function clearResult(): void {
