@@ -2,12 +2,18 @@ import "server-only";
 
 import { z } from "zod";
 
+const optionalSecret = z
+  .string()
+  .trim()
+  .optional()
+  .transform((value) => (value ? value : undefined));
+
 const envSchema = z.object({
-  OPENROUTER_API_KEY: z.string().optional(),
+  OPENROUTER_API_KEY: optionalSecret,
   OPENROUTER_MODEL_PRIMARY: z.string().default("qwen/qwen-2.5-72b-instruct"),
   OPENROUTER_MODEL_FALLBACK: z.string().default("deepseek/deepseek-chat"),
   OPENROUTER_TIMEOUT_MS: z.coerce.number().default(8000),
-  UNSPLASH_ACCESS_KEY: z.string().optional(),
+  UNSPLASH_ACCESS_KEY: optionalSecret,
   APP_URL: z.string().url().default("http://localhost:3000"),
 });
 

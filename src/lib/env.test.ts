@@ -14,6 +14,19 @@ describe("parseEnv", () => {
     expect(env.UNSPLASH_ACCESS_KEY).toBeUndefined();
   });
 
+  it("treats empty secret values from .env as absent", () => {
+    const env = parseEnv({ NODE_ENV: "test", OPENROUTER_API_KEY: "", UNSPLASH_ACCESS_KEY: "  " });
+
+    expect(env.OPENROUTER_API_KEY).toBeUndefined();
+    expect(env.UNSPLASH_ACCESS_KEY).toBeUndefined();
+  });
+
+  it("keeps non-empty secret values", () => {
+    const env = parseEnv({ NODE_ENV: "test", OPENROUTER_API_KEY: " sk-test " });
+
+    expect(env.OPENROUTER_API_KEY).toBe("sk-test");
+  });
+
   it("rejects an invalid APP_URL", () => {
     expect(() => parseEnv({ NODE_ENV: "test", APP_URL: "not-a-url" })).toThrow();
   });
