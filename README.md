@@ -8,4 +8,16 @@ designs a destination-wedding concept, recommends real Querétaro venues, and pr
 - Technical design: [`specs/TDD.md`](specs/TDD.md)
 - Design system and mockups: [`design/`](design/)
 
-Setup and usage instructions will be added as the project is built.
+## Desarrollo local
+
+**Requisitos:** [Docker](https://www.docker.com/) y [kool](https://kool.dev/).
+
+```bash
+kool run setup   # copia .env.dist -> .env, instala hooks, levanta el contenedor e instala dependencias
+kool run dev      # http://localhost:3000
+kool run test     # vitest (proyectos node + jsdom)
+kool run quality  # format:check + types:check + lint:check
+```
+
+Copia `.env.dist` a `.env` y completa las variables que necesites (claves de OpenRouter/Unsplash); sin ellas
+la app usa valores por defecto / fallbacks locales.
