@@ -59,10 +59,8 @@ export function QuizFlow() {
     toast.show(`Guardado: ${title}`);
   }
 
-  function handleSelectOption(index: number) {
-    const option = quiz.step.options[index];
-    quiz.selectOption(option.id);
-    toast.show(`Guardado: ${option.title}`);
+  function handleQuickStripJump(index: number) {
+    quiz.goToOption(index);
   }
 
   function handleStageKeyDown(event: KeyboardEvent<HTMLDivElement>) {
@@ -131,7 +129,7 @@ export function QuizFlow() {
                     options={quiz.step.options}
                     activeIndex={quiz.state.activeOptionIndex}
                     selectedId={quiz.selectedOptionId}
-                    onSelect={handleSelectOption}
+                    onSelect={handleQuickStripJump}
                   />
                 </>
               )}
