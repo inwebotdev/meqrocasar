@@ -1,23 +1,121 @@
 # Querétaro Romance AI (PoC)
 
-Proof of concept for the Secretaría de Turismo del Estado de Querétaro: a gamified card quiz plus an LLM that
-designs a destination-wedding concept, recommends real Querétaro venues, and produces a shareable moodboard
-(PNG 1200x630) and a vertical video reel (9:16).
+Prueba de concepto para la Secretaría de Turismo del Estado de Querétaro: un quiz tipo swipe
+genera, con un modelo de lenguaje, un concepto de boda personalizado con paleta de color,
+narrativa, recintos recomendados de Querétaro, un moodboard descargable (PNG 1200×630) y un
+reel vertical (9:16) reproducible en el navegador.
 
-- Product spec: [`specs/PRD.md`](specs/PRD.md)
-- Technical design: [`specs/TDD.md`](specs/TDD.md)
-- Design system and mockups: [`design/`](design/)
+- Especificación de producto: [`specs/PRD.md`](specs/PRD.md)
+- Diseño técnico: [`specs/TDD.md`](specs/TDD.md)
+- Sistema de diseño y mockups: [`design/`](design/)
+
+## Arquitectura
+
+1. El usuario responde el quiz (`/`, `src/components/quiz`) y el cliente llama a
+   `POST /api/generate-experience` (`src/app/api/generate-experience/route.ts`) con sus
+   respuestas.
+2. El servicio de experiencia (`src/domain/experience/service.ts`) pide a OpenRouter un JSON
+   estructurado, primero al modelo primario (Qwen) y, si falla o no cumple el schema, a un
+   modelo de respaldo (DeepSeek). Si ambos fallan, usa un generador local determinista
+   (`src/domain/experience/fallback.ts`) para que la demo nunca se quede sin resultado.
+3. Las fotos del resultado vienen de Unsplash (`src/domain/images/unsplash.ts`) cuando hay una
+   API key configurada; si no, de un set curado de fotos estáticas
+   (`src/domain/images/static-fallback.ts`).
+4. `/resultados` (`src/components/results`) muestra el concepto, la paleta, el moodboard y el
+   reel. El moodboard se renderiza como imagen en `GET /api/og/moodboard`
+   (`src/app/api/og/moodboard/route.tsx`, Satori sobre el runtime de Node). El reel se reproduce
+   con `@remotion/player` (`src/remotion`) directamente en el navegador — no hay renderizado de
+   video en el servidor.
 
 ## Desarrollo local
 
 **Requisitos:** [Docker](https://www.docker.com/) y [kool](https://kool.dev/).
 
 ```bash
-kool run setup   # copia .env.dist -> .env, instala hooks, levanta el contenedor e instala dependencias
-kool run dev      # http://localhost:3000
-kool run test     # vitest (proyectos node + jsdom)
-kool run quality  # format:check + types:check + lint:check
+kool run setup    # copia .env.dist -> .env, instala git hooks, levanta el contenedor e instala dependencias
+kool run dev       # arranca `next dev` dentro del contenedor, expuesto en http://localhost:3000
+kool run test      # vitest (proyectos "node" y "jsdom"), 100% offline
+kool run quality   # format:check + types:check + lint:check
+kool run build     # next build
 ```
 
-Copia `.env.dist` a `.env` y completa las variables que necesites (claves de OpenRouter/Unsplash); sin ellas
-la app usa valores por defecto / fallbacks locales.
+Todas las herramientas de Node corren dentro de Docker; no se debe ejecutar `yarn`/`npx`/`tsc`
+directamente en el host.
+
+`kool run test` es completamente **offline**: toda llamada externa (OpenRouter, Unsplash) está
+mockeada en los tests. La única excepción es un chequeo opt-in que valida en vivo que las URLs de
+Unsplash del catálogo de fotos sigan respondiendo 200:
+
+```bash
+PHOTO_URL_CHECK=1 docker compose run --rm --no-deps -T app yarn test src/domain/media
+```
+
+## Variables de entorno
+
+Definidas en [`.env.dist`](.env.dist); copia ese archivo a `.env` y completa lo que necesites.
+
+| Variable                    | Requerida | Qué pasa si falta                                                                              |
+| --------------------------- | --------- | ---------------------------------------------------------------------------------------------- |
+| `OPENROUTER_API_KEY`        | No        | Se usa el fallback local determinista en vez de un modelo real (ver `meta.fallbackUsed`).      |
+| `OPENROUTER_MODEL_PRIMARY`  | No        | Usa el default `qwen/qwen-2.5-72b-instruct`.                                                   |
+| `OPENROUTER_MODEL_FALLBACK` | No        | Usa el default `deepseek/deepseek-chat`.                                                       |
+| `OPENROUTER_TIMEOUT_MS`     | No        | Usa el default `8000` (ms) antes de pasar al modelo de respaldo o al fallback local.           |
+| `UNSPLASH_ACCESS_KEY`       | No        | Se usan las fotos estáticas curadas en `src/domain/images/static-fallback.ts`.                 |
+| `APP_URL`                   | No        | Usa el default `http://localhost:3000` (header `HTTP-Referer` de OpenRouter y URLs absolutas). |
+| `APP_PORT`                  | No        | Usa el default `3000` como puerto publicado por `docker-compose`.                              |
+
+## Assets que debes agregar
+
+Estos archivos no se versionan en git y deben agregarse manualmente antes de un despliegue real:
+
+- **`public/audio/wedding-theme.mp3`** — pista de audio de fondo del reel, royalty-free, de al
+  menos 12 segundos (ver `public/audio/README.md` para la guía de tono — "Son Huapango
+  Queretano" / cuerdas clásicas — y la nota de licencia que debe acompañarla). Mientras no
+  exista, el reel se reproduce sin sonido y el chip de pista muestra "Sin audio".
+- **`public/brand/logo.svg`** y **`public/brand/logo-mark.svg`** — son placeholders; deben
+  reemplazarse por el logotipo oficial de Querétaro Romance AI / SECTUR (el segundo es solo el
+  isotipo, usado en el header a partir de 360px de ancho).
+- Las fuentes (`Playfair Display`, `Plus Jakarta Sans`) ya están incluidas en
+  `public/fonts/` bajo la licencia SIL Open Font License 1.1 (ver `public/fonts/README.md`); no
+  requieren acción.
+
+## Métricas de la PoC
+
+Cada resultado generado muestra, en el footer de `/resultados` (`MetaFooter`,
+`src/components/results/MetaFooter.tsx`): el modelo que respondió (o si se usó el fallback
+local), la duración de la generación en milisegundos y, cuando el proveedor la reporta, la suma
+de tokens de prompt + completion.
+
+## Despliegue en Vercel (Hobby)
+
+1. Importa este repositorio de GitHub en Vercel.
+2. Configura las variables de entorno de la tabla anterior en el proyecto de Vercel (al menos
+   `OPENROUTER_API_KEY` y `UNSPLASH_ACCESS_KEY` si quieres generación real en vez de los
+   fallbacks).
+3. `GET /api/og/moodboard` corre en el runtime de Node (`export const runtime = "nodejs"`) y lee
+   fuentes desde `public/fonts/`; no es compatible con el runtime Edge.
+4. No hay renderizado de video en el servidor: el reel se reproduce íntegramente en el cliente
+   con `@remotion/player`.
+
+## Estructura del proyecto
+
+```
+src/
+  app/              # Rutas de Next.js (App Router): quiz, resultados, recintos, API routes
+  domain/           # Lógica de negocio pura: quiz, experience, venues, media, moodboard, ai, images
+  components/        # Componentes React: shell, ui, quiz, results, reel
+  remotion/          # Composición del reel (Remotion Player)
+  lib/               # Cliente de API, store de resultados, env, utilidades
+test/                # Setup de Vitest y stubs compartidos
+```
+
+## Flujo de trabajo
+
+Este repositorio se desarrolla en PRs apiladas (`poc/*`, una capa por PR, con `gh-stack`), usando
+conventional commits. Antes de subir cualquier cambio: `kool run quality` (y, si toca código,
+`kool run test`) deben pasar en verde.
+
+## Próxima iteración
+
+- Reel narrado con voz generada (TTS, p. ej. ElevenLabs) está planeado como un stack separado,
+  fuera del alcance de esta PoC.
