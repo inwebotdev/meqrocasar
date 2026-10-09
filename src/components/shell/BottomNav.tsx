@@ -24,7 +24,7 @@ export function BottomNav() {
 
   return (
     <nav className="pb-safe fixed bottom-0 z-50 w-full bg-surface/90 shadow-nav backdrop-blur-xl">
-      <div className="flex h-16 items-center justify-around px-space-sm">
+      <div className="mx-auto flex h-16 w-full max-w-[520px] items-center justify-around px-space-sm md:max-w-[768px]">
         {NAV_ITEMS.map((item) => {
           const itemPathname = item.href.split("#")[0];
           const isActive = itemPathname === pathname;
