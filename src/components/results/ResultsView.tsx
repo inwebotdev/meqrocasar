@@ -1,3 +1,6 @@
+import { ReelErrorBoundary } from "@/components/reel/ReelErrorBoundary";
+import { ReelPlayerLazy } from "@/components/reel/ReelPlayerLazy";
+import { ReelPoster } from "@/components/reel/ReelPoster";
 import { SectionHeader } from "@/components/ui";
 import type { ExperienceResult } from "@/domain/experience/types";
 
@@ -27,11 +30,19 @@ export function ResultsView({ result }: ResultsViewProps) {
       />
 
       <section id="reel">
-        <ReelCard
-          title={result.conceptTitle}
-          trackName={REEL_TRACK_NAME}
-          posterUrl={result.photos[0]?.url}
-        />
+        <ReelCard title={result.conceptTitle} trackName={REEL_TRACK_NAME}>
+          <ReelErrorBoundary
+            fallback={
+              <ReelPoster
+                title={result.conceptTitle}
+                trackName={REEL_TRACK_NAME}
+                posterUrl={result.photos[0]?.url}
+              />
+            }
+          >
+            <ReelPlayerLazy result={result} trackName={REEL_TRACK_NAME} />
+          </ReelErrorBoundary>
+        </ReelCard>
       </section>
 
       <MoodboardCard result={result} />
