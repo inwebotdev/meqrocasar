@@ -1,0 +1,23 @@
+{
+  "conceptTitle": "Día Elegante entre Arquitectura y Viñedo",
+  "colorPalette": [
+    { "hex": "#5E1026", "name": "Borgoña Moderno" },
+    { "hex": "#C9A66B", "name": "Dorado Satinado" },
+    { "hex": "#F4F1EC", "name": "Blanco Hueso" },
+    { "hex": "#1F3D2B", "name": "Verde Botella" },
+    { "hex": "#000000", "name": "Negro Extra" }
+  ],
+  "narrative": "La pareja prefiere una puesta en escena elegante y contemporánea, con arquitectura vanguardista, espejos de agua y diseño lumínico de autor. Imaginan su celebración entre líneas depuradas y viñedos cercanos que aportan textura natural al conjunto.\n\nAl caer la tarde, la luz dorada se refleja en los espejos de agua mientras los invitados disfrutan de alta coctelería de autor en un entorno minimalista y sereno.",
+  "searchQueries": [
+    "modern minimalist wedding",
+    "elegant concrete wedding decor",
+    "vineyard modern architecture wedding"
+  ],
+  "recommendedVenues": [
+    {
+      "name": "Hacienda Viborillas",
+      "zone": "Colón",
+      "reason": "Su arquitectura virreinal reinterpretada con detalles modernos conecta con una estética contemporánea y elegante."
+    }
+  ]
+}

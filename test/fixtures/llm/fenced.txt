@@ -1,0 +1,25 @@
+¡Claro! Aquí tienes la experiencia solicitada:
+
+```json
+{
+  "conceptTitle": "Noche Virreinal en Casona de Cantera",
+  "colorPalette": [
+    { "hex": "#68182E", "name": "Vino Tinto" },
+    { "hex": "#D4AF37", "name": "Oro Cantera" },
+    { "hex": "#F5EDE0", "name": "Lino Crudo" },
+    { "hex": "#2F4839", "name": "Verde Musgo" }
+  ],
+  "narrative": "La pareja sueña con una celebración nocturna en los patios de cantera rosa de la Casona de los Cinco Patios, donde los candiles de cristal iluminan cada rincón del Centro Histórico. El eco de los pasos sobre la cantera y el aroma a cera derretida envuelven a los invitados en un ambiente de misterio virreinal.\n\nMás tarde, una callejoneada con estudiantina recorre los andadores empedrados, entre ponche caliente y faroles encendidos, cerrando la noche con la calidez de una tradición queretana centenaria.",
+  "searchQueries": ["colonial courtyard night wedding", "candlelit wedding mexico", "cantera stone wedding venue"],
+  "recommendedVenues": [
+    {
+      "name": "Casona de los Cinco Patios",
+      "zone": "Centro Histórico",
+      "reason": "Sus patios de cantera rosa y su cava subterránea son el marco perfecto para una recepción nocturna virreinal."
+    }
+  ],
+  "reelTagline": "Noche Virreinal en Cantera Rosa"
+}
+```
+
+Espero que esta propuesta les encante. ¡Felicidades a la pareja!

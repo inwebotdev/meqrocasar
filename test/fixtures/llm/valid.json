@@ -1,0 +1,28 @@
+{
+  "conceptTitle": "Atardecer Dorado entre Viñedos de Ezequiel Montes",
+  "colorPalette": [
+    { "hex": "#5B1A2B", "name": "Vino de Barrica" },
+    { "hex": "#4B5E3A", "name": "Verde Viñedo" },
+    { "hex": "#C9A227", "name": "Oro Vendimia" },
+    { "hex": "#D9C7A3", "name": "Beige Barrica" }
+  ],
+  "narrative": "La pareja imagina su boda entre las hileras centenarias de Viñedos La Redonda, con la Peña de Bernal asomando en el horizonte mientras el sol se despide entre las vides. El aroma a uva recién cortada se mezcla con el perfume de las flores de temporada, y cada brindis se siente como parte del paisaje.\n\nAl caer la noche, Finca Sala Vivé by Freixenet recibe a los invitados en su cava subterránea, donde las burbujas del método tradicional brillan a la luz de las velas. Es un cierre íntimo y cálido para un día que combina tierra, vino y romance en Querétaro.",
+  "searchQueries": [
+    "vineyard sunset wedding mexico",
+    "wine cellar candlelight wedding",
+    "rustic vineyard wedding couple"
+  ],
+  "recommendedVenues": [
+    {
+      "name": "Viñedos La Redonda",
+      "zone": "Ezequiel Montes",
+      "reason": "Sus jardines con vista a la Peña de Bernal son el escenario ideal para una ceremonia diurna entre vides."
+    },
+    {
+      "name": "Finca Sala Vivé by Freixenet",
+      "zone": "Ezequiel Montes",
+      "reason": "Su cava subterránea ofrece un cierre íntimo y nocturno, perfecto para una cata de espumosos tras la ceremonia."
+    }
+  ],
+  "reelTagline": "Romance entre Viñedos de Querétaro"
+}

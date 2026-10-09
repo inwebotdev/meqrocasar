@@ -1,0 +1,9 @@
+{
+  "conceptTitle": "Atardecer Boho a los Pies de la Peña de Bernal",
+  "colorPalette": [
+    { "hex": "#B5651D", "name": "Terracota Bernal" },
+    { "hex": "#D2A679", "name": "Ocre Semidesierto" },
+    { "hex": "#EFE1C6", "name": "Beige Otomí" },
+    { "hex": "#8A9A5B", "name": "Verde Pampa" }
+  ],
+  "narrative": "La pareja visualiza una boda boho chic con la silueta de la Peña de Bernal como testigo, entre pampas y cactus monumentales
