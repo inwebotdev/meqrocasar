@@ -148,8 +148,7 @@
   --radius-3xl: 1.5rem;
 
   /* Elevation */
-  --shadow-level-1:
-    0 2px 8px -2px rgba(104, 24, 46, 0.04), 0 1px 4px -1px rgba(74, 21, 37, 0.02);
+  --shadow-level-1: 0 2px 8px -2px rgba(104, 24, 46, 0.04), 0 1px 4px -1px rgba(74, 21, 37, 0.02);
   --shadow-level-2:
     0 8px 24px -4px rgba(104, 24, 46, 0.08), 0 4px 12px -2px rgba(192, 108, 84, 0.06);
   --shadow-level-3:
