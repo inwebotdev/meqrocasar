@@ -22,6 +22,15 @@ describe("Button", () => {
     },
   );
 
+  it("stays disabled while loading even when disabled is explicitly false", () => {
+    render(
+      <Button loading disabled={false}>
+        Continuar
+      </Button>,
+    );
+    expect(screen.getByRole("button")).toBeDisabled();
+  });
+
   it("disables the button and shows a spinner with aria-busy when loading", () => {
     render(<Button loading>Continuar</Button>);
 
