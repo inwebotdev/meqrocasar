@@ -19,7 +19,8 @@ describe("QuizAnswersSchema", () => {
   });
 
   it("rejects a payload missing a key", () => {
-    const { mustHave, ...incomplete } = VALID_ANSWERS;
+    const incomplete: Record<string, unknown> = { ...VALID_ANSWERS };
+    delete incomplete.mustHave;
     expect(() => QuizAnswersSchema.parse(incomplete)).toThrow();
   });
 
