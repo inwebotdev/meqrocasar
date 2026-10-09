@@ -84,5 +84,29 @@ export const ExperienceResultSchema = z.object({
     fallbackUsed: z.boolean(),
     durationMs: z.number(),
     generatedAt: z.string(),
+    promptVersion: z.string().optional(),
+    attempts: z
+      .array(
+        z.object({
+          model: z.string(),
+          outcome: z.enum([
+            "ok",
+            "http-error",
+            "timeout",
+            "network",
+            "no-json",
+            "invalid-json",
+            "schema",
+          ]),
+          durationMs: z.number(),
+        }),
+      )
+      .optional(),
+    usage: z
+      .object({
+        promptTokens: z.number(),
+        completionTokens: z.number(),
+      })
+      .optional(),
   }),
 });
