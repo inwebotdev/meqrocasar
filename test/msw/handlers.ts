@@ -31,3 +31,31 @@ export function mockOpenRouterChat(
     return respond({ request, body, callIndex });
   });
 }
+
+export const UNSPLASH_SEARCH_URL = "https://api.unsplash.com/search/photos";
+
+export interface UnsplashRequestInfo {
+  request: Request;
+  query: string | null;
+  /** 1-based index of this call, scoped to this handler instance. */
+  callIndex: number;
+}
+
+/**
+ * Builds a query-aware MSW handler for Unsplash's search/photos endpoint.
+ * `respond` receives the `query` search param (so it can return a
+ * different fixture per query) and a per-handler call counter (so tests
+ * can assert how many requests were made at all, e.g. to prove the static
+ * provider never hits the network).
+ */
+export function mockUnsplashSearch(
+  respond: (info: UnsplashRequestInfo) => Promise<Response> | Response,
+): RequestHandler {
+  let callIndex = 0;
+
+  return http.get(UNSPLASH_SEARCH_URL, ({ request }) => {
+    callIndex += 1;
+    const query = new URL(request.url).searchParams.get("query");
+    return respond({ request, query, callIndex });
+  });
+}

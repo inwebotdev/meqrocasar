@@ -1,11 +1,11 @@
-import { findPhotos, type Photo, type PhotoTag } from "@/domain/media/photos";
+import { photosForAnswers } from "@/domain/media/photos-for-answers";
 import { getOption } from "@/domain/quiz/questions";
 import type { QuizAnswers } from "@/domain/quiz/schema";
 import { matchVenue, rankVenues } from "@/domain/venues/match";
 import type { Venue } from "@/domain/venues/types";
 
 import type { LlmExperience } from "./schema";
-import type { ExperiencePhoto, ExperienceResult, ExperienceVenue, PaletteColor } from "./types";
+import type { ExperienceResult, ExperienceVenue, PaletteColor } from "./types";
 
 type StyleId = QuizAnswers["style"];
 type SettingId = QuizAnswers["setting"];
@@ -172,31 +172,6 @@ function buildReelTagline(answers: QuizAnswers): string {
   return `${STYLE_TAGLINE[answers.style]} ${MUST_HAVE_TAGLINE[answers.mustHave]}`;
 }
 
-// --- Photo tags, keyed by each answer ---------------------------------------
-
-const ANSWER_PHOTO_TAGS: Record<string, readonly PhotoTag[]> = {
-  colonial: ["colonial", "courtyard", "bougainvillea"],
-  rustic_vineyard: ["vineyard", "wine"],
-  boho_chic: ["boho", "desert", "bernal"],
-  modern_elegant: ["modern"],
-  sunset_garden: ["garden", "sunset"],
-  night_casona: ["night", "courtyard"],
-  day_vineyard: ["vineyard"],
-  intimate_boutique: ["chapel", "courtyard"],
-  grand_traditional: ["banquet", "hacienda"],
-  weekend_getaway: ["street", "hacienda"],
-  wine_tasting: ["wine", "vineyard"],
-  fireworks: ["fireworks", "night"],
-  gourmet_mexican_banquet: ["banquet"],
-  callejoneada: ["street", "night"],
-};
-
-function photoTagsFor(answers: QuizAnswers): PhotoTag[] {
-  return [answers.style, answers.setting, answers.experience, answers.mustHave].flatMap(
-    (optionId) => ANSWER_PHOTO_TAGS[optionId] ?? [],
-  );
-}
-
 function reasonFor(answers: QuizAnswers, venueTags: readonly string[]): string {
   const overlap = venueTags.slice(0, 2).join(" y ");
   const styleTitle = getOption("style", answers.style).title;
@@ -263,10 +238,6 @@ function toExperienceVenue(
   };
 }
 
-function toExperiencePhoto(photo: Photo): ExperiencePhoto {
-  return { url: photo.url, alt: photo.alt, credit: photo.credit };
-}
-
 /**
  * Deterministic, offline experience built entirely from local tables and
  * the venue/photo catalogs. No randomness, no network calls: the same
@@ -286,7 +257,7 @@ export function buildFallbackExperience(answers: QuizAnswers): Omit<ExperienceRe
     reelTagline: buildReelTagline(answers),
     searchQueries: buildSearchQueries(answers),
     venues,
-    photos: findPhotos(photoTagsFor(answers), 3).map(toExperiencePhoto),
+    photos: photosForAnswers(answers, 3),
     answers,
   };
 }
