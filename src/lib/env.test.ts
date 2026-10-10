@@ -27,6 +27,15 @@ describe("parseEnv", () => {
     expect(env.OPENROUTER_API_KEY).toBe("sk-test");
   });
 
+  it("applies the timeout default when OPENROUTER_TIMEOUT_MS is empty", () => {
+    expect(parseEnv({ NODE_ENV: "test", OPENROUTER_TIMEOUT_MS: "" }).OPENROUTER_TIMEOUT_MS).toBe(8000);
+    expect(parseEnv({ NODE_ENV: "test", OPENROUTER_TIMEOUT_MS: "  " }).OPENROUTER_TIMEOUT_MS).toBe(8000);
+  });
+
+  it("rejects a non-positive timeout", () => {
+    expect(() => parseEnv({ NODE_ENV: "test", OPENROUTER_TIMEOUT_MS: "0" })).toThrow();
+  });
+
   it("rejects an invalid APP_URL", () => {
     expect(() => parseEnv({ NODE_ENV: "test", APP_URL: "not-a-url" })).toThrow();
   });
