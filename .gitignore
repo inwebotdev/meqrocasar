@@ -22,6 +22,9 @@ dist/
 # testing
 coverage/
 
+# places photo proxy disk cache (PLACES_PHOTO_CACHE_DIR)
+.cache/
+
 # misc
 .DS_Store
 *.pem

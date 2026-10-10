@@ -6,7 +6,13 @@ export interface ApiOk<T> {
 
 /** Error codes returned by this app's API routes. */
 export type ApiErrorCode =
-  "invalid_json" | "invalid_answers" | "internal" | "invalid_params" | "render_failed";
+  | "invalid_json"
+  | "invalid_answers"
+  | "internal"
+  | "invalid_params"
+  | "render_failed"
+  | "not_found"
+  | "places_disabled";
 
 /** Failed API response envelope. */
 export interface ApiError {

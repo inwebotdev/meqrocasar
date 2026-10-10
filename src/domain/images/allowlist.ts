@@ -18,3 +18,22 @@ export function isUnsplashUrl(url: string): boolean {
     return false;
   }
 }
+
+/** The same-origin path prefix the Places photo proxy serves from (`src/domain/places/photo-url.ts`). */
+const PLACES_PHOTO_PATH_PREFIX = "/api/places/photo";
+
+/**
+ * True for an Unsplash URL (see `isUnsplashUrl`) or a same-origin Places
+ * photo proxy path (`/api/places/photo?...`, as built by
+ * `placesPhotoPath`). Used wherever an externally- or proxy-sourced photo
+ * reference is embedded into another resource (e.g. moodboard params),
+ * so we never render an arbitrary, attacker-controlled URL. Never throws.
+ */
+export function isAllowedImageUrl(url: string): boolean {
+  if (url.startsWith(PLACES_PHOTO_PATH_PREFIX)) {
+    const rest = url.slice(PLACES_PHOTO_PATH_PREFIX.length);
+    return rest === "" || rest.startsWith("?");
+  }
+
+  return isUnsplashUrl(url);
+}
