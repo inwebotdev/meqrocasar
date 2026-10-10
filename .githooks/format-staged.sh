@@ -39,7 +39,7 @@ if ((${#skipped[@]})); then
 fi
 ((${#format[@]})) || exit 0
 
-if ! docker compose run --rm --no-deps -T app yarn prettier --write -- "${format[@]}"; then
+if ! docker compose run --rm --no-deps -T app yarn prettier --write "${format[@]}"; then
   echo "pre-commit: Prettier failed (is Docker running?). Fix the problem or commit with --no-verify." >&2
   exit 1
 fi
