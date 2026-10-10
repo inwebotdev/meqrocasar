@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import type { QuizAnswers } from "@/domain/quiz/schema";
 
 import { PHOTOS } from "./photos";
-import { photosForAnswers } from "./photos-for-answers";
+import { photoForFacets, photosForAnswers } from "./photos-for-answers";
 
 const answers: QuizAnswers = {
   style: "rustic_vineyard",
@@ -36,5 +36,23 @@ describe("photosForAnswers", () => {
     );
 
     expect(photos.some((photo) => vineyardOrWineUrls.has(photo.url))).toBe(true);
+  });
+});
+
+describe("photoForFacets", () => {
+  it("favors a vineyard/wine-tagged photo for a rustic_vineyard style facet", () => {
+    const photo = photoForFacets({ style: "rustic_vineyard" });
+    const vineyardOrWineUrls = new Set(
+      PHOTOS.filter(
+        (candidate) => candidate.tags.includes("vineyard") || candidate.tags.includes("wine"),
+      ).map((candidate) => candidate.url),
+    );
+    expect(vineyardOrWineUrls.has(photo.url)).toBe(true);
+  });
+
+  it("falls back to a deterministic default photo when no facets are known", () => {
+    const photo = photoForFacets({});
+    expect(photo.url.length).toBeGreaterThan(0);
+    expect(photoForFacets({})).toEqual(photo);
   });
 });

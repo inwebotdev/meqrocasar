@@ -35,6 +35,9 @@ function makeFallbackStub() {
       calls.push({ queries, answers: resolvedAnswers });
       return FALLBACK_PHOTOS;
     },
+    async resolveOne() {
+      return FALLBACK_PHOTOS[0] as ExperiencePhoto;
+    },
   };
   return { provider, calls };
 }
@@ -177,5 +180,30 @@ describe("createUnsplashImageProvider", () => {
     const photos = await provider.resolve(QUERIES, answers);
 
     expect(photos).toEqual(FALLBACK_PHOTOS);
+  });
+
+  it("resolveOne resolves directly from Unsplash when the query succeeds", async () => {
+    server.use(mockUnsplashSearch(({ query }) => okResult(query ?? "")));
+
+    const { provider: fallback, calls } = makeFallbackStub();
+    const provider = createUnsplashImageProvider({ accessKey: "test-access-key", fallback });
+
+    const photo = await provider.resolveOne(QUERIES[0] as string, { style: "rustic_vineyard" });
+
+    expect(photo.url).toBe(
+      `https://images.unsplash.com/ok-${encodeURIComponent(QUERIES[0] as string)}`,
+    );
+    expect(calls).toHaveLength(0);
+  });
+
+  it("resolveOne falls back when the query fails", async () => {
+    server.use(mockUnsplashSearch(() => HttpResponse.json({ results: [] })));
+
+    const { provider: fallback } = makeFallbackStub();
+    const provider = createUnsplashImageProvider({ accessKey: "test-access-key", fallback });
+
+    const photo = await provider.resolveOne("anything", { style: "rustic_vineyard" });
+
+    expect(photo).toEqual(FALLBACK_PHOTOS[0]);
   });
 });

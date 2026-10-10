@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 import type { ExperiencePhoto } from "@/domain/experience/types";
+import type { Facets } from "@/domain/kb/taxonomy";
 import type { QuizAnswers } from "@/domain/quiz/schema";
 
 import type { ImageProvider } from "./provider";
@@ -121,6 +122,15 @@ export function createUnsplashImageProvider(config: UnsplashImageProviderConfig)
       }
 
       return resolved;
+    },
+
+    async resolveOne(query: string, facets: Facets): Promise<ExperiencePhoto> {
+      const direct = await fetchOne(query, config.accessKey, fetchImpl, timeoutMs);
+      if (direct) {
+        return direct;
+      }
+
+      return config.fallback.resolveOne(query, facets);
     },
   };
 }

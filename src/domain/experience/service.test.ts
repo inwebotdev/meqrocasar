@@ -50,6 +50,9 @@ function makeImagesStub(photosSequence: readonly ExperiencePhoto[][]) {
       index += 1;
       return photos;
     },
+    async resolveOne() {
+      return THREE_PHOTOS[0] as ExperiencePhoto;
+    },
   };
 
   return { provider, calls };

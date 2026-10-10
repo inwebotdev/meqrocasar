@@ -35,4 +35,29 @@ describe("createStaticImageProvider", () => {
 
     expect(calls).toBe(0);
   });
+
+  it("resolveOne resolves a single photo from the registry for known facets", async () => {
+    const provider = createStaticImageProvider();
+    const photo = await provider.resolveOne("vineyard harvest", { style: "rustic_vineyard" });
+
+    expect(photo.url.length).toBeGreaterThan(0);
+    expect(photo.alt.length).toBeGreaterThan(0);
+    expect(photo.credit.length).toBeGreaterThan(0);
+  });
+
+  it("resolveOne never calls the network and falls back to a default photo for empty facets", async () => {
+    let calls = 0;
+    server.use(
+      mockUnsplashSearch(() => {
+        calls += 1;
+        return HttpResponse.json({ results: [] });
+      }),
+    );
+
+    const provider = createStaticImageProvider();
+    const photo = await provider.resolveOne("anything", {});
+
+    expect(photo.url.length).toBeGreaterThan(0);
+    expect(calls).toBe(0);
+  });
 });
