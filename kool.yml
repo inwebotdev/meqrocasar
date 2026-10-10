@@ -16,6 +16,8 @@ scripts:
     - docker compose run --rm --no-deps -T --env-from-file .env app yarn tsx scripts/kb/ingest-places.ts
   kb:build:
     - docker compose run --rm --no-deps -T app yarn tsx scripts/kb/build-venues.ts
+  kb:enrich:
+    - docker compose run --rm --no-deps -T --env-from-file .env app yarn tsx scripts/kb/enrich-kb.ts
   quality:
     - docker compose run --rm --no-deps -T app yarn format:check
     - docker compose run --rm --no-deps -T app yarn types:check

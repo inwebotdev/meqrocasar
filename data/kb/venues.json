@@ -1,115 +1,27 @@
 [
   {
-    "id": "v_casona-cinco-patios",
-    "name": "Casona de los Cinco Patios",
-    "aliases": ["Casona de los 5 Patios", "Casa del Conde de Regla"],
-    "zone": "centro_historico",
-    "municipality": "Querétaro",
-    "capacityEstimate": 280,
+    "id": "v_bernal-pueblo-magico",
+    "name": "Bernal – Pueblo Mágico",
+    "aliases": ["Bernal Querétaro", "Peña de Bernal"],
+    "zone": "bernal",
+    "municipality": "Ezequiel Montes",
+    "capacityEstimate": 200,
     "capacityApprox": true,
-    "oneLiner": "Patios de cantera rosa virreinal en el corazón del Centro Histórico.",
-    "whyWeddings": "Cava subterránea, patio de cantera rosa certificado por SECTUR y callejoneadas nocturnas a un paso, ideal para una boda colonial en pleno Centro Histórico.",
-    "highlights": ["Patio de Cantera Rosa", "Cava Subterránea", "Certificación SECTUR"],
+    "oneLiner": "Pueblo Mágico a los pies de la Peña de Bernal, el tercer monolito más grande del mundo.",
+    "whyWeddings": "La Peña de Bernal como telón de fondo, dulces y quesos artesanales y la plaza del Pueblo Mágico crean una boda boho semidesértica inolvidable.",
+    "highlights": ["Peña de Bernal", "Dulces y Quesos Artesanales", "Plaza del Pueblo Mágico"],
     "facets": {
-      "styles": ["colonial"],
-      "settings": ["night_casona"],
-      "scale": ["grand"],
-      "experiences": ["callejoneada"],
-      "budget": "medio_alto"
-    },
-    "photos": [
-      {
-        "kind": "registry",
-        "ref": "patio-cantera-rosa",
-        "attribution": "Annie Wood"
-      }
-    ],
-    "source": "curated",
-    "confidence": 1
-  },
-  {
-    "id": "v_hacienda-lagunillas",
-    "name": "Hacienda Lagunillas",
-    "aliases": ["Hacienda Lagunillas Hotel & Spa"],
-    "zone": "huimilpan",
-    "municipality": "Huimilpan",
-    "capacityEstimate": 220,
-    "capacityApprox": true,
-    "oneLiner": "Hacienda colonial con spa, jardines y hospedaje boutique en Huimilpan.",
-    "whyWeddings": "Sus jardines coloniales y el restaurante Labrantío ofrecen atardeceres dorados y banquetes gourmet, con hospedaje boutique para que los invitados se queden todo el fin de semana.",
-    "highlights": ["Jardines Coloniales", "Restaurante Labrantío", "Hospedaje Boutique"],
-    "facets": {
-      "styles": ["colonial", "garden_romantic"],
+      "styles": ["pueblo_magico", "boho_desert"],
       "settings": ["sunset_garden"],
-      "scale": ["intimate"],
-      "experiences": ["gourmet_banquet"],
-      "budget": "exclusivo"
-    },
-    "photos": [
-      {
-        "kind": "registry",
-        "ref": "jardin-atardecer-recien-casados",
-        "attribution": "Denisa-Elena Ficau"
-      }
-    ],
-    "source": "curated",
-    "confidence": 1
-  },
-  {
-    "id": "v_vinedos-la-redonda",
-    "name": "Viñedos La Redonda",
-    "aliases": ["La Redonda", "Viñedos la Redonda"],
-    "zone": "ezequiel_montes",
-    "municipality": "Ezequiel Montes",
-    "capacityEstimate": 550,
-    "capacityApprox": true,
-    "oneLiner": "El viñedo más grande y antiguo de Querétaro, con vista a la Peña de Bernal.",
-    "whyWeddings": "Sus jardines entre vides centenarias y la vendimia anual crean el escenario perfecto para una boda rústica al aire libre, con capacidad para grandes celebraciones.",
-    "highlights": [
-      "Jardines con Vista a la Peña de Bernal",
-      "Vendimia Anual",
-      "Eventos al Aire Libre"
-    ],
-    "facets": {
-      "styles": ["rustic_vineyard"],
-      "settings": ["day_vineyard"],
       "scale": ["grand"],
-      "experiences": ["wine_tasting"],
-      "budget": "medio_alto"
+      "experiences": [],
+      "budget": "medio"
     },
     "photos": [
       {
         "kind": "registry",
-        "ref": "entrada-vinedo-barril",
-        "attribution": "shawn kim"
-      }
-    ],
-    "source": "curated",
-    "confidence": 1
-  },
-  {
-    "id": "v_finca-sala-vive-freixenet",
-    "name": "Finca Sala Vivé by Freixenet",
-    "aliases": ["Sala Vivé by Freixenet", "Freixenet Querétaro"],
-    "zone": "ezequiel_montes",
-    "municipality": "Ezequiel Montes",
-    "capacityEstimate": 180,
-    "capacityApprox": true,
-    "oneLiner": "Cavas subterráneas de método tradicional para una boda íntima entre burbujas.",
-    "whyWeddings": "La cava subterránea y los salones con jardín de Freixenet ofrecen catas de espumosos y un ambiente íntimo y sofisticado para pocos invitados.",
-    "highlights": ["Cava Subterránea", "Salones con Jardín", "Cata de Espumosos"],
-    "facets": {
-      "styles": ["rustic_vineyard"],
-      "settings": ["night_casona"],
-      "scale": ["intimate"],
-      "experiences": ["wine_tasting"],
-      "budget": "medio_alto"
-    },
-    "photos": [
-      {
-        "kind": "registry",
-        "ref": "cava-barricas-roble",
-        "attribution": "David Goldman"
+        "ref": "monolito-desierto-atardecer",
+        "attribution": "Pete Alexopoulos"
       }
     ],
     "source": "curated",
@@ -144,112 +56,28 @@
     "confidence": 1
   },
   {
-    "id": "v_puerta-del-lobo",
-    "name": "Puerta del Lobo – Finca El Rosario",
-    "aliases": ["Finca El Rosario", "Puerta del Lobo Querétaro"],
-    "zone": "el_marques",
-    "municipality": "El Marqués",
-    "capacityEstimate": 160,
+    "id": "v_casona-cinco-patios",
+    "name": "Casona de los Cinco Patios",
+    "aliases": ["Casona de los 5 Patios", "Casa del Conde de Regla"],
+    "zone": "centro_historico",
+    "municipality": "Querétaro",
+    "capacityEstimate": 280,
     "capacityApprox": true,
-    "oneLiner": "Viñedos jóvenes con capilla propia consagrada para la ceremonia.",
-    "whyWeddings": "Su capilla consagrada entre viñedos jóvenes y la terraza al atardecer permiten una ceremonia boho con vista al semidesierto queretano.",
-    "highlights": ["Capilla Consagrada", "Viñedos Jóvenes", "Terraza al Atardecer"],
+    "oneLiner": "Patios de cantera rosa virreinal en el corazón del Centro Histórico.",
+    "whyWeddings": "Cava subterránea, patio de cantera rosa certificado por SECTUR y callejoneadas nocturnas a un paso, ideal para una boda colonial en pleno Centro Histórico.",
+    "highlights": ["Patio de Cantera Rosa", "Cava Subterránea", "Certificación SECTUR"],
     "facets": {
-      "styles": ["rustic_vineyard", "boho_desert"],
-      "settings": ["chapel_courtyard", "sunset_garden"],
+      "styles": ["colonial"],
+      "settings": ["night_casona"],
       "scale": ["grand"],
-      "experiences": ["wine_tasting"],
+      "experiences": ["callejoneada"],
       "budget": "medio_alto"
     },
     "photos": [
       {
         "kind": "registry",
-        "ref": "arco-flores-silvestres",
-        "attribution": "Sergio Butko"
-      }
-    ],
-    "source": "curated",
-    "confidence": 1
-  },
-  {
-    "id": "v_hacienda-viborillas",
-    "name": "Hacienda Viborillas",
-    "aliases": ["Viborillas Hacienda"],
-    "zone": "colon",
-    "municipality": "Colón",
-    "capacityEstimate": 400,
-    "capacityApprox": true,
-    "oneLiner": "Hacienda virreinal del siglo XVIII con cavas centenarias y terrazas.",
-    "whyWeddings": "Sus cavas subterráneas centenarias y terrazas panorámicas reciben grandes fiestas con cierre de fuegos artificiales sobre los jardines coloniales.",
-    "highlights": ["Cavas Subterráneas Centenarias", "Terrazas Panorámicas", "Jardines Coloniales"],
-    "facets": {
-      "styles": ["colonial", "modern_elegant"],
-      "settings": ["night_casona"],
-      "scale": ["grand"],
-      "experiences": ["fireworks"],
-      "budget": "exclusivo"
-    },
-    "photos": [
-      {
-        "kind": "registry",
-        "ref": "mesa-larga-velas-flores",
-        "attribution": "M F"
-      }
-    ],
-    "source": "curated",
-    "confidence": 1
-  },
-  {
-    "id": "v_hacienda-galindo",
-    "name": "Hacienda Galindo",
-    "aliases": ["Hacienda Galindo (Fiesta Americana)", "Fiesta Americana Hacienda Galindo"],
-    "zone": "san_juan_del_rio",
-    "municipality": "San Juan del Río",
-    "capacityEstimate": 500,
-    "capacityApprox": true,
-    "oneLiner": "Hacienda del siglo XVI con viñedo propio, spa y hospedaje.",
-    "whyWeddings": "Con viñedo propio, temazcal y hospedaje para los invitados, es el escenario clásico para una gran fiesta tradicional de fin de semana con mariachi y banquete.",
-    "highlights": ["Viñedo Propio", "Spa y Temazcal", "Hospedaje y Jardines"],
-    "facets": {
-      "styles": ["colonial", "rustic_vineyard"],
-      "settings": ["sunset_garden"],
-      "scale": ["grand"],
-      "experiences": ["gourmet_banquet", "mariachi_huapango"],
-      "budget": "exclusivo"
-    },
-    "photos": [
-      {
-        "kind": "registry",
-        "ref": "recepcion-nocturna-palmeras",
-        "attribution": "Vidit Goswami"
-      }
-    ],
-    "source": "curated",
-    "confidence": 1
-  },
-  {
-    "id": "v_hacienda-atongo",
-    "name": "Hacienda Atongo",
-    "aliases": ["Hacienda Atongo Tequisquiapan"],
-    "zone": "tequisquiapan",
-    "municipality": "Tequisquiapan",
-    "capacityEstimate": 150,
-    "capacityApprox": true,
-    "oneLiner": "Hacienda del siglo XVII con viñedo activo y jardines centenarios.",
-    "whyWeddings": "Su viñedo activo y arquitectura rústica permiten una boda diurna entre vides, con vendimia propia y jardines centenarios como telón de fondo.",
-    "highlights": ["Viñedo Activo", "Arquitectura Rústica", "Jardines Centenarios"],
-    "facets": {
-      "styles": ["colonial", "rustic_vineyard"],
-      "settings": ["day_vineyard"],
-      "scale": ["medium"],
-      "experiences": ["vendimia"],
-      "budget": "medio"
-    },
-    "photos": [
-      {
-        "kind": "registry",
-        "ref": "pareja-vinedo-atardecer",
-        "attribution": "Anthea Lawrence"
+        "ref": "patio-cantera-rosa",
+        "attribution": "Annie Wood"
       }
     ],
     "source": "curated",
@@ -288,6 +116,174 @@
     "confidence": 1
   },
   {
+    "id": "v_finca-sala-vive-freixenet",
+    "name": "Finca Sala Vivé by Freixenet",
+    "aliases": ["Sala Vivé by Freixenet", "Freixenet Querétaro"],
+    "zone": "ezequiel_montes",
+    "municipality": "Ezequiel Montes",
+    "capacityEstimate": 180,
+    "capacityApprox": true,
+    "oneLiner": "Cavas subterráneas de método tradicional para una boda íntima entre burbujas.",
+    "whyWeddings": "La cava subterránea y los salones con jardín de Freixenet ofrecen catas de espumosos y un ambiente íntimo y sofisticado para pocos invitados.",
+    "highlights": ["Cava Subterránea", "Salones con Jardín", "Cata de Espumosos"],
+    "facets": {
+      "styles": ["rustic_vineyard"],
+      "settings": ["night_casona"],
+      "scale": ["intimate"],
+      "experiences": ["wine_tasting"],
+      "budget": "medio_alto"
+    },
+    "photos": [
+      {
+        "kind": "registry",
+        "ref": "cava-barricas-roble",
+        "attribution": "David Goldman"
+      }
+    ],
+    "source": "curated",
+    "confidence": 1
+  },
+  {
+    "id": "v_hacienda-atongo",
+    "name": "Hacienda Atongo",
+    "aliases": ["Hacienda Atongo Tequisquiapan"],
+    "zone": "tequisquiapan",
+    "municipality": "Tequisquiapan",
+    "capacityEstimate": 150,
+    "capacityApprox": true,
+    "oneLiner": "Hacienda del siglo XVII con viñedo activo y jardines centenarios.",
+    "whyWeddings": "Su viñedo activo y arquitectura rústica permiten una boda diurna entre vides, con vendimia propia y jardines centenarios como telón de fondo.",
+    "highlights": ["Viñedo Activo", "Arquitectura Rústica", "Jardines Centenarios"],
+    "facets": {
+      "styles": ["colonial", "rustic_vineyard"],
+      "settings": ["day_vineyard"],
+      "scale": ["medium"],
+      "experiences": ["vendimia"],
+      "budget": "medio"
+    },
+    "photos": [
+      {
+        "kind": "registry",
+        "ref": "pareja-vinedo-atardecer",
+        "attribution": "Anthea Lawrence"
+      }
+    ],
+    "source": "curated",
+    "confidence": 1
+  },
+  {
+    "id": "v_hacienda-galindo",
+    "name": "Hacienda Galindo",
+    "aliases": ["Hacienda Galindo (Fiesta Americana)", "Fiesta Americana Hacienda Galindo"],
+    "zone": "san_juan_del_rio",
+    "municipality": "San Juan del Río",
+    "capacityEstimate": 500,
+    "capacityApprox": true,
+    "oneLiner": "Hacienda del siglo XVI con viñedo propio, spa y hospedaje.",
+    "whyWeddings": "Con viñedo propio, temazcal y hospedaje para los invitados, es el escenario clásico para una gran fiesta tradicional de fin de semana con mariachi y banquete.",
+    "highlights": ["Viñedo Propio", "Spa y Temazcal", "Hospedaje y Jardines"],
+    "facets": {
+      "styles": ["colonial", "rustic_vineyard"],
+      "settings": ["sunset_garden"],
+      "scale": ["grand"],
+      "experiences": ["gourmet_banquet", "mariachi_huapango"],
+      "budget": "exclusivo"
+    },
+    "photos": [
+      {
+        "kind": "registry",
+        "ref": "recepcion-nocturna-palmeras",
+        "attribution": "Vidit Goswami"
+      }
+    ],
+    "source": "curated",
+    "confidence": 1
+  },
+  {
+    "id": "v_hacienda-lagunillas",
+    "name": "Hacienda Lagunillas",
+    "aliases": ["Hacienda Lagunillas Hotel & Spa"],
+    "zone": "huimilpan",
+    "municipality": "Huimilpan",
+    "capacityEstimate": 220,
+    "capacityApprox": true,
+    "oneLiner": "Hacienda colonial con spa, jardines y hospedaje boutique en Huimilpan.",
+    "whyWeddings": "Sus jardines coloniales y el restaurante Labrantío ofrecen atardeceres dorados y banquetes gourmet, con hospedaje boutique para que los invitados se queden todo el fin de semana.",
+    "highlights": ["Jardines Coloniales", "Restaurante Labrantío", "Hospedaje Boutique"],
+    "facets": {
+      "styles": ["colonial", "garden_romantic"],
+      "settings": ["sunset_garden"],
+      "scale": ["intimate"],
+      "experiences": ["gourmet_banquet"],
+      "budget": "exclusivo"
+    },
+    "photos": [
+      {
+        "kind": "registry",
+        "ref": "jardin-atardecer-recien-casados",
+        "attribution": "Denisa-Elena Ficau"
+      }
+    ],
+    "source": "curated",
+    "confidence": 1
+  },
+  {
+    "id": "v_hacienda-viborillas",
+    "name": "Hacienda Viborillas",
+    "aliases": ["Viborillas Hacienda"],
+    "zone": "colon",
+    "municipality": "Colón",
+    "capacityEstimate": 400,
+    "capacityApprox": true,
+    "oneLiner": "Hacienda virreinal del siglo XVIII con cavas centenarias y terrazas.",
+    "whyWeddings": "Sus cavas subterráneas centenarias y terrazas panorámicas reciben grandes fiestas con cierre de fuegos artificiales sobre los jardines coloniales.",
+    "highlights": ["Cavas Subterráneas Centenarias", "Terrazas Panorámicas", "Jardines Coloniales"],
+    "facets": {
+      "styles": ["colonial", "modern_elegant"],
+      "settings": ["night_casona"],
+      "scale": ["grand"],
+      "experiences": ["fireworks"],
+      "budget": "exclusivo"
+    },
+    "photos": [
+      {
+        "kind": "registry",
+        "ref": "mesa-larga-velas-flores",
+        "attribution": "M F"
+      }
+    ],
+    "source": "curated",
+    "confidence": 1
+  },
+  {
+    "id": "v_puerta-del-lobo",
+    "name": "Puerta del Lobo – Finca El Rosario",
+    "aliases": ["Finca El Rosario", "Puerta del Lobo Querétaro"],
+    "zone": "el_marques",
+    "municipality": "El Marqués",
+    "capacityEstimate": 160,
+    "capacityApprox": true,
+    "oneLiner": "Viñedos jóvenes con capilla propia consagrada para la ceremonia.",
+    "whyWeddings": "Su capilla consagrada entre viñedos jóvenes y la terraza al atardecer permiten una ceremonia boho con vista al semidesierto queretano.",
+    "highlights": ["Capilla Consagrada", "Viñedos Jóvenes", "Terraza al Atardecer"],
+    "facets": {
+      "styles": ["rustic_vineyard", "boho_desert"],
+      "settings": ["chapel_courtyard", "sunset_garden"],
+      "scale": ["grand"],
+      "experiences": ["wine_tasting"],
+      "budget": "medio_alto"
+    },
+    "photos": [
+      {
+        "kind": "registry",
+        "ref": "arco-flores-silvestres",
+        "attribution": "Sergio Butko"
+      }
+    ],
+    "source": "curated",
+    "confidence": 1
+  },
+  {
     "id": "v_tequisquiapan-pueblo-magico",
     "name": "Tequisquiapan – Pueblo Mágico",
     "aliases": ["Tequisquiapan Querétaro"],
@@ -316,149 +312,36 @@
     "confidence": 1
   },
   {
-    "id": "v_bernal-pueblo-magico",
-    "name": "Bernal – Pueblo Mágico",
-    "aliases": ["Bernal Querétaro", "Peña de Bernal"],
-    "zone": "bernal",
-    "municipality": "Ezequiel Montes",
-    "capacityEstimate": 200,
-    "capacityApprox": true,
-    "oneLiner": "Pueblo Mágico a los pies de la Peña de Bernal, el tercer monolito más grande del mundo.",
-    "whyWeddings": "La Peña de Bernal como telón de fondo, dulces y quesos artesanales y la plaza del Pueblo Mágico crean una boda boho semidesértica inolvidable.",
-    "highlights": ["Peña de Bernal", "Dulces y Quesos Artesanales", "Plaza del Pueblo Mágico"],
-    "facets": {
-      "styles": ["pueblo_magico", "boho_desert"],
-      "settings": ["sunset_garden"],
-      "scale": ["grand"],
-      "experiences": [],
-      "budget": "medio"
-    },
-    "photos": [
-      {
-        "kind": "registry",
-        "ref": "monolito-desierto-atardecer",
-        "attribution": "Pete Alexopoulos"
-      }
-    ],
-    "source": "curated",
-    "confidence": 1
-  },
-  {
-    "id": "v_placesfixtureresorthaciendabajio",
-    "name": "Resort Hacienda del Bajío",
-    "aliases": [],
-    "zone": "san_juan_del_rio",
-    "municipality": "San Juan del Río",
-    "address": "Carretera San Juan del Río - Amealco km 4, San Juan del Río, Qro.",
-    "location": {
-      "lat": 20.3912,
-      "lng": -99.9941
-    },
-    "rating": 4.7,
-    "userRatingCount": 812,
-    "websiteUri": "https://example.com/resort-hacienda-bajio",
-    "googleMapsUri": "https://maps.google.com/?cid=1001",
-    "priceLevel": "PRICE_LEVEL_EXPENSIVE",
-    "capacityEstimate": 150,
-    "capacityApprox": true,
-    "oneLiner": "Resort de hacienda del siglo XVI con viñedo propio, spa y hospedaje para toda la boda.",
-    "whyWeddings": "",
-    "highlights": ["Resort con Hospedaje", "Hospedaje para Invitados", "Restaurante Gourmet"],
-    "facets": {
-      "styles": ["colonial"],
-      "settings": ["night_casona"],
-      "scale": ["medium"],
-      "experiences": [],
-      "budget": "exclusivo"
-    },
-    "photos": [
-      {
-        "kind": "places",
-        "ref": "places/fixture-resort-hacienda-bajio/photos/p1",
-        "attribution": "Fixture Photographer 1"
-      }
-    ],
-    "source": "places",
-    "placeId": "places/fixture-resort-hacienda-bajio",
-    "confidence": 0.4
-  },
-  {
-    "id": "v_placesfixturevinedopenadorada",
-    "name": "Viñedo Peña Dorada",
-    "aliases": [],
+    "id": "v_vinedos-la-redonda",
+    "name": "Viñedos La Redonda",
+    "aliases": ["La Redonda", "Viñedos la Redonda"],
     "zone": "ezequiel_montes",
     "municipality": "Ezequiel Montes",
-    "address": "Carretera a Bernal km 5, Ezequiel Montes, Qro.",
-    "location": {
-      "lat": 20.701,
-      "lng": -99.9021
-    },
-    "rating": 4.6,
-    "userRatingCount": 634,
-    "websiteUri": "https://example.com/vinedo-pena-dorada",
-    "googleMapsUri": "https://maps.google.com/?cid=1002",
-    "priceLevel": "PRICE_LEVEL_MODERATE",
-    "capacityEstimate": 150,
+    "capacityEstimate": 550,
     "capacityApprox": true,
-    "oneLiner": "Viñedo con vista a la Peña de Bernal, vendimia anual y cava subterránea para bodas.",
-    "whyWeddings": "",
-    "highlights": ["Viñedo y Cava", "Atractivo Turístico", "Recomendado en Google"],
+    "oneLiner": "El viñedo más grande y antiguo de Querétaro, con vista a la Peña de Bernal.",
+    "whyWeddings": "Sus jardines entre vides centenarias y la vendimia anual crean el escenario perfecto para una boda rústica al aire libre, con capacidad para grandes celebraciones.",
+    "highlights": [
+      "Jardines con Vista a la Peña de Bernal",
+      "Vendimia Anual",
+      "Eventos al Aire Libre"
+    ],
     "facets": {
       "styles": ["rustic_vineyard"],
       "settings": ["day_vineyard"],
-      "scale": ["medium"],
+      "scale": ["grand"],
       "experiences": ["wine_tasting"],
       "budget": "medio_alto"
     },
     "photos": [
       {
-        "kind": "places",
-        "ref": "places/fixture-vinedo-pena-dorada/photos/p1",
-        "attribution": "Fixture Photographer 2"
+        "kind": "registry",
+        "ref": "entrada-vinedo-barril",
+        "attribution": "shawn kim"
       }
     ],
-    "source": "places",
-    "placeId": "places/fixture-vinedo-pena-dorada",
-    "confidence": 0.4
-  },
-  {
-    "id": "v_placesfixturepabellonzibataeventos",
-    "name": "Pabellón Zibatá Eventos",
-    "aliases": [],
-    "zone": "el_marques",
-    "municipality": "El Marqués",
-    "address": "Blvd. Zibatá 100, El Marqués, Qro.",
-    "location": {
-      "lat": 20.6255,
-      "lng": -100.2911
-    },
-    "rating": 4.5,
-    "userRatingCount": 521,
-    "websiteUri": "https://example.com/pabellon-zibata",
-    "googleMapsUri": "https://maps.google.com/?cid=1003",
-    "priceLevel": "PRICE_LEVEL_MODERATE",
-    "capacityEstimate": 150,
-    "capacityApprox": true,
-    "oneLiner": "Uno de los recintos de eventos más grandes del Bajío, con salones para 150 a 800 invitados.",
-    "whyWeddings": "",
-    "highlights": ["Salón de Banquetes", "Recinto de Eventos", "Recomendado en Google"],
-    "facets": {
-      "styles": ["colonial"],
-      "settings": ["chapel_courtyard"],
-      "scale": ["medium"],
-      "experiences": [],
-      "budget": "medio_alto"
-    },
-    "photos": [
-      {
-        "kind": "places",
-        "ref": "places/fixture-pabellon-zibata-eventos/photos/p1",
-        "attribution": "Fixture Photographer 3"
-      }
-    ],
-    "source": "places",
-    "placeId": "places/fixture-pabellon-zibata-eventos",
-    "confidence": 0.4
+    "source": "curated",
+    "confidence": 1
   },
   {
     "id": "v_placesfixturehotellasjacarandas",
@@ -476,16 +359,16 @@
     "websiteUri": "https://example.com/hotel-las-jacarandas",
     "googleMapsUri": "https://maps.google.com/?cid=1004",
     "priceLevel": "PRICE_LEVEL_MODERATE",
-    "capacityEstimate": 150,
+    "capacityEstimate": 80,
     "capacityApprox": true,
-    "oneLiner": "Hotel boutique en el centro de Tequisquiapan, ideal para una escapada de boda de fin de semana.",
-    "whyWeddings": "",
-    "highlights": ["Hospedaje Boutique", "Hospedaje para Invitados", "Recomendado en Google"],
+    "oneLiner": "Patio colonial florido en el corazón de Tequisquiapan.",
+    "whyWeddings": "Su patio con jacarandas ofrece un marco íntimo y fotogénico para ceremonias, con la comodidad de hospedaje incluido.",
+    "highlights": ["patio florido", "ubicación céntrica", "ambiente boutique"],
     "facets": {
-      "styles": ["pueblo_magico"],
-      "settings": ["day_vineyard"],
-      "scale": ["medium"],
-      "experiences": [],
+      "styles": ["colonial", "pueblo_magico"],
+      "settings": ["chapel_courtyard"],
+      "scale": ["intimate", "medium"],
+      "experiences": ["callejoneada", "temazcal"],
       "budget": "medio_alto"
     },
     "photos": [
@@ -497,7 +380,85 @@
     ],
     "source": "places",
     "placeId": "places/fixture-hotel-las-jacarandas",
-    "confidence": 0.4
+    "confidence": 0.9
+  },
+  {
+    "id": "v_placesfixturejardinlapenaeventos",
+    "name": "Jardín La Peña Eventos",
+    "aliases": [],
+    "zone": "bernal",
+    "municipality": "Bernal",
+    "address": "Camino a la Peña 20, Bernal, Qro.",
+    "location": {
+      "lat": 20.7488,
+      "lng": -99.9451
+    },
+    "rating": 4.7,
+    "userRatingCount": 176,
+    "websiteUri": "https://example.com/jardin-la-pena-eventos",
+    "googleMapsUri": "https://maps.google.com/?cid=1007",
+    "priceLevel": "PRICE_LEVEL_MODERATE",
+    "capacityEstimate": 120,
+    "capacityApprox": true,
+    "oneLiner": "Jardín con vista espectacular a la Peña de Bernal.",
+    "whyWeddings": "El jardín frente a la Peña ofrece un escenario natural imponente, ideal para bodas con estilo boho y ceremonias al atardecer.",
+    "highlights": ["vista a la Peña", "jardín natural", "atardeceres"],
+    "facets": {
+      "styles": ["boho_desert", "garden_romantic"],
+      "settings": ["sunset_garden"],
+      "scale": ["medium"],
+      "experiences": ["hot_air_balloon", "mariachi_huapango"],
+      "budget": "medio_alto"
+    },
+    "photos": [
+      {
+        "kind": "places",
+        "ref": "places/fixture-jardin-la-pena-eventos/photos/p1",
+        "attribution": "Fixture Photographer 7"
+      }
+    ],
+    "source": "places",
+    "placeId": "places/fixture-jardin-la-pena-eventos",
+    "confidence": 0.95
+  },
+  {
+    "id": "v_placesfixtureresorthaciendabajio",
+    "name": "Resort Hacienda del Bajío",
+    "aliases": [],
+    "zone": "san_juan_del_rio",
+    "municipality": "San Juan del Río",
+    "address": "Carretera San Juan del Río - Amealco km 4, San Juan del Río, Qro.",
+    "location": {
+      "lat": 20.3912,
+      "lng": -99.9941
+    },
+    "rating": 4.7,
+    "userRatingCount": 812,
+    "websiteUri": "https://example.com/resort-hacienda-bajio",
+    "googleMapsUri": "https://maps.google.com/?cid=1001",
+    "priceLevel": "PRICE_LEVEL_EXPENSIVE",
+    "capacityEstimate": 200,
+    "capacityApprox": true,
+    "oneLiner": "Una hacienda colonial con viñedos para bodas de fin de semana inolvidables.",
+    "whyWeddings": "Su arquitectura colonial, viñedo propio y capacidad de hospedaje lo hacen ideal para eventos de varios días.",
+    "highlights": ["viñedo propio", "hacienda siglo XVI", "spa"],
+    "facets": {
+      "styles": ["colonial", "rustic_vineyard"],
+      "settings": ["sunset_garden", "day_vineyard", "night_casona"],
+      "scale": ["grand"],
+      "experiences": ["wine_tasting", "vendimia", "gourmet_banquet"],
+      "budget": "exclusivo"
+    },
+    "photos": [
+      {
+        "kind": "places",
+        "ref": "places/fixture-resort-hacienda-bajio/photos/p1",
+        "attribution": "Fixture Photographer 1"
+      }
+    ],
+    "source": "places",
+    "placeId": "places/fixture-resort-hacienda-bajio",
+    "confidence": 0.9
   },
   {
     "id": "v_placesfixturecasarealdelvirrey",
@@ -517,9 +478,9 @@
     "priceLevel": "PRICE_LEVEL_MODERATE",
     "capacityEstimate": 150,
     "capacityApprox": true,
-    "oneLiner": "Casona virreinal del Centro Histórico con patios de cantera rosa para recepciones.",
-    "whyWeddings": "",
-    "highlights": ["Salón de Banquetes", "Patrimonio Histórico", "Recomendado en Google"],
+    "oneLiner": "Patios de cantera rosa bajo el cielo nocturno queretano.",
+    "whyWeddings": "Su arquitectura virreinal y los patios de cantera rosa crean un ambiente íntimo y elegante, ideal para recepciones nocturnas.",
+    "highlights": ["patios de cantera", "arquitectura virreinal", "centro histórico"],
     "facets": {
       "styles": ["colonial"],
       "settings": ["night_casona"],
@@ -536,7 +497,85 @@
     ],
     "source": "places",
     "placeId": "places/fixture-casa-real-del-virrey",
-    "confidence": 0.4
+    "confidence": 0.95
+  },
+  {
+    "id": "v_placesfixturejardinbotanicocadereyta",
+    "name": "Jardín Botánico Cadereyta Eventos",
+    "aliases": [],
+    "zone": "cadereyta",
+    "municipality": "Cadereyta",
+    "address": "Carretera Cadereyta - Vizarrón km 2, Cadereyta de Montes, Qro.",
+    "location": {
+      "lat": 20.6991,
+      "lng": -99.819
+    },
+    "rating": 4.6,
+    "userRatingCount": 92,
+    "websiteUri": "https://example.com/jardin-botanico-cadereyta",
+    "googleMapsUri": "https://maps.google.com/?cid=1009",
+    "priceLevel": "PRICE_LEVEL_INEXPENSIVE",
+    "capacityEstimate": 100,
+    "capacityApprox": true,
+    "oneLiner": "Un jardín de cactáceas donde el desierto se viste de gala.",
+    "whyWeddings": "Las terrazas entre cactáceas ofrecen un escenario natural único para ceremonias íntimas al atardecer.",
+    "highlights": ["cactáceas", "terrazas", "atardeceres"],
+    "facets": {
+      "styles": ["boho_desert", "garden_romantic"],
+      "settings": ["sunset_garden"],
+      "scale": ["medium"],
+      "experiences": [],
+      "budget": "medio"
+    },
+    "photos": [
+      {
+        "kind": "places",
+        "ref": "places/fixture-jardin-botanico-cadereyta/photos/p1",
+        "attribution": "Fixture Photographer 9"
+      }
+    ],
+    "source": "places",
+    "placeId": "places/fixture-jardin-botanico-cadereyta",
+    "confidence": 0.9
+  },
+  {
+    "id": "v_placesfixturevinedopenadorada",
+    "name": "Viñedo Peña Dorada",
+    "aliases": [],
+    "zone": "ezequiel_montes",
+    "municipality": "Ezequiel Montes",
+    "address": "Carretera a Bernal km 5, Ezequiel Montes, Qro.",
+    "location": {
+      "lat": 20.701,
+      "lng": -99.9021
+    },
+    "rating": 4.6,
+    "userRatingCount": 634,
+    "websiteUri": "https://example.com/vinedo-pena-dorada",
+    "googleMapsUri": "https://maps.google.com/?cid=1002",
+    "priceLevel": "PRICE_LEVEL_MODERATE",
+    "capacityEstimate": 150,
+    "capacityApprox": true,
+    "oneLiner": "Viñedo con vistas espectaculares y cava subterránea para bodas únicas.",
+    "whyWeddings": "Ofrece un entorno natural impresionante con la Peña de Bernal de fondo, ideal para ceremonias y recepciones con degustación de vinos.",
+    "highlights": ["vista a la Peña de Bernal", "cava subterránea", "vendimia anual"],
+    "facets": {
+      "styles": ["rustic_vineyard"],
+      "settings": ["day_vineyard"],
+      "scale": ["medium"],
+      "experiences": ["wine_tasting", "vendimia"],
+      "budget": "medio_alto"
+    },
+    "photos": [
+      {
+        "kind": "places",
+        "ref": "places/fixture-vinedo-pena-dorada/photos/p1",
+        "attribution": "Fixture Photographer 2"
+      }
+    ],
+    "source": "places",
+    "placeId": "places/fixture-vinedo-pena-dorada",
+    "confidence": 0.9
   },
   {
     "id": "v_placesfixturebodegaaltosdecolon",
@@ -554,17 +593,17 @@
     "websiteUri": "https://example.com/bodega-altos-de-colon",
     "googleMapsUri": "https://maps.google.com/?cid=1006",
     "priceLevel": "PRICE_LEVEL_EXPENSIVE",
-    "capacityEstimate": 150,
+    "capacityEstimate": 80,
     "capacityApprox": true,
-    "oneLiner": "Bodega de diseño contemporáneo a 2,000 metros de altitud, con terraza para cenas de autor.",
-    "whyWeddings": "",
-    "highlights": ["Viñedo y Cava", "Viñedo Propio", "Recomendado en Google"],
+    "oneLiner": "Cena íntima sobre los viñedos con diseño contemporáneo.",
+    "whyWeddings": "Terraza con vistas panorámicas al viñedo y arquitectura moderna para eventos elegantes.",
+    "highlights": ["vista al viñedo", "terraza elevada", "cocina de autor"],
     "facets": {
-      "styles": ["rustic_vineyard"],
+      "styles": ["modern_elegant", "rustic_vineyard"],
       "settings": ["day_vineyard"],
-      "scale": ["medium"],
-      "experiences": ["wine_tasting"],
-      "budget": "exclusivo"
+      "scale": ["intimate", "medium"],
+      "experiences": ["wine_tasting", "vendimia", "gourmet_banquet"],
+      "budget": "medio_alto"
     },
     "photos": [
       {
@@ -575,46 +614,46 @@
     ],
     "source": "places",
     "placeId": "places/fixture-bodega-altos-de-colon",
-    "confidence": 0.4
+    "confidence": 0.9
   },
   {
-    "id": "v_placesfixturejardinlapenaeventos",
-    "name": "Jardín La Peña Eventos",
+    "id": "v_placesfixturepabellonzibataeventos",
+    "name": "Pabellón Zibatá Eventos",
     "aliases": [],
-    "zone": "bernal",
-    "municipality": "Bernal",
-    "address": "Camino a la Peña 20, Bernal, Qro.",
+    "zone": "el_marques",
+    "municipality": "El Marqués",
+    "address": "Blvd. Zibatá 100, El Marqués, Qro.",
     "location": {
-      "lat": 20.7488,
-      "lng": -99.9451
+      "lat": 20.6255,
+      "lng": -100.2911
     },
-    "rating": 4.7,
-    "userRatingCount": 176,
-    "websiteUri": "https://example.com/jardin-la-pena-eventos",
-    "googleMapsUri": "https://maps.google.com/?cid=1007",
+    "rating": 4.5,
+    "userRatingCount": 521,
+    "websiteUri": "https://example.com/pabellon-zibata",
+    "googleMapsUri": "https://maps.google.com/?cid=1003",
     "priceLevel": "PRICE_LEVEL_MODERATE",
-    "capacityEstimate": 150,
+    "capacityEstimate": 800,
     "capacityApprox": true,
-    "oneLiner": "Jardín de eventos a los pies de la Peña de Bernal, ideal para ceremonias boho al atardecer.",
-    "whyWeddings": "",
-    "highlights": ["Recinto de Eventos", "Jardines", "Atractivo Turístico"],
+    "oneLiner": "Salones amplios para bodas de gran escala con servicio de primera.",
+    "whyWeddings": "Ideal para bodas grandes con un toque de elegancia moderna y capacidad para hasta 800 invitados.",
+    "highlights": ["Gran capacidad", "Servicio de primera", "Salones versátiles"],
     "facets": {
-      "styles": ["boho_desert"],
-      "settings": ["sunset_garden"],
-      "scale": ["medium"],
-      "experiences": [],
+      "styles": ["modern_elegant"],
+      "settings": ["night_casona"],
+      "scale": ["grand"],
+      "experiences": ["gourmet_banquet"],
       "budget": "medio_alto"
     },
     "photos": [
       {
         "kind": "places",
-        "ref": "places/fixture-jardin-la-pena-eventos/photos/p1",
-        "attribution": "Fixture Photographer 7"
+        "ref": "places/fixture-pabellon-zibata-eventos/photos/p1",
+        "attribution": "Fixture Photographer 3"
       }
     ],
     "source": "places",
-    "placeId": "places/fixture-jardin-la-pena-eventos",
-    "confidence": 0.4
+    "placeId": "places/fixture-pabellon-zibata-eventos",
+    "confidence": 0.95
   },
   {
     "id": "v_placesfixturehaciendadelcimatario",
@@ -634,15 +673,15 @@
     "priceLevel": "PRICE_LEVEL_MODERATE",
     "capacityEstimate": 150,
     "capacityApprox": true,
-    "oneLiner": "Restaurante de hacienda con jardines coloniales y hospedaje boutique para los invitados.",
-    "whyWeddings": "",
-    "highlights": ["Restaurante Gourmet", "Hospedaje para Invitados", "Atractivo Turístico"],
+    "oneLiner": "Banquete gourmet en un jardín colonial al atardecer.",
+    "whyWeddings": "Ofrece un ambiente colonial con jardines románticos y un banquete gourmet, ideal para bodas íntimas y medianas.",
+    "highlights": ["Jardines coloniales", "Banquete gourmet", "Atardecer mágico"],
     "facets": {
-      "styles": ["colonial"],
+      "styles": ["colonial", "garden_romantic"],
       "settings": ["sunset_garden"],
-      "scale": ["medium"],
-      "experiences": [],
-      "budget": "medio_alto"
+      "scale": ["intimate", "medium"],
+      "experiences": ["gourmet_banquet", "mariachi_huapango"],
+      "budget": "medio"
     },
     "photos": [
       {
@@ -653,84 +692,6 @@
     ],
     "source": "places",
     "placeId": "places/fixture-hacienda-del-cimatario",
-    "confidence": 0.4
-  },
-  {
-    "id": "v_placesfixturejardinbotanicocadereyta",
-    "name": "Jardín Botánico Cadereyta Eventos",
-    "aliases": [],
-    "zone": "cadereyta",
-    "municipality": "Cadereyta",
-    "address": "Carretera Cadereyta - Vizarrón km 2, Cadereyta de Montes, Qro.",
-    "location": {
-      "lat": 20.6991,
-      "lng": -99.819
-    },
-    "rating": 4.6,
-    "userRatingCount": 92,
-    "websiteUri": "https://example.com/jardin-botanico-cadereyta",
-    "googleMapsUri": "https://maps.google.com/?cid=1009",
-    "priceLevel": "PRICE_LEVEL_INEXPENSIVE",
-    "capacityEstimate": 150,
-    "capacityApprox": true,
-    "oneLiner": "Jardín botánico de cactáceas con terrazas para ceremonias boho semidesérticas.",
-    "whyWeddings": "",
-    "highlights": ["Parque y Jardines", "Jardines", "Atractivo Turístico"],
-    "facets": {
-      "styles": ["pueblo_magico"],
-      "settings": ["day_vineyard"],
-      "scale": ["medium"],
-      "experiences": [],
-      "budget": "medio"
-    },
-    "photos": [
-      {
-        "kind": "places",
-        "ref": "places/fixture-jardin-botanico-cadereyta/photos/p1",
-        "attribution": "Fixture Photographer 9"
-      }
-    ],
-    "source": "places",
-    "placeId": "places/fixture-jardin-botanico-cadereyta",
-    "confidence": 0.4
-  },
-  {
-    "id": "v_placesfixturemisionjalpanhospedaje",
-    "name": "Misión de Jalpan Hospedaje",
-    "aliases": [],
-    "zone": "sierra_gorda",
-    "municipality": "Sierra Gorda",
-    "address": "Independencia 1, Jalpan de Serra, Qro.",
-    "location": {
-      "lat": 21.2179,
-      "lng": -99.4815
-    },
-    "rating": 4.5,
-    "userRatingCount": 58,
-    "websiteUri": "https://example.com/mision-jalpan-hospedaje",
-    "googleMapsUri": "https://maps.google.com/?cid=1010",
-    "priceLevel": "PRICE_LEVEL_INEXPENSIVE",
-    "capacityEstimate": 150,
-    "capacityApprox": true,
-    "oneLiner": "Hospedaje junto a la misión franciscana del siglo XVIII, punto de partida para una escapada de boda en la Sierra Gorda.",
-    "whyWeddings": "",
-    "highlights": ["Hospedaje para Invitados", "Patrimonio Histórico", "Atractivo Turístico"],
-    "facets": {
-      "styles": ["colonial"],
-      "settings": ["sunset_garden"],
-      "scale": ["medium"],
-      "experiences": [],
-      "budget": "medio"
-    },
-    "photos": [
-      {
-        "kind": "places",
-        "ref": "places/fixture-mision-jalpan-hospedaje/photos/p1",
-        "attribution": "Fixture Photographer 10"
-      }
-    ],
-    "source": "places",
-    "placeId": "places/fixture-mision-jalpan-hospedaje",
-    "confidence": 0.4
+    "confidence": 0.9
   }
 ]
