@@ -8,6 +8,7 @@ export interface ApiOk<T> {
 export type ApiErrorCode =
   | "invalid_json"
   | "invalid_answers"
+  | "invalid_transcript"
   | "internal"
   | "invalid_params"
   | "render_failed"

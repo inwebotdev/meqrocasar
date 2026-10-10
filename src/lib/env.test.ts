@@ -14,6 +14,10 @@ describe("parseEnv", () => {
     expect(env.UNSPLASH_ACCESS_KEY).toBeUndefined();
     expect(env.GOOGLE_PLACES_API_KEY).toBeUndefined();
     expect(env.PLACES_PHOTO_CACHE_DIR).toBe(".cache/places");
+    expect(env.OPENROUTER_MODEL_FAST).toBe("deepseek/deepseek-chat");
+    expect(env.OPENROUTER_MODEL_FAST_FALLBACK).toBe("qwen/qwen-turbo");
+    expect(env.QUIZ_MAX_STEPS).toBe(7);
+    expect(env.QUIZ_STEP_TIMEOUT_MS).toBe(6000);
   });
 
   it("treats empty secret values from .env as absent", () => {
@@ -67,5 +71,31 @@ describe("parseEnv", () => {
     const env = parseEnv({ NODE_ENV: "test", OPENROUTER_TIMEOUT_MS: "5000" });
 
     expect(env.OPENROUTER_TIMEOUT_MS).toBe(5000);
+  });
+
+  it("overrides the quiz engine's model/step env vars", () => {
+    const env = parseEnv({
+      NODE_ENV: "test",
+      OPENROUTER_MODEL_FAST: "some/other-fast-model",
+      OPENROUTER_MODEL_FAST_FALLBACK: "some/other-fallback",
+      QUIZ_MAX_STEPS: "5",
+      QUIZ_STEP_TIMEOUT_MS: "3000",
+    });
+
+    expect(env.OPENROUTER_MODEL_FAST).toBe("some/other-fast-model");
+    expect(env.OPENROUTER_MODEL_FAST_FALLBACK).toBe("some/other-fallback");
+    expect(env.QUIZ_MAX_STEPS).toBe(5);
+    expect(env.QUIZ_STEP_TIMEOUT_MS).toBe(3000);
+  });
+
+  it("rejects a non-positive QUIZ_MAX_STEPS", () => {
+    expect(() => parseEnv({ NODE_ENV: "test", QUIZ_MAX_STEPS: "0" })).toThrow();
+  });
+
+  it("applies the QUIZ_MAX_STEPS/QUIZ_STEP_TIMEOUT_MS defaults when blank", () => {
+    const env = parseEnv({ NODE_ENV: "test", QUIZ_MAX_STEPS: "", QUIZ_STEP_TIMEOUT_MS: "  " });
+
+    expect(env.QUIZ_MAX_STEPS).toBe(7);
+    expect(env.QUIZ_STEP_TIMEOUT_MS).toBe(6000);
   });
 });
