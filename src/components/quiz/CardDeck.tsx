@@ -1,9 +1,9 @@
 import { OptionCard } from "./OptionCard";
 import { PeekCard } from "./PeekCard";
-import type { QuizOption } from "@/domain/quiz/types";
+import type { ResolvedOption } from "@/domain/quiz/generated-step";
 
 export interface CardDeckProps {
-  options: readonly QuizOption[];
+  options: readonly ResolvedOption[];
   activeIndex: number;
   selectedId: string | undefined;
   onNext: () => void;

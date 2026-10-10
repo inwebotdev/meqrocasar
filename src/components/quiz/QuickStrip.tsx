@@ -1,9 +1,11 @@
 import { Icon } from "@/components/ui";
-import type { QuizOption } from "@/domain/quiz/types";
+import type { ResolvedOption } from "@/domain/quiz/generated-step";
 import { cn } from "@/lib/cn";
 
+import { iconForOption } from "./facet-icon";
+
 export interface QuickStripProps {
-  options: readonly QuizOption[];
+  options: readonly ResolvedOption[];
   activeIndex: number;
   selectedId: string | undefined;
   onSelect: (index: number) => void;
@@ -38,12 +40,12 @@ export function QuickStrip({ options, activeIndex, selectedId, onSelect }: Quick
               )}
             >
               <Icon
-                name={option.icon}
+                name={iconForOption(option)}
                 filled={isActiveOrSelected}
                 size={20}
                 className={isActiveOrSelected ? "text-primary" : "text-secondary"}
               />
-              <span className="w-full truncate font-label-sm text-label-sm">{option.label}</span>
+              <span className="w-full truncate font-label-sm text-label-sm">{option.title}</span>
             </button>
           );
         })}

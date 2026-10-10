@@ -1,12 +1,11 @@
 import { Icon } from "@/components/ui";
-import { getPhoto } from "@/domain/media/photos";
-import type { QuizOption } from "@/domain/quiz/types";
+import type { ResolvedOption } from "@/domain/quiz/generated-step";
 import { cn } from "@/lib/cn";
 
 export type PeekCardVariant = "next" | "back";
 
 export interface PeekCardProps {
-  option: QuizOption;
+  option: ResolvedOption;
   variant: PeekCardVariant;
   onClick?: () => void;
 }
@@ -17,8 +16,6 @@ const VARIANT_CLASSES: Record<PeekCardVariant, string> = {
 };
 
 export function PeekCard({ option, variant, onClick }: PeekCardProps) {
-  const photo = getPhoto(option.photoId);
-
   return (
     <article
       onClick={variant === "next" ? onClick : undefined}
@@ -27,16 +24,18 @@ export function PeekCard({ option, variant, onClick }: PeekCardProps) {
         VARIANT_CLASSES[variant],
       )}
     >
-      {/* eslint-disable-next-line @next/next/no-img-element -- curated remote photo, not a build-time asset */}
-      <img src={photo.url} alt={photo.alt} className="h-full w-full object-cover" />
+      {/* eslint-disable-next-line @next/next/no-img-element -- resolved remote photo (Unsplash/Places), not a build-time asset */}
+      <img src={option.photo.url} alt={option.photo.alt} className="h-full w-full object-cover" />
       <div className="absolute inset-0 bg-gradient-to-t from-primary via-primary/30 to-transparent" />
 
       {variant === "next" ? (
         <div className="absolute inset-x-4 bottom-4 flex flex-col gap-1 text-on-primary">
-          <div className="inline-flex items-center gap-1 self-start rounded-full bg-surface-container-lowest/20 px-2 py-0.5 font-label-sm text-label-sm text-on-primary backdrop-blur-sm">
-            <Icon name="location_on" size={12} />
-            <span>{option.venueHint}</span>
-          </div>
+          {option.venue && (
+            <div className="inline-flex items-center gap-1 self-start rounded-full bg-surface-container-lowest/20 px-2 py-0.5 font-label-sm text-label-sm text-on-primary backdrop-blur-sm">
+              <Icon name="location_on" size={12} />
+              <span>{option.venue.name}</span>
+            </div>
+          )}
           <h2 className="font-headline-md text-headline-md">{option.title}</h2>
           <p className="line-clamp-1 font-body-sm text-body-sm text-surface-container-highest">
             {option.description}

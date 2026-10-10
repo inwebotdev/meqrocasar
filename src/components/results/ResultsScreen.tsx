@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { Pill, Skeleton, useToast } from "@/components/ui";
 import type { ExperienceResult } from "@/domain/experience/types";
 import { clearResult, loadResult } from "@/lib/results-store";
+import { clearTranscript } from "@/lib/transcript-store";
 
 import { ResultsView } from "./ResultsView";
 
@@ -27,6 +28,7 @@ export function ResultsScreen() {
 
   function handleRestart() {
     clearResult();
+    clearTranscript();
     router.push("/");
   }
 

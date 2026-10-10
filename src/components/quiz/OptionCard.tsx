@@ -9,17 +9,19 @@ import {
 } from "framer-motion";
 
 import { Chip, Icon, Pill } from "@/components/ui";
-import { getPhoto } from "@/domain/media/photos";
-import type { QuizOption } from "@/domain/quiz/types";
+import type { ResolvedOption } from "@/domain/quiz/generated-step";
 import { cn } from "@/lib/cn";
 
 const DRAG_OFFSET_THRESHOLD = 80;
 const DRAG_VELOCITY_THRESHOLD = 500;
 
+/** Generic placeholder credits a photo source may stamp instead of a real name: not worth showing. */
+const SUPPRESSED_CREDITS = new Set(["unsplash", "registry"]);
+
 export interface OptionCardProps {
-  option: QuizOption;
+  option: ResolvedOption;
   selected: boolean;
-  /** Drag-right / tap / Enter: marks this option as the step's selection. */
+  /** Drag-right / tap / Enter: confirms this option as the step's choice. */
   onSelect: () => void;
   /** Drag-left: advances the deck to the next option. */
   onNext: () => void;
@@ -31,7 +33,7 @@ export function OptionCard({ option, selected, onSelect, onNext }: OptionCardPro
   const rawRotate = useTransform(x, [-200, 200], [-8, 8]);
   const likeOpacity = useTransform(x, [0, DRAG_OFFSET_THRESHOLD], [0, 1]);
   const passOpacity = useTransform(x, [-DRAG_OFFSET_THRESHOLD, 0], [1, 0]);
-  const photo = getPhoto(option.photoId);
+  const showCredit = !SUPPRESSED_CREDITS.has(option.photo.credit.trim().toLowerCase());
 
   function handleDragEnd(_event: PointerEvent | MouseEvent | TouchEvent, info: PanInfo) {
     if (info.offset.x <= -DRAG_OFFSET_THRESHOLD || info.velocity.x <= -DRAG_VELOCITY_THRESHOLD) {
@@ -62,10 +64,10 @@ export function OptionCard({ option, selected, onSelect, onNext }: OptionCardPro
         selected && "ring-[3px] ring-bougainvillea",
       )}
     >
-      {/* eslint-disable-next-line @next/next/no-img-element -- curated remote photo, not a build-time asset */}
+      {/* eslint-disable-next-line @next/next/no-img-element -- resolved remote photo (Unsplash/Places), not a build-time asset */}
       <img
-        src={photo.url}
-        alt={photo.alt}
+        src={option.photo.url}
+        alt={option.photo.alt}
         loading="eager"
         draggable={false}
         className="h-full w-full object-cover"
@@ -108,10 +110,12 @@ export function OptionCard({ option, selected, onSelect, onNext }: OptionCardPro
       </motion.div>
 
       <div className="absolute inset-x-0 bottom-0 flex flex-col gap-2 p-4 text-on-primary">
-        <div className="inline-flex items-center gap-1.5 self-start rounded-full bg-surface-container-lowest/25 px-2.5 py-1 shadow-sm backdrop-blur-md">
-          <Icon name="castle" size={14} className="text-tertiary-fixed-dim" />
-          <span className="font-label-md text-label-md">Recomendado: {option.venueHint}</span>
-        </div>
+        {option.venue && (
+          <div className="inline-flex items-center gap-1.5 self-start rounded-full bg-surface-container-lowest/25 px-2.5 py-1 shadow-sm backdrop-blur-md">
+            <Icon name="castle" size={14} className="text-tertiary-fixed-dim" />
+            <span className="font-label-md text-label-md">Recomendado: {option.venue.name}</span>
+          </div>
+        )}
         <div className="flex flex-col gap-0.5">
           <h2 className="font-headline-lg-mobile text-headline-lg-mobile leading-tight text-on-primary">
             {option.title}
@@ -120,12 +124,22 @@ export function OptionCard({ option, selected, onSelect, onNext }: OptionCardPro
             {option.description}
           </p>
         </div>
-        <div className="flex flex-wrap items-center gap-1.5 pt-1">
-          {option.hashtags.map((hashtag) => (
-            <Chip key={hashtag} tone="primary-container">
-              {hashtag}
-            </Chip>
-          ))}
+        <div className="flex flex-wrap items-end justify-between gap-1.5 pt-1">
+          <div className="flex flex-wrap items-center gap-1.5">
+            {option.hashtags.map((hashtag, index) => (
+              // Index, not the hashtag text: a generated option's hashtags
+              // aren't guaranteed unique (the LLM occasionally repeats a
+              // degenerate "#" for more than one of the three).
+              <Chip key={index} tone="primary-container">
+                {hashtag}
+              </Chip>
+            ))}
+          </div>
+          {showCredit && (
+            <span className="font-label-sm text-label-sm text-on-primary/70">
+              {option.photo.credit}
+            </span>
+          )}
         </div>
       </div>
     </motion.article>
