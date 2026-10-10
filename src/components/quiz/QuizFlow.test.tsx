@@ -1,23 +1,44 @@
 import type { PropsWithChildren, ReactNode } from "react";
-import { describe, expect, it, vi } from "vitest";
-import { render, screen, waitFor } from "@testing-library/react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
 import { ToastProvider } from "@/components/ui";
-import { QUIZ_STEPS } from "@/domain/quiz/questions";
 import type { ExperienceResult } from "@/domain/experience/types";
+import { resolvedStepFromCurated, type ResolvedStep } from "@/domain/quiz/generated-step";
+import { QUIZ_STEPS } from "@/domain/quiz/questions";
 
 const { push } = vi.hoisted(() => ({ push: vi.fn() }));
 vi.mock("next/navigation", () => ({ useRouter: () => ({ push }) }));
 
-const { generateExperience } = vi.hoisted(() => ({ generateExperience: vi.fn() }));
-vi.mock("@/lib/api-client", async () => {
-  const actual = await vi.importActual<typeof import("@/lib/api-client")>("@/lib/api-client");
-  return { ...actual, generateExperience };
+const { fetchNextStep, generateExperienceFromTranscript, ApiClientErrorMock } = vi.hoisted(() => {
+  class ApiClientErrorMock extends Error {
+    code: string;
+    status?: number;
+    constructor(params: { code: string; status?: number; message: string }) {
+      super(params.message);
+      this.name = "ApiClientError";
+      this.code = params.code;
+      this.status = params.status;
+    }
+  }
+  return {
+    fetchNextStep: vi.fn(),
+    generateExperienceFromTranscript: vi.fn(),
+    ApiClientErrorMock,
+  };
 });
+vi.mock("@/lib/quiz-client", () => ({
+  fetchNextStep,
+  generateExperienceFromTranscript,
+  ApiClientError: ApiClientErrorMock,
+}));
 
 const { saveResult } = vi.hoisted(() => ({ saveResult: vi.fn() }));
 vi.mock("@/lib/results-store", () => ({ saveResult }));
+
+const { saveTranscript } = vi.hoisted(() => ({ saveTranscript: vi.fn() }));
+vi.mock("@/lib/transcript-store", () => ({ saveTranscript }));
 
 type MotionStubProps = PropsWithChildren<Record<string, unknown>>;
 
@@ -79,6 +100,93 @@ function renderQuiz() {
   );
 }
 
+/**
+ * Chooses `option` regardless of whether it's already the active card: the
+ * "Elegir …" button only exists for the active option, so a non-first
+ * option is first made active via its quick-strip button (`goToOption`,
+ * no side effect beyond moving the active index) before confirming it.
+ */
+async function chooseOption(user: ReturnType<typeof userEvent.setup>, option: { title: string }) {
+  const quickStripButtons = screen.getAllByRole("button", { name: option.title });
+  await user.click(quickStripButtons[quickStripButtons.length - 1]!);
+  await user.click(await screen.findByRole("button", { name: `Elegir ${option.title}` }));
+}
+
+const curatedMeta = {
+  model: "local-fallback",
+  durationMs: 4,
+  cached: false,
+  fallbackUsed: false,
+  source: "static" as const,
+  attempts: 0,
+  promptVersion: "quiz-engine-v1",
+};
+
+const llmMeta = { ...curatedMeta, model: "deepseek/deepseek-chat", source: "llm" as const };
+
+const step1 = resolvedStepFromCurated(QUIZ_STEPS[0]!, 1);
+
+const step2: ResolvedStep = {
+  id: "setting-llm",
+  topic: "Entorno",
+  question: "¿En qué momento del día cobra vida su celebración?",
+  helper: "Elige la luz y el entorno que mejor acompañan su boda.",
+  selectLabel: "Elegir este Entorno",
+  done: false,
+  index: 2,
+  source: "llm",
+  options: [
+    {
+      id: "atardecer-vinedo",
+      title: "Atardecer entre Viñedos",
+      description: "Copas en mano mientras el sol se despide entre las vides.",
+      hashtags: ["#AtardecerVinedo", "#ValleDeColon", "#LuzDorada"],
+      facets: { setting: "day_vineyard" },
+      refs: { venueIds: [], experienceIds: ["vendimia-la-redonda"] },
+      photoQuery: "vineyard sunset wedding toast",
+      badge: "Ruta del Vino",
+      matchLabel: "95% AFINIDAD",
+      photo: {
+        url: "https://images.unsplash.com/photo-step2-a",
+        alt: "Viñedo al atardecer",
+        credit: "Fotógrafo B",
+      },
+    },
+    {
+      id: "noche-casona",
+      title: "Noche de Casona",
+      description: "Candiles y cantera iluminan la noche virreinal.",
+      hashtags: ["#NocheDeCasona", "#CandilesDeCantera", "#CentroHistorico"],
+      facets: { setting: "night_casona" },
+      refs: { venueIds: [], experienceIds: [] },
+      photoQuery: "candlelit courtyard night wedding",
+      badge: "Noche Virreinal",
+      matchLabel: "90% AFINIDAD",
+      photo: {
+        url: "https://images.unsplash.com/photo-step2-b",
+        alt: "Patio nocturno",
+        credit: "Fotógrafo C",
+      },
+    },
+    {
+      id: "dia-jardin",
+      title: "Día de Jardín",
+      description: "Brindis matutinos entre flores y luz natural.",
+      hashtags: ["#DiaDeJardin", "#LuzNatural", "#Brindis"],
+      facets: { setting: "sunset_garden" },
+      refs: { venueIds: [], experienceIds: [] },
+      photoQuery: "garden daytime wedding toast",
+      badge: "Golden Hour SECTUR",
+      matchLabel: "87% AFINIDAD",
+      photo: {
+        url: "https://images.unsplash.com/photo-step2-c",
+        alt: "Jardín de día",
+        credit: "Fotógrafo D",
+      },
+    },
+  ],
+};
+
 const validResult: ExperienceResult = {
   conceptTitle: "Atardecer Dorado entre Viñedos",
   palette: [
@@ -111,121 +219,138 @@ const validResult: ExperienceResult = {
 };
 
 describe("QuizFlow", () => {
-  it("renders step 1 with its topic, 4 dots, and a disabled Continuar button", () => {
+  beforeEach(() => {
+    fetchNextStep.mockReset();
+    generateExperienceFromTranscript.mockReset();
+    saveResult.mockReset();
+    saveTranscript.mockReset();
+    push.mockReset();
+  });
+
+  it("loads and renders the curated step 1 on mount", async () => {
+    fetchNextStep.mockResolvedValueOnce({ done: false, step: step1, meta: curatedMeta });
     renderQuiz();
 
-    expect(screen.getByText(`Paso 1: ${QUIZ_STEPS[0].topic}`)).toBeInTheDocument();
+    expect(await screen.findByText("Paso 1: Estilo")).toBeInTheDocument();
     expect(screen.getAllByRole("button", { name: /Ir a opción/i })).toHaveLength(4);
-    expect(screen.getByRole("button", { name: /Continuar/i })).toBeDisabled();
+    expect(fetchNextStep).toHaveBeenCalledWith({ entries: [] });
   });
 
-  it("selecting the active card shows a toast, enables Continuar, and marks the quick strip pressed", async () => {
-    const user = userEvent.setup();
-    renderQuiz();
-
-    const firstOption = QUIZ_STEPS[0].options[0];
-    await user.click(screen.getByRole("button", { name: `Elegir ${firstOption.title}` }));
-
-    expect(await screen.findByText(`Guardado: ${firstOption.title}`)).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /Continuar/i })).toBeEnabled();
-    expect(screen.getByRole("button", { name: firstOption.label })).toHaveAttribute(
-      "aria-pressed",
-      "true",
+  it("choosing a card shows a toast, then StepLoading, then step 2 from the mock", async () => {
+    fetchNextStep.mockResolvedValueOnce({ done: false, step: step1, meta: curatedMeta });
+    // The second call is held open deliberately, so the test can assert the
+    // `StepLoading` pill deterministically instead of racing a real timer.
+    let resolveSecondCall: ((value: unknown) => void) | undefined;
+    fetchNextStep.mockImplementationOnce(
+      () => new Promise((resolve) => (resolveSecondCall = resolve)),
     );
-  });
-
-  it("clicking Continuar advances to step 2", async () => {
     const user = userEvent.setup();
     renderQuiz();
 
-    const firstOption = QUIZ_STEPS[0].options[0];
-    await user.click(screen.getByRole("button", { name: `Elegir ${firstOption.title}` }));
-    await user.click(screen.getByRole("button", { name: /Continuar/i }));
+    const first = step1.options[0]!;
+    const optionButton = await screen.findByRole("button", { name: `Elegir ${first.title}` });
+    await user.click(optionButton);
 
-    expect(screen.getByText(`Paso 2: ${QUIZ_STEPS[1].topic}`)).toBeInTheDocument();
+    expect(await screen.findByText(`Guardado: ${first.title}`)).toBeInTheDocument();
+    expect(optionButton).toHaveAttribute("aria-pressed", "true");
+
+    expect(await screen.findByText("La IA prepara su siguiente pregunta…")).toBeInTheDocument();
+    expect(fetchNextStep).toHaveBeenNthCalledWith(2, {
+      entries: [
+        expect.objectContaining({
+          stepId: "style",
+          chosen: expect.objectContaining({ id: first.id }),
+        }),
+      ],
+    });
+
+    resolveSecondCall?.({ done: false, step: step2, meta: llmMeta });
+
+    expect(await screen.findByText(step2.question)).toBeInTheDocument();
+    expect(screen.getByText("Paso 2: Entorno")).toBeInTheDocument();
   });
 
-  it("next/prev buttons cycle the active option's title", async () => {
+  it("shows the known-facets strip with the labels of every answered facet", async () => {
+    fetchNextStep.mockResolvedValueOnce({ done: false, step: step1, meta: curatedMeta });
+    fetchNextStep.mockResolvedValueOnce({ done: false, step: step2, meta: llmMeta });
     const user = userEvent.setup();
     renderQuiz();
 
-    const [first, second] = QUIZ_STEPS[0].options;
+    await screen.findByText("Paso 1: Estilo");
+    const rustic = step1.options.find((option) => option.id === "rustic_vineyard")!;
+    await chooseOption(user, rustic);
 
-    expect(screen.getByRole("heading", { name: first.title })).toBeInTheDocument();
-
-    await user.click(screen.getByRole("button", { name: "Explorar siguiente opción" }));
-    expect(screen.getByRole("heading", { name: second.title })).toBeInTheDocument();
-
-    await user.click(screen.getByRole("button", { name: "Opción anterior" }));
-    expect(screen.getByRole("heading", { name: first.title })).toBeInTheDocument();
+    expect(await screen.findByText(step2.question)).toBeInTheDocument();
+    expect(screen.getByText("Rústico Viñedo")).toBeInTheDocument();
   });
 
-  it("announces the active option in an aria-live region that updates on next", async () => {
+  it("Paso anterior pops the last entry, re-requests that step, and restores the active option", async () => {
+    fetchNextStep.mockResolvedValueOnce({ done: false, step: step1, meta: curatedMeta });
+    fetchNextStep.mockResolvedValueOnce({ done: false, step: step2, meta: llmMeta });
     const user = userEvent.setup();
     renderQuiz();
 
-    const [first, second] = QUIZ_STEPS[0].options;
+    await screen.findByText("Paso 1: Estilo");
+    const rustic = step1.options.find((option) => option.id === "rustic_vineyard")!;
+    await chooseOption(user, rustic);
+    expect(await screen.findByText(step2.question)).toBeInTheDocument();
 
-    expect(screen.getByText(`Opción 1 de 4: ${first.title}`)).toBeInTheDocument();
+    fetchNextStep.mockResolvedValueOnce({ done: false, step: step1, meta: curatedMeta });
+    await user.click(screen.getByRole("button", { name: "← Paso anterior" }));
 
-    await user.click(screen.getByRole("button", { name: "Explorar siguiente opción" }));
-
-    expect(screen.getByText(`Opción 2 de 4: ${second.title}`)).toBeInTheDocument();
-    expect(screen.queryByText(`Opción 1 de 4: ${first.title}`)).not.toBeInTheDocument();
+    expect(await screen.findByText("Paso 1: Estilo")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: rustic.title })).toBeInTheDocument();
+    expect(fetchNextStep).toHaveBeenNthCalledWith(3, { entries: [] });
   });
 
-  it("quick strip jumps the active option without selecting it", async () => {
+  it("generates the experience, saves it and redirects to /resultados when the engine is done", async () => {
+    fetchNextStep.mockResolvedValueOnce({ done: false, step: step1, meta: curatedMeta });
+    fetchNextStep.mockResolvedValueOnce({ done: true, meta: llmMeta });
+    generateExperienceFromTranscript.mockResolvedValueOnce(validResult);
     const user = userEvent.setup();
     renderQuiz();
 
-    const target = QUIZ_STEPS[0].options[2];
-    await user.click(screen.getByRole("button", { name: target.label }));
+    const first = step1.options[0]!;
+    await user.click(await screen.findByRole("button", { name: `Elegir ${first.title}` }));
 
-    expect(screen.getByRole("heading", { name: target.title })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /Continuar/i })).toBeDisabled();
-    expect(screen.queryByText(`Guardado: ${target.title}`)).not.toBeInTheDocument();
-  });
-
-  it("completing all 4 steps calls generateExperience with the exact answers, saves and redirects", async () => {
-    generateExperience.mockResolvedValueOnce(validResult);
-    const user = userEvent.setup();
-    renderQuiz();
-
-    const expectedAnswers = {
-      style: QUIZ_STEPS[0].options[0].id,
-      setting: QUIZ_STEPS[1].options[0].id,
-      experience: QUIZ_STEPS[2].options[0].id,
-      mustHave: QUIZ_STEPS[3].options[0].id,
-    };
-
-    for (let i = 0; i < QUIZ_STEPS.length; i += 1) {
-      const option = QUIZ_STEPS[i].options[0];
-      await user.click(screen.getByRole("button", { name: `Elegir ${option.title}` }));
-      await user.click(screen.getByRole("button", { name: /Continuar|Crear mi experiencia/i }));
-    }
-
-    await waitFor(() => expect(generateExperience).toHaveBeenCalledWith(expectedAnswers));
+    expect(await screen.findByText("La IA está diseñando su boda…")).toBeInTheDocument();
     await waitFor(() => expect(saveResult).toHaveBeenCalledWith(validResult));
     await waitFor(() => expect(push).toHaveBeenCalledWith("/resultados"));
   });
 
-  it("shows QuizError on API failure, and retry calls generateExperience again", async () => {
-    generateExperience.mockRejectedValueOnce(new Error("boom"));
-    generateExperience.mockResolvedValueOnce(validResult);
+  it("shows QuizError on a step-fetch failure, and retry re-requests the step", async () => {
+    fetchNextStep.mockRejectedValueOnce(
+      new ApiClientErrorMock({ code: "network", message: "Sin conexión" }),
+    );
+    fetchNextStep.mockResolvedValueOnce({ done: false, step: step1, meta: curatedMeta });
     const user = userEvent.setup();
     renderQuiz();
 
-    for (let i = 0; i < QUIZ_STEPS.length; i += 1) {
-      const option = QUIZ_STEPS[i].options[0];
-      await user.click(screen.getByRole("button", { name: `Elegir ${option.title}` }));
-      await user.click(screen.getByRole("button", { name: /Continuar|Crear mi experiencia/i }));
-    }
+    expect(await screen.findByText("Sin conexión")).toBeInTheDocument();
+    const retryButton = screen.getByRole("button", { name: "Intentar de nuevo" });
 
-    expect(await screen.findByRole("button", { name: "Intentar de nuevo" })).toBeInTheDocument();
+    await user.click(retryButton);
 
-    await user.click(screen.getByRole("button", { name: "Intentar de nuevo" }));
+    expect(await screen.findByText("Paso 1: Estilo")).toBeInTheDocument();
+    expect(fetchNextStep).toHaveBeenCalledTimes(2);
+  });
 
-    await waitFor(() => expect(generateExperience).toHaveBeenCalledTimes(2));
-    await waitFor(() => expect(push).toHaveBeenCalledWith("/resultados"));
+  it("ArrowRight then Enter on the stage chooses the next option via the keyboard", async () => {
+    fetchNextStep.mockResolvedValueOnce({ done: false, step: step1, meta: curatedMeta });
+    fetchNextStep.mockResolvedValueOnce({ done: false, step: step2, meta: llmMeta });
+    renderQuiz();
+
+    const second = step1.options[1]!;
+    await screen.findByText("Paso 1: Estilo");
+
+    const stage = screen
+      .getByRole("button", { name: `Elegir ${step1.options[0]!.title}` })
+      .closest("section")!;
+    fireEvent.keyDown(stage, { key: "ArrowRight" });
+    expect(screen.getByRole("heading", { name: second.title })).toBeInTheDocument();
+
+    fireEvent.keyDown(stage, { key: "Enter" });
+    expect(await screen.findByText(`Guardado: ${second.title}`)).toBeInTheDocument();
+    expect(await screen.findByText(step2.question)).toBeInTheDocument();
   });
 });

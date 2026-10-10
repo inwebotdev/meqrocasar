@@ -1,28 +1,32 @@
 import { describe, expect, it } from "vitest";
 import { render, screen } from "@testing-library/react";
 
-import { QUIZ_STEPS } from "@/domain/quiz/questions";
-
 import { QuizProgress } from "./QuizProgress";
 
 function heartCounter(expected: string) {
   return (_content: string, element: Element | null) => element?.textContent === expected;
 }
 
-describe("QuizProgress", () => {
-  it("renders the step 1 headline, topic label and heart counter", () => {
-    render(<QuizProgress stepIndex={0} total={QUIZ_STEPS.length} step={QUIZ_STEPS[0]} />);
+const step = {
+  question: "¿Qué vibra define su historia?",
+  topic: "Estilo",
+  helper: "Desliza las postales o toca tu favorita.",
+};
 
-    expect(screen.getByRole("heading", { name: QUIZ_STEPS[0].question })).toBeInTheDocument();
-    expect(screen.getByText(`Paso 1: ${QUIZ_STEPS[0].topic}`)).toBeInTheDocument();
-    expect(screen.getByText(heartCounter("1 / 4"))).toBeInTheDocument();
-    expect(screen.getByText(QUIZ_STEPS[0].helper)).toBeInTheDocument();
+describe("QuizProgress", () => {
+  it("renders the step 1 headline, topic label and heart counter out of 7", () => {
+    render(<QuizProgress entriesCount={0} step={step} />);
+
+    expect(screen.getByRole("heading", { name: step.question })).toBeInTheDocument();
+    expect(screen.getByText("Paso 1: Estilo")).toBeInTheDocument();
+    expect(screen.getByText(heartCounter("1 / 7"))).toBeInTheDocument();
+    expect(screen.getByText(step.helper)).toBeInTheDocument();
   });
 
-  it("renders step 3's topic label and heart counter when on step 3", () => {
-    render(<QuizProgress stepIndex={2} total={QUIZ_STEPS.length} step={QUIZ_STEPS[2]} />);
+  it("renders step 3's topic label and heart counter when 2 entries are answered", () => {
+    render(<QuizProgress entriesCount={2} step={{ ...step, topic: "Zona" }} />);
 
-    expect(screen.getByText(`Paso 3: ${QUIZ_STEPS[2].topic}`)).toBeInTheDocument();
-    expect(screen.getByText(heartCounter("3 / 4"))).toBeInTheDocument();
+    expect(screen.getByText("Paso 3: Zona")).toBeInTheDocument();
+    expect(screen.getByText(heartCounter("3 / 7"))).toBeInTheDocument();
   });
 });
