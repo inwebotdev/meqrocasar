@@ -12,13 +12,32 @@ describe("parseEnv", () => {
     expect(env.APP_URL).toBe("http://localhost:3000");
     expect(env.OPENROUTER_API_KEY).toBeUndefined();
     expect(env.UNSPLASH_ACCESS_KEY).toBeUndefined();
+    expect(env.GOOGLE_PLACES_API_KEY).toBeUndefined();
+    expect(env.PLACES_PHOTO_CACHE_DIR).toBe(".cache/places");
   });
 
   it("treats empty secret values from .env as absent", () => {
-    const env = parseEnv({ NODE_ENV: "test", OPENROUTER_API_KEY: "", UNSPLASH_ACCESS_KEY: "  " });
+    const env = parseEnv({
+      NODE_ENV: "test",
+      OPENROUTER_API_KEY: "",
+      UNSPLASH_ACCESS_KEY: "  ",
+      GOOGLE_PLACES_API_KEY: "",
+    });
 
     expect(env.OPENROUTER_API_KEY).toBeUndefined();
     expect(env.UNSPLASH_ACCESS_KEY).toBeUndefined();
+    expect(env.GOOGLE_PLACES_API_KEY).toBeUndefined();
+  });
+
+  it("keeps a non-empty GOOGLE_PLACES_API_KEY and a custom PLACES_PHOTO_CACHE_DIR", () => {
+    const env = parseEnv({
+      NODE_ENV: "test",
+      GOOGLE_PLACES_API_KEY: " places-key ",
+      PLACES_PHOTO_CACHE_DIR: "/tmp/places-cache",
+    });
+
+    expect(env.GOOGLE_PLACES_API_KEY).toBe("places-key");
+    expect(env.PLACES_PHOTO_CACHE_DIR).toBe("/tmp/places-cache");
   });
 
   it("keeps non-empty secret values", () => {

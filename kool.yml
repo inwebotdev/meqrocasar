@@ -12,6 +12,10 @@ scripts:
     - kool exec app yarn build
   test:
     - docker compose run --rm --no-deps -T app yarn test
+  kb:ingest:
+    - docker compose run --rm --no-deps -T --env-from-file .env app yarn tsx scripts/kb/ingest-places.ts
+  kb:build:
+    - docker compose run --rm --no-deps -T app yarn tsx scripts/kb/build-venues.ts
   quality:
     - docker compose run --rm --no-deps -T app yarn format:check
     - docker compose run --rm --no-deps -T app yarn types:check

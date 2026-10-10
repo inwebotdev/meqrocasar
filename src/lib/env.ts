@@ -17,6 +17,8 @@ const envSchema = z.object({
     z.coerce.number().int().positive().default(8000),
   ),
   UNSPLASH_ACCESS_KEY: optionalSecret,
+  GOOGLE_PLACES_API_KEY: optionalSecret,
+  PLACES_PHOTO_CACHE_DIR: z.string().trim().min(1).default(".cache/places"),
   APP_URL: z.string().url().default("http://localhost:3000"),
 });
 

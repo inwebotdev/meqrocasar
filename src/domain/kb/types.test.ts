@@ -12,6 +12,18 @@ describe("KbZoneSchema", () => {
     expect(zones).toHaveLength(10);
     expect(zones.map((zone) => zone.id)).toEqual([...ZONE_VALUES]);
   });
+
+  it("gives every zone a search centre and a radius within Google's 50km limit", () => {
+    const zones = z.array(KbZoneSchema).parse(zonesData);
+    for (const zone of zones) {
+      expect(zone.center.lat).toBeGreaterThan(19);
+      expect(zone.center.lat).toBeLessThan(22);
+      expect(zone.center.lng).toBeGreaterThan(-101);
+      expect(zone.center.lng).toBeLessThan(-99);
+      expect(zone.radiusMeters).toBeGreaterThan(0);
+      expect(zone.radiusMeters).toBeLessThanOrEqual(50000);
+    }
+  });
 });
 
 describe("KbExperienceSchema", () => {

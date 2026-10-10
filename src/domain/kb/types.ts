@@ -24,6 +24,9 @@ export const ZoneFacetsSchema = z
   })
   .strict();
 
+/** A zone's search centre and the radius (meters, ≤50,000 per Google's limit) used as `locationBias` for Places Text Search. */
+export const KbZoneGeoSchema = z.object({ lat: z.number(), lng: z.number() }).strict();
+
 export const KbZoneSchema = z
   .object({
     id: ZoneSchema,
@@ -32,6 +35,8 @@ export const KbZoneSchema = z
     description: z.string().min(1).max(400),
     landscapes: z.array(z.string().min(1)).min(3).max(5),
     travelMinutesFromCity: z.number().int().nonnegative(),
+    center: KbZoneGeoSchema,
+    radiusMeters: z.number().positive().max(50000),
     puebloMagico: z.boolean(),
     bestSeasons: z.array(SeasonSchema).min(1),
     weddingFormats: z.array(z.string().min(1)).min(2).max(4),
@@ -108,13 +113,15 @@ export const KbVenueSchema = z
     capacityEstimate: z.number().int().positive(),
     capacityApprox: z.literal(true),
     oneLiner: z.string().min(1).max(120),
-    whyWeddings: z.string().min(1).max(240),
+    /** Empty for a places-sourced venue pending enrichment (`source: "places"`); always non-empty once curated/enriched. */
+    whyWeddings: z.string().max(240),
     highlights: z.tuple([z.string().min(1), z.string().min(1), z.string().min(1)]),
     facets: KbVenueFacetsSchema,
     photos: z.array(KbPhotoSchema),
     source: z.enum(["curated", "places"]),
     placeId: z.string().optional(),
-    confidence: z.literal(1),
+    /** `1` for hand-curated venues; a lower heuristic value (e.g. `0.4`) for venues mapped straight from a Places snapshot, pending enrichment. */
+    confidence: z.number().min(0).max(1),
   })
   .strict();
 

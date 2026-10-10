@@ -11,6 +11,8 @@
       "Plazas y jardines virreinales"
     ],
     "travelMinutesFromCity": 0,
+    "center": { "lat": 20.5888, "lng": -100.3899 },
+    "radiusMeters": 4000,
     "puebloMagico": false,
     "bestSeasons": ["primavera", "otono", "invierno"],
     "weddingFormats": [
@@ -39,6 +41,8 @@
       "Sierra queretana"
     ],
     "travelMinutesFromCity": 35,
+    "center": { "lat": 20.3667, "lng": -100.2833 },
+    "radiusMeters": 15000,
     "puebloMagico": false,
     "bestSeasons": ["primavera", "verano", "otono"],
     "weddingFormats": [
@@ -67,6 +71,8 @@
       "Horizonte con la Peña de Bernal"
     ],
     "travelMinutesFromCity": 60,
+    "center": { "lat": 20.6964, "lng": -99.8982 },
+    "radiusMeters": 20000,
     "puebloMagico": false,
     "bestSeasons": ["verano", "otono"],
     "weddingFormats": [
@@ -95,6 +101,8 @@
       "Paisaje semidesértico"
     ],
     "travelMinutesFromCity": 60,
+    "center": { "lat": 20.75, "lng": -99.9474 },
+    "radiusMeters": 10000,
     "puebloMagico": true,
     "bestSeasons": ["primavera", "otono", "invierno"],
     "weddingFormats": [
@@ -123,6 +131,8 @@
       "Cielo con globos aerostáticos al amanecer"
     ],
     "travelMinutesFromCity": 60,
+    "center": { "lat": 20.53, "lng": -99.89 },
+    "radiusMeters": 15000,
     "puebloMagico": true,
     "bestSeasons": ["primavera", "verano"],
     "weddingFormats": [
@@ -151,6 +161,8 @@
       "Campos agrícolas del Bajío"
     ],
     "travelMinutesFromCity": 45,
+    "center": { "lat": 20.3903, "lng": -99.9957 },
+    "radiusMeters": 18000,
     "puebloMagico": false,
     "bestSeasons": ["primavera", "verano", "otono", "invierno"],
     "weddingFormats": [
@@ -179,6 +191,8 @@
       "Lagos artificiales entre vides"
     ],
     "travelMinutesFromCity": 50,
+    "center": { "lat": 20.7836, "lng": -100.033 },
+    "radiusMeters": 20000,
     "puebloMagico": false,
     "bestSeasons": ["primavera", "verano", "otono"],
     "weddingFormats": [
@@ -207,6 +221,8 @@
       "Cercanía a la ciudad y el aeropuerto"
     ],
     "travelMinutesFromCity": 15,
+    "center": { "lat": 20.624, "lng": -100.2895 },
+    "radiusMeters": 15000,
     "puebloMagico": false,
     "bestSeasons": ["primavera", "verano", "otono", "invierno"],
     "weddingFormats": [
@@ -235,6 +251,8 @@
       "Paisaje de transición entre dos climas"
     ],
     "travelMinutesFromCity": 90,
+    "center": { "lat": 20.6978, "lng": -99.8167 },
+    "radiusMeters": 25000,
     "puebloMagico": true,
     "bestSeasons": ["primavera", "otono"],
     "weddingFormats": [
@@ -263,6 +281,8 @@
       "Lagos y ríos de montaña"
     ],
     "travelMinutesFromCity": 195,
+    "center": { "lat": 21.2186, "lng": -99.4828 },
+    "radiusMeters": 50000,
     "puebloMagico": true,
     "bestSeasons": ["otono", "invierno"],
     "weddingFormats": [

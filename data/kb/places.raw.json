@@ -1,0 +1,318 @@
+{
+  "fetchedAt": "2026-10-10T20:35:03.000Z",
+  "queries": 0,
+  "places": [
+    {
+      "id": "places/fixture-resort-hacienda-bajio",
+      "displayName": { "text": "Resort Hacienda del Bajío", "languageCode": "es" },
+      "formattedAddress": "Carretera San Juan del Río - Amealco km 4, San Juan del Río, Qro.",
+      "location": { "latitude": 20.3912, "longitude": -99.9941 },
+      "rating": 4.7,
+      "userRatingCount": 812,
+      "websiteUri": "https://example.com/resort-hacienda-bajio",
+      "googleMapsUri": "https://maps.google.com/?cid=1001",
+      "editorialSummary": {
+        "text": "Resort de hacienda del siglo XVI con viñedo propio, spa y hospedaje para toda la boda."
+      },
+      "primaryType": "resort_hotel",
+      "types": ["resort_hotel", "lodging", "restaurant", "point_of_interest"],
+      "priceLevel": "PRICE_LEVEL_EXPENSIVE",
+      "photos": [
+        {
+          "name": "places/fixture-resort-hacienda-bajio/photos/p1",
+          "widthPx": 4000,
+          "heightPx": 3000,
+          "authorAttributions": [{ "displayName": "Fixture Photographer 1" }]
+        }
+      ],
+      "reviews": [
+        {
+          "rating": 5,
+          "text": {
+            "text": "El lugar perfecto para una boda de fin de semana con toda la familia."
+          },
+          "relativePublishTimeDescription": "hace 2 meses"
+        }
+      ]
+    },
+    {
+      "id": "places/fixture-vinedo-pena-dorada",
+      "displayName": { "text": "Viñedo Peña Dorada", "languageCode": "es" },
+      "formattedAddress": "Carretera a Bernal km 5, Ezequiel Montes, Qro.",
+      "location": { "latitude": 20.701, "longitude": -99.9021 },
+      "rating": 4.6,
+      "userRatingCount": 634,
+      "websiteUri": "https://example.com/vinedo-pena-dorada",
+      "googleMapsUri": "https://maps.google.com/?cid=1002",
+      "editorialSummary": {
+        "text": "Viñedo con vista a la Peña de Bernal, vendimia anual y cava subterránea para bodas."
+      },
+      "primaryType": "winery",
+      "types": ["winery", "tourist_attraction", "point_of_interest"],
+      "priceLevel": "PRICE_LEVEL_MODERATE",
+      "photos": [
+        {
+          "name": "places/fixture-vinedo-pena-dorada/photos/p1",
+          "widthPx": 4000,
+          "heightPx": 3000,
+          "authorAttributions": [{ "displayName": "Fixture Photographer 2" }]
+        }
+      ],
+      "reviews": [
+        {
+          "rating": 5,
+          "text": { "text": "La vendimia como actividad nupcial fue inolvidable." },
+          "relativePublishTimeDescription": "hace 3 meses"
+        }
+      ]
+    },
+    {
+      "id": "places/fixture-pabellon-zibata-eventos",
+      "displayName": { "text": "Pabellón Zibatá Eventos", "languageCode": "es" },
+      "formattedAddress": "Blvd. Zibatá 100, El Marqués, Qro.",
+      "location": { "latitude": 20.6255, "longitude": -100.2911 },
+      "rating": 4.5,
+      "userRatingCount": 521,
+      "websiteUri": "https://example.com/pabellon-zibata",
+      "googleMapsUri": "https://maps.google.com/?cid=1003",
+      "editorialSummary": {
+        "text": "Uno de los recintos de eventos más grandes del Bajío, con salones para 150 a 800 invitados."
+      },
+      "primaryType": "banquet_hall",
+      "types": ["banquet_hall", "event_venue", "point_of_interest"],
+      "priceLevel": "PRICE_LEVEL_MODERATE",
+      "photos": [
+        {
+          "name": "places/fixture-pabellon-zibata-eventos/photos/p1",
+          "widthPx": 3600,
+          "heightPx": 2400,
+          "authorAttributions": [{ "displayName": "Fixture Photographer 3" }]
+        }
+      ],
+      "reviews": [
+        {
+          "rating": 4,
+          "text": { "text": "Gran capacidad y buen servicio para bodas grandes." },
+          "relativePublishTimeDescription": "hace 1 mes"
+        }
+      ]
+    },
+    {
+      "id": "places/fixture-hotel-las-jacarandas",
+      "displayName": { "text": "Hotel Boutique Las Jacarandas", "languageCode": "es" },
+      "formattedAddress": "Andador Juárez 12, Tequisquiapan, Qro.",
+      "location": { "latitude": 20.5312, "longitude": -99.8887 },
+      "rating": 4.8,
+      "userRatingCount": 398,
+      "websiteUri": "https://example.com/hotel-las-jacarandas",
+      "googleMapsUri": "https://maps.google.com/?cid=1004",
+      "editorialSummary": {
+        "text": "Hotel boutique en el centro de Tequisquiapan, ideal para una escapada de boda de fin de semana."
+      },
+      "primaryType": "hotel",
+      "types": ["hotel", "lodging", "point_of_interest"],
+      "priceLevel": "PRICE_LEVEL_MODERATE",
+      "photos": [
+        {
+          "name": "places/fixture-hotel-las-jacarandas/photos/p1",
+          "widthPx": 3200,
+          "heightPx": 2400,
+          "authorAttributions": [{ "displayName": "Fixture Photographer 4" }]
+        }
+      ],
+      "reviews": [
+        {
+          "rating": 5,
+          "text": { "text": "Precioso patio con jacarandas, perfecto para la ceremonia." },
+          "relativePublishTimeDescription": "hace 2 semanas"
+        }
+      ]
+    },
+    {
+      "id": "places/fixture-casa-real-del-virrey",
+      "displayName": { "text": "Casa Real del Virrey", "languageCode": "es" },
+      "formattedAddress": "Andador Libertad 45, Centro Histórico, Querétaro, Qro.",
+      "location": { "latitude": 20.5901, "longitude": -100.3922 },
+      "rating": 4.6,
+      "userRatingCount": 287,
+      "websiteUri": "https://example.com/casa-real-del-virrey",
+      "googleMapsUri": "https://maps.google.com/?cid=1005",
+      "editorialSummary": {
+        "text": "Casona virreinal del Centro Histórico con patios de cantera rosa para recepciones."
+      },
+      "primaryType": "banquet_hall",
+      "types": ["banquet_hall", "historical_landmark", "point_of_interest"],
+      "priceLevel": "PRICE_LEVEL_MODERATE",
+      "photos": [
+        {
+          "name": "places/fixture-casa-real-del-virrey/photos/p1",
+          "widthPx": 3000,
+          "heightPx": 2000,
+          "authorAttributions": [{ "displayName": "Fixture Photographer 5" }]
+        }
+      ],
+      "reviews": [
+        {
+          "rating": 5,
+          "text": { "text": "Los patios de cantera son espectaculares de noche." },
+          "relativePublishTimeDescription": "hace 1 mes"
+        }
+      ]
+    },
+    {
+      "id": "places/fixture-bodega-altos-de-colon",
+      "displayName": { "text": "Bodega Altos de Colón", "languageCode": "es" },
+      "formattedAddress": "Carretera Colón - Bernal km 8, Colón, Qro.",
+      "location": { "latitude": 20.7801, "longitude": -100.0298 },
+      "rating": 4.5,
+      "userRatingCount": 204,
+      "websiteUri": "https://example.com/bodega-altos-de-colon",
+      "googleMapsUri": "https://maps.google.com/?cid=1006",
+      "editorialSummary": {
+        "text": "Bodega de diseño contemporáneo a 2,000 metros de altitud, con terraza para cenas de autor."
+      },
+      "primaryType": "winery",
+      "types": ["winery", "vineyard", "point_of_interest"],
+      "priceLevel": "PRICE_LEVEL_EXPENSIVE",
+      "photos": [
+        {
+          "name": "places/fixture-bodega-altos-de-colon/photos/p1",
+          "widthPx": 3600,
+          "heightPx": 2700,
+          "authorAttributions": [{ "displayName": "Fixture Photographer 6" }]
+        }
+      ],
+      "reviews": [
+        {
+          "rating": 4,
+          "text": { "text": "Cena de autor en la terraza con vista al viñedo, íntima y elegante." },
+          "relativePublishTimeDescription": "hace 3 semanas"
+        }
+      ]
+    },
+    {
+      "id": "places/fixture-jardin-la-pena-eventos",
+      "displayName": { "text": "Jardín La Peña Eventos", "languageCode": "es" },
+      "formattedAddress": "Camino a la Peña 20, Bernal, Qro.",
+      "location": { "latitude": 20.7488, "longitude": -99.9451 },
+      "rating": 4.7,
+      "userRatingCount": 176,
+      "websiteUri": "https://example.com/jardin-la-pena-eventos",
+      "googleMapsUri": "https://maps.google.com/?cid=1007",
+      "editorialSummary": {
+        "text": "Jardín de eventos a los pies de la Peña de Bernal, ideal para ceremonias boho al atardecer."
+      },
+      "primaryType": "event_venue",
+      "types": ["event_venue", "garden", "tourist_attraction"],
+      "priceLevel": "PRICE_LEVEL_MODERATE",
+      "photos": [
+        {
+          "name": "places/fixture-jardin-la-pena-eventos/photos/p1",
+          "widthPx": 3200,
+          "heightPx": 2400,
+          "authorAttributions": [{ "displayName": "Fixture Photographer 7" }]
+        }
+      ],
+      "reviews": [
+        {
+          "rating": 5,
+          "text": { "text": "La vista de la Peña al atardecer durante la ceremonia fue mágica." },
+          "relativePublishTimeDescription": "hace 2 meses"
+        }
+      ]
+    },
+    {
+      "id": "places/fixture-hacienda-del-cimatario",
+      "displayName": { "text": "Hacienda del Cimatario", "languageCode": "es" },
+      "formattedAddress": "Camino a la Presa de San Pedro s/n, Huimilpan, Qro.",
+      "location": { "latitude": 20.3651, "longitude": -100.2809 },
+      "rating": 4.4,
+      "userRatingCount": 149,
+      "websiteUri": "https://example.com/hacienda-del-cimatario",
+      "googleMapsUri": "https://maps.google.com/?cid=1008",
+      "editorialSummary": {
+        "text": "Restaurante de hacienda con jardines coloniales y hospedaje boutique para los invitados."
+      },
+      "primaryType": "restaurant",
+      "types": ["restaurant", "lodging", "tourist_attraction"],
+      "priceLevel": "PRICE_LEVEL_MODERATE",
+      "photos": [
+        {
+          "name": "places/fixture-hacienda-del-cimatario/photos/p1",
+          "widthPx": 3000,
+          "heightPx": 2000,
+          "authorAttributions": [{ "displayName": "Fixture Photographer 8" }]
+        }
+      ],
+      "reviews": [
+        {
+          "rating": 4,
+          "text": { "text": "El banquete gourmet en el jardín al atardecer fue excelente." },
+          "relativePublishTimeDescription": "hace 4 meses"
+        }
+      ]
+    },
+    {
+      "id": "places/fixture-jardin-botanico-cadereyta",
+      "displayName": { "text": "Jardín Botánico Cadereyta Eventos", "languageCode": "es" },
+      "formattedAddress": "Carretera Cadereyta - Vizarrón km 2, Cadereyta de Montes, Qro.",
+      "location": { "latitude": 20.6991, "longitude": -99.819 },
+      "rating": 4.6,
+      "userRatingCount": 92,
+      "websiteUri": "https://example.com/jardin-botanico-cadereyta",
+      "googleMapsUri": "https://maps.google.com/?cid=1009",
+      "editorialSummary": {
+        "text": "Jardín botánico de cactáceas con terrazas para ceremonias boho semidesérticas."
+      },
+      "primaryType": "park",
+      "types": ["park", "garden", "tourist_attraction"],
+      "priceLevel": "PRICE_LEVEL_INEXPENSIVE",
+      "photos": [
+        {
+          "name": "places/fixture-jardin-botanico-cadereyta/photos/p1",
+          "widthPx": 2800,
+          "heightPx": 2100,
+          "authorAttributions": [{ "displayName": "Fixture Photographer 9" }]
+        }
+      ],
+      "reviews": [
+        {
+          "rating": 5,
+          "text": { "text": "Las cactáceas al atardecer crean un escenario único para fotos." },
+          "relativePublishTimeDescription": "hace 5 meses"
+        }
+      ]
+    },
+    {
+      "id": "places/fixture-mision-jalpan-hospedaje",
+      "displayName": { "text": "Misión de Jalpan Hospedaje", "languageCode": "es" },
+      "formattedAddress": "Independencia 1, Jalpan de Serra, Qro.",
+      "location": { "latitude": 21.2179, "longitude": -99.4815 },
+      "rating": 4.5,
+      "userRatingCount": 58,
+      "websiteUri": "https://example.com/mision-jalpan-hospedaje",
+      "googleMapsUri": "https://maps.google.com/?cid=1010",
+      "editorialSummary": {
+        "text": "Hospedaje junto a la misión franciscana del siglo XVIII, punto de partida para una escapada de boda en la Sierra Gorda."
+      },
+      "primaryType": "lodging",
+      "types": ["lodging", "historical_landmark", "tourist_attraction"],
+      "priceLevel": "PRICE_LEVEL_INEXPENSIVE",
+      "photos": [
+        {
+          "name": "places/fixture-mision-jalpan-hospedaje/photos/p1",
+          "widthPx": 2600,
+          "heightPx": 1950,
+          "authorAttributions": [{ "displayName": "Fixture Photographer 10" }]
+        }
+      ],
+      "reviews": [
+        {
+          "rating": 4,
+          "text": { "text": "Una escapada de varios días perfecta para después de la boda." },
+          "relativePublishTimeDescription": "hace 6 meses"
+        }
+      ]
+    }
+  ]
+}
