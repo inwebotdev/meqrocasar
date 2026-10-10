@@ -76,7 +76,13 @@ export function foldFacets(entries: readonly TranscriptEntry[]): Facets {
   return entries.reduce<Facets>((facets, entry) => ({ ...facets, ...entry.chosen.facets }), {});
 }
 
-function kbVenueRefs(venueHint: string): string[] {
+/**
+ * Resolves a curated option's free-text `venueHint` to the matching
+ * knowledge-base venue id (`v_{legacy-catalog-id}`), or `[]` when no match
+ * is found. Exported so `generated-step.ts` can build the same refs when
+ * mapping a curated deck into the generated-step shape.
+ */
+export function kbVenueRefs(venueHint: string): string[] {
   const matched = matchVenue(venueHint);
   return matched ? [`v_${matched.id}`] : [];
 }
@@ -103,7 +109,12 @@ export function entryFromCuratedOption(step: QuizStep, option: QuizOption): Tran
   };
 }
 
-function facetsForLegacyStepOption(stepId: QuizStepId, optionId: string): Facets {
+/**
+ * Facets a curated step's option contributes alone, dispatched by legacy
+ * step id. Exported so `generated-step.ts` can derive the same facets when
+ * mapping a curated deck into the generated-step shape.
+ */
+export function facetsForLegacyStepOption(stepId: QuizStepId, optionId: string): Facets {
   switch (stepId) {
     case "style":
       assertOneOf(optionId, STYLE_IDS, stepId);
