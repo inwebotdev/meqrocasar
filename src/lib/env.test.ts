@@ -28,8 +28,12 @@ describe("parseEnv", () => {
   });
 
   it("applies the timeout default when OPENROUTER_TIMEOUT_MS is empty", () => {
-    expect(parseEnv({ NODE_ENV: "test", OPENROUTER_TIMEOUT_MS: "" }).OPENROUTER_TIMEOUT_MS).toBe(8000);
-    expect(parseEnv({ NODE_ENV: "test", OPENROUTER_TIMEOUT_MS: "  " }).OPENROUTER_TIMEOUT_MS).toBe(8000);
+    expect(parseEnv({ NODE_ENV: "test", OPENROUTER_TIMEOUT_MS: "" }).OPENROUTER_TIMEOUT_MS).toBe(
+      8000,
+    );
+    expect(parseEnv({ NODE_ENV: "test", OPENROUTER_TIMEOUT_MS: "  " }).OPENROUTER_TIMEOUT_MS).toBe(
+      8000,
+    );
   });
 
   it("rejects a non-positive timeout", () => {
