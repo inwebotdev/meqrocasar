@@ -25,7 +25,19 @@ import type { QuizOption, QuizStep } from "./types";
 
 const OPTION_ID_PATTERN = /^[a-z0-9_-]{2,40}$/;
 
-const HashtagSchema = z.string().min(2).max(40).startsWith("#");
+// `.regex(/^#/)` rather than `.startsWith("#")`: Zod's JSON Schema export
+// for `startsWith` adds a non-standard `format: "starts_with"` alongside
+// the `pattern`, which OpenAI's strict structured-output validator (and
+// potentially others) rejects outright ("'starts_with' is not a valid
+// format"). `regex` emits a plain `pattern`, which every provider accepts.
+//
+// No `.min()` beyond the implicit "#": real-run testing against several
+// fast OpenRouter models showed grammar-constrained decoders frequently
+// satisfy a `pattern` + `minLength` combination on a short string by
+// emitting the shortest valid match ("#") regardless of prompt
+// instructions, so requiring more than "starts with #" here just produces
+// schema failures instead of better content.
+const HashtagSchema = z.string().max(40).regex(/^#/);
 
 export const GeneratedRefsSchema = z
   .object({

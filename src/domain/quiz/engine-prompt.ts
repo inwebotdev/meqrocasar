@@ -41,9 +41,13 @@ En cada turno de esta conversación debes hacer UNA sola siguiente pregunta: la 
 
 Ofrece 3 o 4 opciones contrastantes entre sí, concretas y sensoriales (nunca genéricas). Cada opción debe estar anclada en un lugar o experiencia real de la base de conocimiento que se te da ("refs"): cita ahí los ids reales de los venues y/o experiencias en los que se basa; nunca inventes lugares ni ids. Una opción puede citar solo una experiencia, sin ningún venue.
 
+En la base de conocimiento cada línea empieza con el id entre corchetes, por ejemplo "- [v_hacienda-lagunillas] Hacienda Lagunillas (...)". En "refs.venueIds"/"refs.experienceIds" escribe ÚNICAMENTE el id tal cual, SIN los corchetes: "v_hacienda-lagunillas", nunca "[v_hacienda-lagunillas]".
+
 No uses lenguaje publicitario ni superlativos vacíos. Los títulos deben ser breves, evocadores y específicos del lugar o momento que describen.
 
 El campo "facets" de cada opción debe contener exactamente el/los facet(s) que esa elección establece si la pareja la elige. "photoQuery" es una búsqueda corta en inglés para un banco de fotos de stock (no en español).
+
+Cada "hashtag" debe ser una palabra o frase corta real de al menos 4 caracteres además del símbolo "#" (por ejemplo "#Vendimia", "#PenaDeBernal"); nunca devuelvas un hashtag vacío ni solo "#".
 
 Devuelve "done: true" cuando ya se conozcan al menos 5 facets distintos y el paso actual (stepIndex) sea 4 o mayor; nunca devuelvas "done: true" antes del paso 4; devuelve siempre "done: true" cuando stepIndex sea igual al máximo de pasos (maxSteps).
 

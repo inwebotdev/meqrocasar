@@ -14,8 +14,8 @@ describe("parseEnv", () => {
     expect(env.UNSPLASH_ACCESS_KEY).toBeUndefined();
     expect(env.GOOGLE_PLACES_API_KEY).toBeUndefined();
     expect(env.PLACES_PHOTO_CACHE_DIR).toBe(".cache/places");
-    expect(env.OPENROUTER_MODEL_FAST).toBe("deepseek/deepseek-chat");
-    expect(env.OPENROUTER_MODEL_FAST_FALLBACK).toBe("qwen/qwen-turbo");
+    expect(env.OPENROUTER_MODEL_FAST).toBe("qwen/qwen-2.5-7b-instruct");
+    expect(env.OPENROUTER_MODEL_FAST_FALLBACK).toBe("deepseek/deepseek-chat");
     expect(env.QUIZ_MAX_STEPS).toBe(7);
     expect(env.QUIZ_STEP_TIMEOUT_MS).toBe(6000);
   });

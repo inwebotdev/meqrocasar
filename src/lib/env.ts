@@ -21,9 +21,16 @@ const envSchema = z.object({
   OPENROUTER_MODEL_PRIMARY: z.string().default("qwen/qwen-2.5-72b-instruct"),
   OPENROUTER_MODEL_FALLBACK: z.string().default("deepseek/deepseek-chat"),
   OPENROUTER_TIMEOUT_MS: positiveIntWithDefault(8000),
-  /** The quiz engine's fast model for per-step generation (not the final generation's primary/fallback above). */
-  OPENROUTER_MODEL_FAST: z.string().default("deepseek/deepseek-chat"),
-  OPENROUTER_MODEL_FAST_FALLBACK: z.string().default("qwen/qwen-turbo"),
+  /**
+   * The quiz engine's fast model for per-step generation (not the final
+   * generation's primary/fallback above). Defaults tuned from real runs
+   * against OpenRouter (see engine-prompt.ts/engine.ts history): several
+   * "fast" models either ignored the strict JSON schema or took 15-40s on
+   * this layer's deeply-nested step schema; `qwen-2.5-7b-instruct`
+   * consistently answered in under ~1.5s and validated cleanly.
+   */
+  OPENROUTER_MODEL_FAST: z.string().default("qwen/qwen-2.5-7b-instruct"),
+  OPENROUTER_MODEL_FAST_FALLBACK: z.string().default("deepseek/deepseek-chat"),
   QUIZ_MAX_STEPS: positiveIntWithDefault(7),
   QUIZ_STEP_TIMEOUT_MS: positiveIntWithDefault(6000),
   UNSPLASH_ACCESS_KEY: optionalSecret,
