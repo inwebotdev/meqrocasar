@@ -1,0 +1,282 @@
+[
+  {
+    "id": "centro_historico",
+    "name": "Centro Histórico de Querétaro",
+    "tagline": "Patrimonio Mundial UNESCO entre cantera rosa y callejones virreinales",
+    "description": "Declarado Patrimonio Mundial por la UNESCO en 1996, el Centro Histórico conserva la traza reticular colonial junto a callejones sinuosos de origen indígena, arcos del acueducto, fachadas barrocas y casonas virreinales que hoy funcionan como recintos para bodas y recepciones.",
+    "landscapes": [
+      "Patios de cantera rosa",
+      "Arcos del acueducto histórico",
+      "Callejones empedrados",
+      "Plazas y jardines virreinales"
+    ],
+    "travelMinutesFromCity": 0,
+    "puebloMagico": false,
+    "bestSeasons": ["primavera", "otono", "invierno"],
+    "weddingFormats": [
+      "Recepción en casona virreinal",
+      "Callejoneada nocturna como after-party",
+      "Ceremonia en patio de cantera"
+    ],
+    "facets": {
+      "styles": ["colonial"],
+      "settings": ["night_casona"]
+    },
+    "sources": [
+      "https://www.excelsior.com.mx/comunidad/estudiantinas-avivan-con-musica-calles-de-centro-historico/1239943",
+      "https://escapadas.mexicodesconocido.com.mx/actividades/recorrido-leyendas-de-queretaro/"
+    ]
+  },
+  {
+    "id": "huimilpan",
+    "name": "Huimilpan",
+    "tagline": "Haciendas coloniales y jardines rurales a 35 minutos de la capital",
+    "description": "Parte de la sierra queretana, Huimilpan conserva varias de las diez haciendas coloniales instaladas en su territorio, entre ellas Hacienda Lagunillas, y ofrece turismo rural con la presa de San Pedro, el Parque Nacional El Cimatario y la parroquia de San Miguel Arcángel de 1716.",
+    "landscapes": [
+      "Jardines de hacienda colonial",
+      "Campos de cultivo y viñedo propio",
+      "Presa de San Pedro",
+      "Sierra queretana"
+    ],
+    "travelMinutesFromCity": 35,
+    "puebloMagico": false,
+    "bestSeasons": ["primavera", "verano", "otono"],
+    "weddingFormats": [
+      "Boda de jardín al atardecer en hacienda",
+      "Banquete gourmet en restaurante de hacienda",
+      "Escapada de spa y temazcal"
+    ],
+    "facets": {
+      "styles": ["colonial", "garden_romantic"],
+      "settings": ["sunset_garden"]
+    },
+    "sources": [
+      "https://www.ecured.cu/Huimilpan_(México)",
+      "https://queretaro.travel/lugares/a-gastronomic-experience-in-the-queretaro-countryside/?lang=en"
+    ]
+  },
+  {
+    "id": "ezequiel_montes",
+    "name": "Ezequiel Montes",
+    "tagline": "El corazón vinícola de Querétaro, cuna de la Ruta del Queso y el Vino",
+    "description": "Con más de 500 hectáreas de vid plantada en el estado, Ezequiel Montes alberga algunas de las bodegas más visitadas del país, como Viñedos La Redonda, Finca Sala Vivé by Freixenet y Bodegas De Cote, y es pieza central de la Ruta del Arte, Queso y Vino.",
+    "landscapes": [
+      "Hileras de vides centenarias",
+      "Cavas subterráneas",
+      "Lagos artificiales entre viñedos",
+      "Horizonte con la Peña de Bernal"
+    ],
+    "travelMinutesFromCity": 60,
+    "puebloMagico": false,
+    "bestSeasons": ["verano", "otono"],
+    "weddingFormats": [
+      "Vendimia y pisado de uvas como actividad nupcial",
+      "Cena de autor en cava privada",
+      "Boda diurna entre viñedos"
+    ],
+    "facets": {
+      "styles": ["rustic_vineyard"],
+      "settings": ["day_vineyard", "night_casona"]
+    },
+    "sources": [
+      "https://www.unotv.com/turismo/zona-vinicola-de-queretaro-donde-esta-y-que-la-hace-especial/",
+      "https://www.elfinanciero.com.mx/viajes/2025/08/01/queretaro-donde-el-vino-se-encuentra-con-la-naturaleza-y-el-lujo/"
+    ]
+  },
+  {
+    "id": "bernal",
+    "name": "Bernal",
+    "tagline": "A los pies del tercer monolito más grande del mundo",
+    "description": "San Sebastián Bernal es Pueblo Mágico a la sombra de la Peña de Bernal, formación rocosa de más de 8 millones de años y 430 metros de altura considerada el tercer monolito más grande del mundo, rodeada de calles de cantera, dulces de nuez y escalada.",
+    "landscapes": [
+      "La Peña de Bernal",
+      "Calles empedradas con fachadas de cantera",
+      "Plaza del Pueblo Mágico",
+      "Paisaje semidesértico"
+    ],
+    "travelMinutesFromCity": 60,
+    "puebloMagico": true,
+    "bestSeasons": ["primavera", "otono", "invierno"],
+    "weddingFormats": [
+      "Ceremonia boho con la Peña de fondo",
+      "Recepción en viñedo cercano",
+      "Escapada de fin de semana con invitados"
+    ],
+    "facets": {
+      "styles": ["boho_desert", "pueblo_magico"],
+      "settings": ["sunset_garden"]
+    },
+    "sources": [
+      "https://www.unotv.com/turismo/bernal-queretaro-un-pueblo-magico-de-escalada-y-sorpresas-por-descubrir/",
+      "https://www.nmas.com.mx/queretaro/estilo-de-vida/lugares/pena-de-bernal-un-destino-imperdible-en-queretaro-historia-gastronomia-y-aventura/"
+    ]
+  },
+  {
+    "id": "tequisquiapan",
+    "name": "Tequisquiapan",
+    "tagline": "Pueblo Mágico de calles empedradas, viñedos y globos aerostáticos",
+    "description": "A una hora de la capital, Tequisquiapan es Pueblo Mágico reconocido por sus viñedos boutique, queserías, el recorrido de su centro histórico y los vuelos en globo aerostático al amanecer; cada año celebra la Feria Nacional del Queso y el Vino.",
+    "landscapes": [
+      "Calles empedradas con jacarandas",
+      "Plaza principal y balnearios de agua termal",
+      "Viñedos boutique",
+      "Cielo con globos aerostáticos al amanecer"
+    ],
+    "travelMinutesFromCity": 60,
+    "puebloMagico": true,
+    "bestSeasons": ["primavera", "verano"],
+    "weddingFormats": [
+      "Escapada de fin de semana en hotel boutique",
+      "Vuelo en globo como actividad de despedida",
+      "Boda entre viñedos con cata de cierre"
+    ],
+    "facets": {
+      "styles": ["pueblo_magico", "rustic_vineyard"],
+      "settings": ["day_vineyard"]
+    },
+    "sources": [
+      "https://www.eluniversal.com.mx/destinos/los-6-pueblos-magicos-de-queretaro-y-sus-atractivos-3/",
+      "https://www.infobae.com/mexico/2023/02/01/cuanto-cuesta-un-paseo-en-globo-por-los-hermosos-pueblos-magicos-de-teotihuacan-y-tequisquiapan/"
+    ]
+  },
+  {
+    "id": "san_juan_del_rio",
+    "name": "San Juan del Río",
+    "tagline": "Haciendas del siglo XVI con viñedo propio y hospedaje para los invitados",
+    "description": "Histórica zona opalera del Bajío queretano, San Juan del Río alberga la Hacienda Galindo, restaurada del siglo XVI y hoy un resort con viñedo y cava propios, spa con temazcal y más de 2,500 m² de espacios capaces de hospedar a los invitados todo el fin de semana.",
+    "landscapes": [
+      "Jardines y terrazas de hacienda",
+      "Viñedo propio de la hacienda",
+      "Patios virreinales del siglo XVI",
+      "Campos agrícolas del Bajío"
+    ],
+    "travelMinutesFromCity": 45,
+    "puebloMagico": false,
+    "bestSeasons": ["primavera", "verano", "otono", "invierno"],
+    "weddingFormats": [
+      "Boda de fin de semana con hospedaje para invitados",
+      "Gran fiesta tradicional con mariachi",
+      "Ceremonia de spa y temazcal previa a la boda"
+    ],
+    "facets": {
+      "styles": ["colonial"],
+      "settings": ["night_casona", "sunset_garden"]
+    },
+    "sources": [
+      "https://www.successfulmeetings.com/Meeting-Event-Venues/San-Juan-del-Rio-Mexico/Convention-Hotel/Fiesta-Americana-Hacienda-Galindo-Resort-p56618803",
+      "https://directorio.posadas.com/fshoteles/americana/FAHG.pdf"
+    ]
+  },
+  {
+    "id": "colon",
+    "name": "Colón",
+    "tagline": "Viñedos boutique de diseño contemporáneo en la ruta del vino",
+    "description": "Uno de los ocho municipios vitivinícolas de Querétaro, con nueve viñedos propios, Colón apuesta por bodegas de diseño contemporáneo como Bodegas De Cote, a 2,020 metros de altitud, y forma parte de la Ruta del Arte, Queso y Vino junto con El Marqués, Ezequiel Montes y Tequisquiapan.",
+    "landscapes": [
+      "Viñedos de altura con arquitectura contemporánea",
+      "Terrazas y cavas privadas",
+      "Campos abiertos del Bajío queretano",
+      "Lagos artificiales entre vides"
+    ],
+    "travelMinutesFromCity": 50,
+    "puebloMagico": false,
+    "bestSeasons": ["primavera", "verano", "otono"],
+    "weddingFormats": [
+      "Cena de autor en viñedo de diseño",
+      "Boda íntima en terraza de cava",
+      "Recorrido en bicicleta por el viñedo antes de la ceremonia"
+    ],
+    "facets": {
+      "styles": ["rustic_vineyard", "modern_elegant"],
+      "settings": ["day_vineyard", "night_casona"]
+    },
+    "sources": [
+      "https://www.unotv.com/turismo/zona-vinicola-de-queretaro-donde-esta-y-que-la-hace-especial/",
+      "https://www.elfinanciero.com.mx/bajio/bodegas-boutique-la-apuesta-de-las-empresas-vitivinicolas-queretanas/"
+    ]
+  },
+  {
+    "id": "el_marques",
+    "name": "El Marqués",
+    "tagline": "Haciendas virreinales y nuevos viñedos a 15 minutos de la capital",
+    "description": "A solo 8 kilómetros del centro de la ciudad de Querétaro, El Marqués conserva más de 24 antiguas haciendas, un Biomuseo, viñedos jóvenes en La Cañada y el Pabellón Zibatá, uno de los recintos de eventos más grandes del Bajío, con más de 500 eventos al año.",
+    "landscapes": [
+      "Antiguas haciendas virreinales",
+      "Viñedos jóvenes de La Cañada",
+      "Jardines y campos de golf",
+      "Cercanía a la ciudad y el aeropuerto"
+    ],
+    "travelMinutesFromCity": 15,
+    "puebloMagico": false,
+    "bestSeasons": ["primavera", "verano", "otono", "invierno"],
+    "weddingFormats": [
+      "Boda de gran formato en pabellón de eventos",
+      "Ceremonia íntima en capilla de viñedo",
+      "Recepción en antigua hacienda remodelada"
+    ],
+    "facets": {
+      "styles": ["colonial", "modern_elegant"],
+      "settings": ["chapel_courtyard", "day_vineyard"]
+    },
+    "sources": [
+      "https://oem.com.mx/elsoldemexico/turismo/la-canada-de-el-marques-queretaro-un-lugar-de-ensueno-16433700",
+      "https://www.elfinanciero.com.mx/bajio/vitivinicultura-apuesta-turistica-de-el-marques/"
+    ]
+  },
+  {
+    "id": "cadereyta",
+    "name": "Cadereyta",
+    "tagline": "Pueblo Mágico semidesértico, puerta de entrada a la Sierra Gorda",
+    "description": "Nombrado Pueblo Mágico en 2011, Cadereyta de Montes combina dos climas, un Jardín Botánico Regional de cactáceas, viñedos y la Isla de Tzibanzá; es la puerta de entrada a la Sierra Gorda queretana a hora y media de la capital.",
+    "landscapes": [
+      "Jardín Botánico Regional de cactáceas",
+      "Viñedos semidesérticos",
+      "Isla de Tzibanzá",
+      "Paisaje de transición entre dos climas"
+    ],
+    "travelMinutesFromCity": 90,
+    "puebloMagico": true,
+    "bestSeasons": ["primavera", "otono"],
+    "weddingFormats": [
+      "Escapada de fin de semana en Pueblo Mágico",
+      "Ceremonia entre jardines de cactáceas",
+      "Vuelo en globo como actividad de grupo"
+    ],
+    "facets": {
+      "styles": ["pueblo_magico", "boho_desert"],
+      "settings": ["day_vineyard"]
+    },
+    "sources": [
+      "https://www.mexicodesconocido.com.mx/cadereyta-pueblos-magicos-de-mexico.html",
+      "https://queretaro.travel/lugares/cadereyta-de-montes/?lang=en"
+    ]
+  },
+  {
+    "id": "sierra_gorda",
+    "name": "Sierra Gorda",
+    "tagline": "Reserva de la biósfera con misiones franciscanas Patrimonio Mundial",
+    "description": "Decretada en 1997 con más de 383 mil hectáreas, la Reserva de la Biosfera Sierra Gorda es la más diversa en ecosistemas de México y resguarda las cinco misiones franciscanas del siglo XVIII reconocidas por la UNESCO; Jalpan de Serra, su Pueblo Mágico, está a unas tres horas de la capital.",
+    "landscapes": [
+      "Bosques de niebla y selva baja",
+      "Montañas y cañones de la Sierra Madre Oriental",
+      "Misiones franciscanas de cantera labrada",
+      "Lagos y ríos de montaña"
+    ],
+    "travelMinutesFromCity": 195,
+    "puebloMagico": true,
+    "bestSeasons": ["otono", "invierno"],
+    "weddingFormats": [
+      "Escapada de varios días con visita a las misiones franciscanas",
+      "Boda ecoturística de fin de semana",
+      "Ceremonia con huapango arribeño y música tradicional"
+    ],
+    "facets": {
+      "styles": ["pueblo_magico"],
+      "settings": ["sunset_garden"]
+    },
+    "sources": [
+      "https://whc.unesco.org/en/list/1079",
+      "https://www.milenio.com/estilo/viajes/sierra-gorda-un-remanso-de-la-naturaleza-en-queretaro"
+    ]
+  }
+]

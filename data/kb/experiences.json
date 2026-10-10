@@ -1,0 +1,366 @@
+[
+  {
+    "id": "vendimia-la-redonda",
+    "name": "Vendimia en Viñedos La Redonda",
+    "zoneIds": ["ezequiel_montes"],
+    "description": "Siete fines de semana de fiesta de la cosecha en el viñedo más grande y antiguo de Querétaro: recorridos por las vides, pisado tradicional de la uva, maridajes, música en vivo y espectáculos al aire libre, con la Peña de Bernal asomando en el horizonte.",
+    "durationHours": 4,
+    "priceTier": "medio",
+    "seasons": ["verano", "otono"],
+    "facets": {
+      "experiences": ["vendimia"],
+      "styles": ["rustic_vineyard"],
+      "settings": ["day_vineyard"]
+    },
+    "venueHints": ["Viñedos La Redonda"],
+    "sources": [
+      "https://www.publimetro.com.mx/plus/2024/08/03/temporada-de-vendimia-en-la-redonda-queretaro-actividades-fechas-y-horarios/",
+      "https://www.mexicodesconocido.com.mx/fiestas-vendimia-queretaro.html"
+    ]
+  },
+  {
+    "id": "vendimia-freixenet",
+    "name": "Fiesta de la Vendimia en Finca Sala Vivé by Freixenet",
+    "zoneIds": ["ezequiel_montes"],
+    "description": "La celebración anual de la cosecha en la finca mexicana de Freixenet combina recorridos por los viñedos, música, gastronomía y una cata de espumosos de método tradicional en su cava subterránea excavada a 25 metros de profundidad.",
+    "durationHours": 4,
+    "priceTier": "medio_alto",
+    "seasons": ["verano", "otono"],
+    "facets": {
+      "experiences": ["vendimia"],
+      "styles": ["rustic_vineyard"],
+      "settings": ["day_vineyard"]
+    },
+    "venueHints": ["Finca Sala Vivé by Freixenet"],
+    "sources": [
+      "https://amp.milenio.com/estilo/gastronomia/freixenet-mexico-celebra-fiesta-vendimia-finca-sala-vive",
+      "https://www.eluniversal.com.mx/articulo/menu/2017/03/16/queretaro-tendra-una-fiesta-burbujeante/"
+    ]
+  },
+  {
+    "id": "cata-cava-freixenet",
+    "name": "Cata en la cava subterránea de Freixenet",
+    "zoneIds": ["ezequiel_montes"],
+    "description": "Recorrido guiado por la cava a 25 metros bajo tierra donde reposan los vinos espumosos de método tradicional, con cata de tres etiquetas conducida por un sommelier en el claustro de la finca.",
+    "durationHours": 1.5,
+    "priceTier": "medio",
+    "seasons": ["primavera", "verano", "otono", "invierno"],
+    "facets": {
+      "experiences": ["wine_tasting"],
+      "styles": ["rustic_vineyard"]
+    },
+    "venueHints": ["Finca Sala Vivé by Freixenet"],
+    "sources": [
+      "https://www.yumping.com/enoturismo/cavas-freixenet-de-mexico--e19709439",
+      "https://foodandpleasure.com/enoturismo-en-queretaro/"
+    ]
+  },
+  {
+    "id": "cata-vinos-de-cote",
+    "name": "Cata de vinos y maridaje en Bodegas De Cote",
+    "zoneIds": ["ezequiel_montes"],
+    "description": "Cata de autor en un viñedo contemporáneo con lago artificial y cava privada, maridada con alta cocina de autor, ideal para una celebración íntima entre semana o como actividad previa a la boda.",
+    "durationHours": 2,
+    "priceTier": "medio_alto",
+    "seasons": ["primavera", "verano", "otono", "invierno"],
+    "facets": {
+      "experiences": ["wine_tasting"],
+      "styles": ["rustic_vineyard", "modern_elegant"]
+    },
+    "venueHints": ["Bodegas De Cote"],
+    "sources": [
+      "https://www.mexicodesconocido.com.mx/enoturismo-en-queretaro-3-vinedos-para-deleitar-tus-sentidos.html"
+    ]
+  },
+  {
+    "id": "ruta-arte-queso-vino",
+    "name": "Ruta del Arte, Queso y Vino",
+    "zoneIds": ["tequisquiapan", "ezequiel_montes", "colon", "el_marques"],
+    "description": "Recorrido de un día por más de 30 viñedos y 11 queserías artesanales entre Tequisquiapan, Ezequiel Montes, Colón y El Marqués, con catas, maridajes, recorridos de cava y, en temporada de cosecha, festivales con música y arte.",
+    "durationHours": 6,
+    "priceTier": "medio",
+    "seasons": ["primavera", "verano", "otono"],
+    "facets": {
+      "experiences": ["wine_tasting", "cheese_route"],
+      "styles": ["rustic_vineyard", "pueblo_magico"],
+      "settings": ["day_vineyard"]
+    },
+    "venueHints": ["Viñedos La Redonda", "Finca Sala Vivé by Freixenet", "Quesos Vai"],
+    "sources": [
+      "https://www.razon.com.mx/estilos/ruta-arte-queso-vino-experiencia-despertar-sentidos-454180/",
+      "https://www.elfinanciero.com.mx/bajio/ruta-del-arte-queso-y-vino-atraera-a-70-mil-visitantes-en-verano/"
+    ]
+  },
+  {
+    "id": "globo-tequisquiapan",
+    "name": "Globo aerostático al amanecer en Tequisquiapan",
+    "zoneIds": ["tequisquiapan"],
+    "description": "Vuelo de 45 minutos a una hora sobre viñedos y campos del valle de Tequisquiapan desde el aeródromo Isaac Castro Sahade, con brindis incluido; un clásico para pedir matrimonio o para una sesión de fotos aérea antes de la boda.",
+    "durationHours": 1,
+    "priceTier": "medio_alto",
+    "seasons": ["primavera", "otono", "invierno"],
+    "facets": {
+      "experiences": ["hot_air_balloon"],
+      "styles": ["pueblo_magico"]
+    },
+    "venueHints": ["Querétaro en Globo", "Globos de Tequisquiapan"],
+    "sources": [
+      "https://www.infobae.com/mexico/2023/02/01/cuanto-cuesta-un-paseo-en-globo-por-los-hermosos-pueblos-magicos-de-teotihuacan-y-tequisquiapan/",
+      "https://www.yumping.com/es-MX/deportes-de-aire/queretaro-en-globo--e19682234"
+    ]
+  },
+  {
+    "id": "globo-pena-bernal",
+    "name": "Vuelo en globo sobre la Peña de Bernal",
+    "zoneIds": ["bernal"],
+    "description": "Vuelo aerostático al amanecer sobre el semidesierto y el tercer monolito más grande del mundo, con buffet de bienvenida; una manera espectacular de abrir una escapada de boda en Bernal.",
+    "durationHours": 1,
+    "priceTier": "medio_alto",
+    "seasons": ["primavera", "otono", "invierno"],
+    "facets": {
+      "experiences": ["hot_air_balloon"],
+      "styles": ["pueblo_magico", "boho_desert"]
+    },
+    "venueHints": ["Peña de Bernal"],
+    "sources": [
+      "https://www.yumping.com/ofertas/paseo-en-globo/queretaro/paseo-en-globo-por-pena-de-bernal-con-buffet--o47568"
+    ]
+  },
+  {
+    "id": "temazcal-hacienda-galindo",
+    "name": "Temazcal en Hacienda Galindo",
+    "zoneIds": ["san_juan_del_rio"],
+    "description": "Ceremonia de temazcal dentro del spa de la hacienda del siglo XVI, con un temazcalero que guía el ritual de vapor y hierbas medicinales; un cierre de despedida de soltera o de fin de semana de boda con un componente ancestral.",
+    "durationHours": 2,
+    "priceTier": "medio",
+    "seasons": ["primavera", "verano", "otono", "invierno"],
+    "facets": {
+      "experiences": ["temazcal"],
+      "styles": ["colonial"]
+    },
+    "venueHints": ["Hacienda Galindo"],
+    "sources": [
+      "https://www.chilango.com/viajes/en-corto/hacienda-galindo-queretaro-500-anos-historia/",
+      "https://queretaro.travel/lugares/meet-again-in-the-temazcales-of-queretaro/?lang=en"
+    ]
+  },
+  {
+    "id": "temazcal-huimilpan",
+    "name": "Temazcal ceremonial en Huimilpan",
+    "zoneIds": ["huimilpan"],
+    "description": "Baño de vapor tradicional guiado por un temazcalero con cantos ceremoniales, meditación y hierbas medicinales dentro de una choza en forma de vientre materno, en el entorno rural de Huimilpan.",
+    "durationHours": 1.5,
+    "priceTier": "medio",
+    "seasons": ["primavera", "verano", "otono", "invierno"],
+    "facets": {
+      "experiences": ["temazcal"]
+    },
+    "venueHints": ["Temazcal Tonatiu Iquzayampa"],
+    "sources": [
+      "https://queretaro.travel/lugares/meet-again-in-the-temazcales-of-queretaro/?lang=en"
+    ]
+  },
+  {
+    "id": "callejoneada-centro-historico",
+    "name": "Callejoneada por el Centro Histórico",
+    "zoneIds": ["centro_historico"],
+    "description": "Recorrido nocturno con estudiantina vestida de capa y birrete que guía a los invitados por los andadores de cantera del Centro Histórico, entre ponche, vino y canciones tradicionales como \"Cielito Lindo\".",
+    "durationHours": 2,
+    "priceTier": "medio",
+    "seasons": ["primavera", "verano", "otono", "invierno"],
+    "facets": {
+      "experiences": ["callejoneada"],
+      "styles": ["colonial"],
+      "settings": ["night_casona"]
+    },
+    "venueHints": ["Casona de los Cinco Patios", "Centro Histórico de Querétaro"],
+    "sources": [
+      "https://www.excelsior.com.mx/comunidad/estudiantinas-avivan-con-musica-calles-de-centro-historico/1239943",
+      "https://www.chilango.com/ocio/callejoneando-por-el-centro-historico/"
+    ]
+  },
+  {
+    "id": "atardecer-pena-bernal",
+    "name": "Atardecer en la Peña de Bernal",
+    "zoneIds": ["bernal"],
+    "description": "Subida a pie por la ladera del monolito, considerado sitio sagrado por las comunidades otomí-chichimecas, para ver cómo la luz dorada del atardecer tiñe el semidesierto; un escenario fotográfico icónico para la boda o la escapada previa.",
+    "durationHours": 1.5,
+    "priceTier": "medio",
+    "seasons": ["primavera", "otono", "invierno"],
+    "facets": {
+      "experiences": ["sierra_gorda_escape"],
+      "styles": ["pueblo_magico", "boho_desert"],
+      "settings": ["sunset_garden"]
+    },
+    "venueHints": ["Peña de Bernal"],
+    "sources": [
+      "https://www.mexicodesconocido.com.mx/bernal-queretaro-pueblo-magico.html",
+      "https://www.publimetro.com.mx/plus/2023/06/25/las-mejores-actividades-para-disfrutar-en-pena-de-bernal/"
+    ]
+  },
+  {
+    "id": "misiones-sierra-gorda",
+    "name": "Ruta de las misiones franciscanas de la Sierra Gorda",
+    "zoneIds": ["sierra_gorda"],
+    "description": "Visita a las cinco misiones barrocas del siglo XVIII fundadas por fray Junípero Serra —Jalpan, Concá, Landa, Tilaco y Tancoyol—, Patrimonio de la Humanidad por la UNESCO desde 2003, dentro de la Reserva de la Biosfera Sierra Gorda.",
+    "durationHours": 8,
+    "priceTier": "medio",
+    "seasons": ["primavera", "verano"],
+    "facets": {
+      "experiences": ["sierra_gorda_escape"],
+      "styles": ["pueblo_magico"],
+      "settings": ["chapel_courtyard"]
+    },
+    "venueHints": [
+      "Misión de Jalpan",
+      "Misión de Concá",
+      "Misión de Landa",
+      "Misión de Tilaco",
+      "Misión de Tancoyol"
+    ],
+    "sources": [
+      "https://whc.unesco.org/document/217612",
+      "https://www.mexicodesconocido.com.mx/misiones-de-la-sierra-gorda-patimonio-cultural-de-la-humanidad.html"
+    ]
+  },
+  {
+    "id": "tour-queserias",
+    "name": "Tour de queserías artesanales de la Ruta del Queso",
+    "zoneIds": ["tequisquiapan", "huimilpan", "colon"],
+    "description": "Visita a ranchos y fábricas artesanales como Quesos Vai, Rancho San Josemaría y Cava Bocanegra para ver de cerca la elaboración del queso y degustarlo acompañado de vino, cerveza o mezcal local.",
+    "durationHours": 4,
+    "priceTier": "medio",
+    "seasons": ["primavera", "verano", "otono", "invierno"],
+    "facets": {
+      "experiences": ["cheese_route"],
+      "styles": ["rustic_vineyard"]
+    },
+    "venueHints": ["Quesos Vai", "Rancho San Josemaría", "Cava Bocanegra"],
+    "sources": [
+      "https://www.mexicodesconocido.com.mx/ruta-del-queso-en-queretaro.html",
+      "https://foodandpleasure.com/ruta-del-queso-queretaro/"
+    ]
+  },
+  {
+    "id": "cena-vinedo-de-cote",
+    "name": "Cena en viñedo con alta cocina de autor",
+    "zoneIds": ["ezequiel_montes"],
+    "description": "Cena de autor junto al lago artificial de Bodegas De Cote, entre hileras de vides iluminadas, con menú de temporada maridado a los vinos de la casa; un formato íntimo y contemporáneo para la cena de ensayo o la recepción misma.",
+    "durationHours": 3,
+    "priceTier": "exclusivo",
+    "seasons": ["primavera", "verano", "otono", "invierno"],
+    "facets": {
+      "experiences": ["gourmet_banquet", "wine_tasting"],
+      "styles": ["rustic_vineyard", "modern_elegant"],
+      "settings": ["night_casona"]
+    },
+    "venueHints": ["Bodegas De Cote"],
+    "sources": [
+      "https://www.mexicodesconocido.com.mx/enoturismo-en-queretaro-3-vinedos-para-deleitar-tus-sentidos.html"
+    ]
+  },
+  {
+    "id": "huapango-mariachi",
+    "name": "Huapango arribeño y mariachi tradicional",
+    "zoneIds": ["sierra_gorda", "centro_historico"],
+    "description": "Trío huasteco de guitarra, jarana y violín interpretando huapango arribeño —tradición viva de la Sierra Gorda queretana— o mariachi tradicional para la ceremonia, el vals y la fiesta, con glosas y versos improvisados al estilo de la región.",
+    "durationHours": 2,
+    "priceTier": "medio",
+    "seasons": ["primavera", "verano", "otono", "invierno"],
+    "facets": {
+      "experiences": ["mariachi_huapango"],
+      "styles": ["colonial", "pueblo_magico"]
+    },
+    "venueHints": ["tríos huastecos de la Sierra Gorda", "mariachi tradicional queretano"],
+    "sources": [
+      "https://www.meer.com/es/29447-el-huapango",
+      "https://ri-ng.uaq.mx/handle/123456789/211"
+    ]
+  },
+  {
+    "id": "fuegos-artificiales-viborillas",
+    "name": "Castillo de fuegos artificiales en Hacienda Viborillas",
+    "zoneIds": ["colon"],
+    "description": "Castillo de fuegos artificiales sobre las terrazas panorámicas de la hacienda virreinal, con sus cavas centenarias iluminadas de fondo; el cierre tradicional de una gran fiesta de boda en Colón.",
+    "durationHours": 0.5,
+    "priceTier": "medio_alto",
+    "seasons": ["primavera", "verano", "otono", "invierno"],
+    "facets": {
+      "experiences": ["fireworks"],
+      "styles": ["colonial"],
+      "settings": ["night_casona"]
+    },
+    "venueHints": ["Hacienda Viborillas"],
+    "sources": [
+      "https://www.elfinanciero.com.mx/bajio/ruta-del-vino-de-queretaro-registra-700-mil-turistas/"
+    ]
+  },
+  {
+    "id": "fuegos-artificiales-la-redonda",
+    "name": "Fuegos artificiales en la Fiesta de la Vendimia de La Redonda",
+    "zoneIds": ["ezequiel_montes"],
+    "description": "Los fuegos artificiales que cierran cada fin de semana de la Fiesta de la Vendimia en La Redonda, junto con conciertos al aire libre y paseos en globo, sobre el viñedo más antiguo del estado.",
+    "durationHours": 0.5,
+    "priceTier": "medio",
+    "seasons": ["verano", "otono"],
+    "facets": {
+      "experiences": ["fireworks", "vendimia"],
+      "styles": ["rustic_vineyard"]
+    },
+    "venueHints": ["Viñedos La Redonda"],
+    "sources": ["https://www.chilango.com/viajes/escapate/festival-del-vino-queretano/"]
+  },
+  {
+    "id": "banquete-gourmet-labrantio",
+    "name": "Banquete gourmet queretano en el Labrantío",
+    "zoneIds": ["huimilpan"],
+    "description": "Banquete de alta cocina mexicana de temporada en el restaurante Labrantío de Hacienda Lagunillas, con vista a la capilla y al viñedo emergente de la hacienda; mixiotes, moles y vinos queretanos en cada tiempo.",
+    "durationHours": 3,
+    "priceTier": "medio_alto",
+    "seasons": ["primavera", "verano", "otono", "invierno"],
+    "facets": {
+      "experiences": ["gourmet_banquet"],
+      "styles": ["colonial", "garden_romantic"]
+    },
+    "venueHints": ["Restaurante Labrantío", "Hacienda Lagunillas"],
+    "sources": [
+      "https://queretaro.travel/lugares/a-gastronomic-experience-in-the-queretaro-countryside/?lang=en"
+    ]
+  },
+  {
+    "id": "hospedaje-hacienda-galindo",
+    "name": "Hospedaje de fin de semana en Hacienda Galindo",
+    "zoneIds": ["san_juan_del_rio"],
+    "description": "Fin de semana completo alojados en las 168 habitaciones de la hacienda del siglo XVI, con viñedo propio, spa, alberca climatizada y dos restaurantes, para que los invitados vivan la boda como una escapada y no solo un evento de un día.",
+    "durationHours": 48,
+    "priceTier": "exclusivo",
+    "seasons": ["primavera", "verano", "otono", "invierno"],
+    "facets": {
+      "experiences": ["sierra_gorda_escape"],
+      "styles": ["colonial"]
+    },
+    "venueHints": ["Hacienda Galindo"],
+    "sources": [
+      "https://www.chilango.com/viajes/en-corto/hacienda-galindo-queretaro-500-anos-historia/",
+      "https://foodandpleasure.com/vinedos-en-queretaro-hacienda-galindo"
+    ]
+  },
+  {
+    "id": "escapada-fin-semana-tequisquiapan",
+    "name": "Escapada de fin de semana en Tequisquiapan",
+    "zoneIds": ["tequisquiapan"],
+    "description": "Dos o tres días en el Pueblo Mágico de calles empedradas y hoteles boutique, combinando globo aerostático, ruta del queso y vino, aguas termales y mercado de artesanías, antes o después de la boda.",
+    "durationHours": 48,
+    "priceTier": "medio_alto",
+    "seasons": ["primavera", "otono", "invierno"],
+    "facets": {
+      "experiences": ["sierra_gorda_escape"],
+      "styles": ["pueblo_magico"],
+      "settings": ["sunset_garden"]
+    },
+    "venueHints": ["Tequisquiapan Pueblo Mágico"],
+    "sources": [
+      "https://www.unotv.com/turismo/tequisquiapan-un-pueblo-que-destaca-por-paisajes-y-rutas/"
+    ]
+  }
+]
