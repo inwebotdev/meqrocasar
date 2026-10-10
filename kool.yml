@@ -17,4 +17,4 @@ scripts:
     - docker compose run --rm --no-deps -T app yarn types:check
     - docker compose run --rm --no-deps -T app yarn lint:check
   format:
-    - sh -c 'CHANGED=$(git diff --cached --name-only --diff-filter=ACMR 2>/dev/null | grep -E "\.(ts|tsx|js|jsx|mjs|css|json|md)$" || true); if [ -n "$CHANGED" ]; then docker compose run --rm --no-deps -T app yarn prettier --write $CHANGED && git add $CHANGED; fi; true'
+    - sh .githooks/format-staged.sh
