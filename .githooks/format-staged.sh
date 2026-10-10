@@ -2,7 +2,7 @@
 # Formats the staged files with Prettier (inside Docker) and re-stages them.
 # Files that also have unstaged changes are skipped so that partial commits
 # never pick up hunks the developer left out of the index.
-set -u
+set -eu
 
 STAGED=$(git diff --cached --name-only --diff-filter=ACMR | grep -E '\.(ts|tsx|js|jsx|mjs|css|json|md)$' || true)
 [ -z "$STAGED" ] && exit 0
@@ -23,5 +23,8 @@ if [ -n "$SKIPPED" ]; then
 fi
 [ -z "$FORMAT" ] && exit 0
 
-docker compose run --rm --no-deps -T app yarn prettier --write $FORMAT
+if ! docker compose run --rm --no-deps -T app yarn prettier --write $FORMAT; then
+  echo "pre-commit: Prettier failed (is Docker running?). Fix the problem or commit with --no-verify." >&2
+  exit 1
+fi
 git add $FORMAT
