@@ -13,6 +13,7 @@ import type { BudgetValue, Facets, StyleValue, ZoneValue } from "./taxonomy";
 // --- quiz answers → facets ------------------------------------------------
 
 type StyleId = QuizAnswers["style"];
+type SettingId = QuizAnswers["setting"];
 type MustHaveId = QuizAnswers["mustHave"];
 type ExperienceId = QuizAnswers["experience"];
 
@@ -23,17 +24,25 @@ const LEGACY_STYLE_TO_FACET: Record<StyleId, StyleValue> = {
   modern_elegant: "modern_elegant",
 };
 
-const LEGACY_MUST_HAVE_TO_EXPERIENCE_FACET: Record<MustHaveId, Facets["experience"]> = {
-  wine_tasting: "wine_tasting",
-  fireworks: "fireworks",
-  gourmet_mexican_banquet: "gourmet_banquet",
-  callejoneada: "callejoneada",
-};
+/** Facets contributed by the old "style" (step 1) answer alone. */
+export function facetsFromLegacyStyle(style: StyleId): Facets {
+  return { style: LEGACY_STYLE_TO_FACET[style] };
+}
 
 /**
- * The old "experience" step (`intimate_boutique` | `grand_traditional` |
- * `weekend_getaway`) is really about party scale, with the weekend getaway
- * also implying the couple wants lodging for their guests.
+ * Facets contributed by the old "setting" (step 2) answer alone. Its
+ * answer ids (`sunset_garden`, `night_casona`, `day_vineyard`) are already
+ * a subset of the new `setting` taxonomy, so they carry over unchanged.
+ */
+export function facetsFromLegacySetting(setting: SettingId): Facets {
+  return { setting };
+}
+
+/**
+ * Facets contributed by the old "experience" (step 3) answer alone. That
+ * step (`intimate_boutique` | `grand_traditional` | `weekend_getaway`) is
+ * really about party scale, with the weekend getaway also implying the
+ * couple wants lodging for their guests.
  */
 const LEGACY_EXPERIENCE_TO_FACETS: Record<ExperienceId, Facets> = {
   intimate_boutique: { scale: "intimate" },
@@ -41,17 +50,33 @@ const LEGACY_EXPERIENCE_TO_FACETS: Record<ExperienceId, Facets> = {
   weekend_getaway: { scale: "medium", lodging: "needed" },
 };
 
+export function facetsFromLegacyExperience(experience: ExperienceId): Facets {
+  return LEGACY_EXPERIENCE_TO_FACETS[experience];
+}
+
+/** Facets contributed by the old "mustHave" (step 4) answer alone. */
+const LEGACY_MUST_HAVE_TO_EXPERIENCE_FACET: Record<MustHaveId, Facets["experience"]> = {
+  wine_tasting: "wine_tasting",
+  fireworks: "fireworks",
+  gourmet_mexican_banquet: "gourmet_banquet",
+  callejoneada: "callejoneada",
+};
+
+export function facetsFromLegacyMustHave(mustHave: MustHaveId): Facets {
+  return { experience: LEGACY_MUST_HAVE_TO_EXPERIENCE_FACET[mustHave] };
+}
+
 /**
- * Converts the old 4-answer quiz shape into `Facets`. The old `setting`
- * answer ids (`sunset_garden`, `night_casona`, `day_vineyard`) are already
- * a subset of the new `setting` taxonomy, so they carry over unchanged.
+ * Converts the old 4-answer quiz shape into `Facets`, composing the four
+ * per-step mappings above (see `transcriptFromLegacyAnswers` for the
+ * per-step breakdown used to build transcript entries).
  */
 export function facetsFromLegacyAnswers(answers: QuizAnswers): Facets {
   return {
-    style: LEGACY_STYLE_TO_FACET[answers.style],
-    setting: answers.setting,
-    experience: LEGACY_MUST_HAVE_TO_EXPERIENCE_FACET[answers.mustHave],
-    ...LEGACY_EXPERIENCE_TO_FACETS[answers.experience],
+    ...facetsFromLegacyStyle(answers.style),
+    ...facetsFromLegacySetting(answers.setting),
+    ...facetsFromLegacyExperience(answers.experience),
+    ...facetsFromLegacyMustHave(answers.mustHave),
   };
 }
 
