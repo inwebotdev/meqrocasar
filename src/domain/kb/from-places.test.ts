@@ -9,7 +9,7 @@ import {
   type PlacesSnapshot,
 } from "./from-places";
 import { loadKb } from "./load";
-import type { KbZone } from "./types";
+import type { KbVenue, KbZone } from "./types";
 
 const { zones, venues: seedVenues } = loadKb();
 
@@ -186,5 +186,75 @@ describe("mergeSnapshotIntoKb", () => {
     };
     const merged = mergeSnapshotIntoKb(seedVenues, snapshot, zones);
     expect(merged).toEqual(seedVenues);
+  });
+
+  it("matches an already-linked, enriched venue by placeId even if its Google display name has since changed", () => {
+    const ezequielMontes = zone("ezequiel_montes");
+    const enrichedSeed = {
+      ...kbVenueFromPlace(
+        winery({ id: "places/renamed-winery" }),
+        "ezequiel_montes",
+        ezequielMontes,
+      ),
+      // Simulate a completed enrichment pass: real facets/copy, confidence raised.
+      oneLiner: "Un viñedo dorado al atardecer.",
+      whyWeddings: "Cava subterránea y terraza con vista al valle.",
+      highlights: ["Viñedo propio", "Cava", "Terraza"] as [string, string, string],
+      confidence: 0.95,
+    };
+
+    const renamedPlace = winery({
+      id: "places/renamed-winery",
+      displayName: { text: "Viñedo de Prueba (Nuevo Nombre)" }, // Google renamed it since ingestion
+      rating: 4.9,
+    });
+
+    const snapshot: PlacesSnapshot = {
+      fetchedAt: "2026-01-01T00:00:00.000Z",
+      queries: 1,
+      places: [renamedPlace],
+    };
+
+    const merged = mergeSnapshotIntoKb([enrichedSeed], snapshot, zones);
+
+    expect(merged).toHaveLength(1);
+    const result = merged[0]!;
+    // Matched by placeId, not name: metadata refreshed...
+    expect(result.rating).toBe(4.9);
+    // ...but the enrichment itself, and the seed's own name, are untouched.
+    expect(result.name).toBe(enrichedSeed.name);
+    expect(result.oneLiner).toBe(enrichedSeed.oneLiner);
+    expect(result.whyWeddings).toBe(enrichedSeed.whyWeddings);
+    expect(result.highlights).toEqual(enrichedSeed.highlights);
+    expect(result.confidence).toBe(0.95);
+  });
+
+  it("rebuilding never resets an already-enriched venue's facets/copy/confidence", () => {
+    const ezequielMontes = zone("ezequiel_montes");
+    const place = winery({ id: "places/already-enriched" });
+    const enrichedSeed = {
+      ...kbVenueFromPlace(place, "ezequiel_montes", ezequielMontes),
+      facets: {
+        styles: ["modern_elegant"],
+        settings: ["rooftop_city"],
+        scale: ["grand"],
+        experiences: [],
+        budget: "exclusivo",
+      } satisfies KbVenue["facets"],
+      oneLiner: "Copia ya enriquecida.",
+      whyWeddings: "Razones ya enriquecidas.",
+      highlights: ["A", "B", "C"] as [string, string, string],
+      capacityEstimate: 999,
+      confidence: 0.92,
+    };
+
+    const snapshot: PlacesSnapshot = {
+      fetchedAt: "2026-01-01T00:00:00.000Z",
+      queries: 1,
+      places: [place],
+    };
+    const merged = mergeSnapshotIntoKb([enrichedSeed], snapshot, zones);
+
+    expect(merged).toEqual([enrichedSeed]);
   });
 });

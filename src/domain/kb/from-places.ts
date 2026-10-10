@@ -234,6 +234,23 @@ function seedMatchesPlace(seed: KbVenue, place: Place): boolean {
   return seedNames.includes(placeName);
 }
 
+/**
+ * Finds the snapshot place for `seed`: matched by `placeId` when the seed
+ * already carries one (robust to a later Places rename — this is the
+ * primary strategy so a rebuild never silently re-links a seed to the
+ * wrong place), falling back to a name/alias match for a seed that
+ * hasn't been linked to a place yet (a curated seed on its first
+ * `kb:build`, or a places-sourced venue re-ingested without its id).
+ */
+function findMatchingPlace(seed: KbVenue, places: readonly Place[]): Place | undefined {
+  if (seed.placeId) {
+    const byId = places.find((place) => place.id === seed.placeId);
+    if (byId) return byId;
+  }
+
+  return places.find((place) => seedMatchesPlace(seed, place));
+}
+
 /** Attaches Places metadata (placeId, rating, counts, links, extra photos) to a seed venue, keeping the seed's own curated copy. */
 function attachPlaceToSeed(seed: KbVenue, place: Place): KbVenue {
   const extraPhotos = buildPhotos(place).filter(
@@ -261,9 +278,12 @@ function attachPlaceToSeed(seed: KbVenue, place: Place): KbVenue {
 
 /**
  * Merges a Places snapshot into the curated seed venues: a snapshot place
- * matching a seed by name/alias enriches that seed in place (the seed's
- * own copy — name, facets, one-liner, etc. — always wins); every
- * unmatched snapshot place is appended as a new, low-confidence venue via
+ * matching a seed by `placeId` (preferred) or by name/alias (first-time
+ * linking) enriches that seed in place — the seed's own copy (name,
+ * facets, one-liner, capacity, confidence, etc., i.e. anything an
+ * enrichment pass may have written) always wins, `attachPlaceToSeed`
+ * only ever adds metadata the seed doesn't already have. Every unmatched
+ * snapshot place is appended as a new, low-confidence venue via
  * `kbVenueFromPlace`.
  */
 export function mergeSnapshotIntoKb(
@@ -274,7 +294,7 @@ export function mergeSnapshotIntoKb(
   const matchedPlaceIds = new Set<string>();
 
   const merged = seedVenues.map((seed) => {
-    const match = snapshot.places.find((place) => seedMatchesPlace(seed, place));
+    const match = findMatchingPlace(seed, snapshot.places);
     if (!match) return seed;
     matchedPlaceIds.add(match.id);
     return attachPlaceToSeed(seed, match);

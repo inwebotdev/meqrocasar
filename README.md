@@ -73,12 +73,15 @@ validadas por `src/domain/kb/`. Los recintos se alimentan de dos fuentes:
 
 1. **Curados a mano** (`source: "curated"`, `confidence: 1`): los 12 recintos originales, con
    `oneLiner`/`whyWeddings`/`highlights` escritos a mano.
-2. **Google Places (New)** (`source: "places"`, `confidence: 0.4` hasta que un futuro paso de
+2. **Google Places (New)** (`source: "places"`, `confidence: 0.4` hasta que el paso de
    enriquecimiento los complete): resultados de búsqueda de texto por zona × categoría de boda.
+
+El refresco completo de la base de conocimiento es una secuencia de tres pasos:
 
 ```bash
 kool run kb:ingest   # Google Places (New) -> data/kb/places.raw.json (snapshot committeado)
 kool run kb:build     # places.raw.json + venues.json actual -> data/kb/venues.json regenerado
+kool run kb:enrich    # OpenRouter (Qwen/DeepSeek) -> clasifica y escribe copy es-MX en venues.json
 ```
 
 `kb:ingest` requiere `GOOGLE_PLACES_API_KEY` (con **Places API (New)** habilitada y facturación
@@ -88,6 +91,17 @@ reintento en 429/5xx). Text Search (Pro) tiene un nivel gratuito de 5,000 llamad
 una actualización completa (~60-120 llamadas) no genera costo. Sin la API key, la app funciona
 igual sobre la base de conocimiento ya committeada. `GET /api/places/photo` sirve las fotos de
 Places con cache en disco de 30 días (`PLACES_PHOTO_CACHE_DIR`).
+
+`kb:enrich` requiere `OPENROUTER_API_KEY` y clasifica, en lotes de 8 recintos por llamada
+estructurada, cada recinto proveniente de Places con `confidence < 0.9` (o sin `whyWeddings`):
+asigna facetas (`styles`, `settings`, `scale`, `experiences`, `budget`), estima capacidad, escribe
+`oneLiner`/`whyWeddings`/`highlights` en español latinoamericano y marca `isWeddingVenue: false`
+para lugares que no pueden albergar una boda (se eliminan de `venues.json`, igual que los de
+`confidence < 0.5`). Los recintos curados se omiten salvo `--all`, y solo ganan los campos que
+tuvieran vacíos. Es idempotente — una segunda corrida solo reprocesa lo que siga por debajo del
+umbral — y reporta tokens y costo estimado (`src/domain/ai/pricing.ts`) por modelo usado. Si el
+modelo primario configurado es lento/inestable para el tamaño de lote completo, `--batch-size=<n>`
+reduce el lote (p. ej. `kool exec app yarn kb:enrich --batch-size=2`).
 
 ## Assets que debes agregar
 
