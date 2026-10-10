@@ -39,7 +39,10 @@ if ((${#skipped[@]})); then
 fi
 ((${#format[@]})) || exit 0
 
-if ! docker compose run --rm --no-deps -T app yarn prettier --write "${format[@]}"; then
+# Run as the host user so files rewritten by Prettier keep their ownership on
+# Linux hosts with a rootful Docker daemon. HOME is redirected because that
+# uid usually has no home inside the image and yarn needs a writable cache.
+if ! docker compose run --rm --no-deps -T --user "$(id -u):$(id -g)" -e HOME=/tmp app yarn prettier --write "${format[@]}"; then
   echo "pre-commit: Prettier failed (is Docker running?). Fix the problem or commit with --no-verify." >&2
   exit 1
 fi
