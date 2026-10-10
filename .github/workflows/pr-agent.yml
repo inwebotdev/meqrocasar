@@ -1,0 +1,83 @@
+name: PR Agent
+
+on:
+  pull_request:
+    types: [opened, reopened, synchronize]
+
+concurrency:
+  group: pr-agent-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+permissions:
+  issues: write
+  pull-requests: write
+  contents: write
+  checks: write
+  id-token: write # OIDC token exchange with AWS
+
+jobs:
+  pr_agent:
+    name: Run PR Agent
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    if: github.event.pull_request.draft == false && github.actor != 'dependabot[bot]'
+    steps:
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::249780396505:role/GithubSecretsManagerRole
+          aws-region: us-east-1
+
+      - name: Load OpenRouter key from Secrets Manager
+        uses: aws-actions/aws-secretsmanager-get-secrets@v2
+        with:
+          # The secret is JSON {"GH_PR_AGENT_OPENROUTER_API_KEY": "..."}; with alias OPENROUTER
+          # this exports $OPENROUTER_GH_PR_AGENT_OPENROUTER_API_KEY (ALIAS_KEY), masked in logs
+          secret-ids: |
+            OPENROUTER,GH_PR_AGENT_OPENROUTER_API_KEY
+          parse-json-secrets: true
+
+      - name: PR Agent
+        # Pinned to a reviewed commit (v0.47.0): this step gets AWS credentials, a write token and the API key.
+        uses: the-pr-agent/pr-agent@8e5a9295973b24af4b70cafd0b660a230811ef9e # v0.47.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          OPENROUTER.KEY: ${{ env.OPENROUTER_GH_PR_AGENT_OPENROUTER_API_KEY }}
+          # Tried: deepseek-v4-flash (broken output), gemini-3.1-flash-lite (shallow),
+          # gpt-5-mini (confident false findings, wrong line numbers).
+          config.model: "z-ai/glm-5.2"
+          config.fallback_models: '["openrouter/moonshotai/kimi-k2.7-code"]'
+          # Cap the prompt: large diffs get pruned instead of chunked into many slow calls.
+          config.max_model_tokens: "128000"
+          config.custom_model_max_tokens: "262144" # kimi context size
+          # Context around each hunk. pr-agent caps extra lines at 10 (MAX_EXTRA_LINES); dynamic
+          # context extends a hunk back to its enclosing function/class within the given lines.
+          config.patch_extra_lines_before: "10"
+          config.patch_extra_lines_after: "10"
+          config.allow_dynamic_context: "true"
+          config.max_extra_lines_before_dynamic_context: "60"
+          config.ai_timeout: "180"
+          config.num_retries: "1"
+          # Log which model actually answered.
+          config.output_run_details: "true"
+          # Lockfiles, vendored code, build output and generated files are noise for a review.
+          # (Setting this replaces pr-agent's default of vendor/**.)
+          ignore.glob: '["vendor/**", "yarn.lock", "composer.lock", "package-lock.json", "public/build/**", "bootstrap/ssr/**", "resources/js/types/generated.d.ts", "**/*.min.js", "**/*.map"]'
+          # Post each finding as an inline comment on its exact line (same model call, no extra cost).
+          pr_reviewer.inline_key_issues: "true"
+          # pr-agent defaults to 3 findings per review; it has no "unlimited" (0 means report none).
+          pr_reviewer.num_max_findings: "30"
+          # Each review stands alone: finding tracking marked findings "resolved" when a response
+          # failed schema validation or hit the findings cap, even though nothing was fixed.
+          pr_reviewer.persistent_finding_state: "false"
+          # Fewer required output fields = fewer schema failures. Security review stays on.
+          pr_reviewer.require_tests_review: "false"
+          pr_reviewer.require_estimate_effort_to_review: "false"
+          pr_reviewer.require_ticket_analysis_review: "false"
+          # No extra_instructions here: env vars override each repo's .pr_agent.toml, so project
+          # context belongs in that file (or AGENTS.md) on the repo's default branch.
+          github_action_config.pr_actions: '["opened", "reopened", "synchronize"]'
+          github_action_config.auto_review: "true"
+          # Code suggestions were a second full pass over the diff; review only.
+          github_action_config.auto_improve: "false"
+          github_action_config.auto_describe: "false"
