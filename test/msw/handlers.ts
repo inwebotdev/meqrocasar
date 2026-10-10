@@ -32,6 +32,56 @@ export function mockOpenRouterChat(
   });
 }
 
+export const PLACES_SEARCH_TEXT_URL = "https://places.googleapis.com/v1/places:searchText";
+
+export interface PlacesSearchTextRequestInfo {
+  request: Request;
+  /** Parsed JSON request body (`textQuery`, `locationBias`, `pageToken`, …). */
+  body: Record<string, unknown>;
+  /** 1-based index of this call, scoped to this handler instance. */
+  callIndex: number;
+}
+
+/**
+ * Builds a request-body-aware MSW handler for the Places API (New) Text
+ * Search endpoint. `respond` receives the parsed body (so it can branch on
+ * `body.pageToken`) and a per-handler call counter (so tests can assert
+ * paging across calls).
+ */
+export function mockPlacesSearchText(
+  respond: (info: PlacesSearchTextRequestInfo) => Promise<Response> | Response,
+): RequestHandler {
+  let callIndex = 0;
+
+  return http.post(PLACES_SEARCH_TEXT_URL, async ({ request }) => {
+    callIndex += 1;
+    const body = (await request.clone().json()) as Record<string, unknown>;
+    return respond({ request, body, callIndex });
+  });
+}
+
+export interface PlacesPhotoMediaRequestInfo {
+  request: Request;
+  /** 1-based index of this call, scoped to this handler instance. */
+  callIndex: number;
+}
+
+/**
+ * Builds an MSW handler for the Places API (New) photo media endpoint
+ * (`GET /v1/{photo resource name}/media`). Matches any resource name so
+ * tests can assert the request was made without hand-building the path.
+ */
+export function mockPlacesPhotoMedia(
+  respond: (info: PlacesPhotoMediaRequestInfo) => Promise<Response> | Response,
+): RequestHandler {
+  let callIndex = 0;
+
+  return http.get("https://places.googleapis.com/v1/*", ({ request }) => {
+    callIndex += 1;
+    return respond({ request, callIndex });
+  });
+}
+
 export const UNSPLASH_SEARCH_URL = "https://api.unsplash.com/search/photos";
 
 export interface UnsplashRequestInfo {
