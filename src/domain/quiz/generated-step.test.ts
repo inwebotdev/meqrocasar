@@ -2,8 +2,10 @@ import { describe, expect, it } from "vitest";
 
 import { QUIZ_STEPS } from "./questions";
 import {
+  entryFromResolvedOption,
   GeneratedOptionSchema,
   GeneratedStepSchema,
+  ResolvedStepSchema,
   resolvedStepFromCurated,
 } from "./generated-step";
 
@@ -119,5 +121,33 @@ describe("resolvedStepFromCurated", () => {
     expect(rustic?.facets.style).toBe("rustic_vineyard");
     expect(rustic?.refs.venueIds).toEqual(["v_vinedos-la-redonda"]);
     expect(rustic?.venue?.id).toBe("v_vinedos-la-redonda");
+  });
+
+  it("round-trips through ResolvedStepSchema", () => {
+    const step = resolvedStepFromCurated(QUIZ_STEPS[0]!, 1);
+    expect(ResolvedStepSchema.safeParse(step).success).toBe(true);
+  });
+});
+
+describe("entryFromResolvedOption", () => {
+  it("builds a transcript entry straight from the resolved option's own fields", () => {
+    const step = resolvedStepFromCurated(QUIZ_STEPS[0]!, 1);
+    const option = step.options.find((candidate) => candidate.id === "rustic_vineyard");
+    if (!option) throw new Error("fixture missing");
+
+    const entry = entryFromResolvedOption(step, option);
+
+    expect(entry).toEqual({
+      stepId: step.id,
+      question: step.question,
+      topic: step.topic,
+      chosen: {
+        id: option.id,
+        title: option.title,
+        summary: option.description,
+        facets: option.facets,
+        refs: option.refs,
+      },
+    });
   });
 });

@@ -6,7 +6,13 @@ import {
   facetsFromLegacySetting,
   facetsFromLegacyStyle,
 } from "@/domain/kb/legacy-map";
-import { FacetsSchema, type Facets } from "@/domain/kb/taxonomy";
+import {
+  FacetsSchema,
+  type ExperienceValue,
+  type Facets,
+  type SettingValue,
+  type StyleValue,
+} from "@/domain/kb/taxonomy";
 import { matchVenue } from "@/domain/venues/match";
 
 import {
@@ -156,4 +162,85 @@ export function transcriptFromLegacyAnswers(answers: QuizAnswers): Transcript {
   });
 
   return { entries };
+}
+
+// --- adaptive transcript → legacy answers (for the /api/generate-experience fallback) ---
+
+/**
+ * Reverse of `facetsFromLegacyStyle`/`facetsFromLegacySetting`/etc: maps a
+ * folded `Facets` value back onto the closest legacy quiz-answer id, for
+ * facet values the old 4-question quiz never had (e.g. `garden_romantic`,
+ * `rooftop_city`), picking the closest sensible legacy equivalent rather
+ * than failing.
+ */
+const STYLE_FACET_TO_LEGACY: Record<StyleValue, QuizAnswers["style"]> = {
+  colonial: "colonial",
+  rustic_vineyard: "rustic_vineyard",
+  boho_desert: "boho_chic",
+  modern_elegant: "modern_elegant",
+  garden_romantic: "colonial",
+  pueblo_magico: "boho_chic",
+};
+
+const SETTING_FACET_TO_LEGACY: Record<SettingValue, QuizAnswers["setting"]> = {
+  sunset_garden: "sunset_garden",
+  night_casona: "night_casona",
+  day_vineyard: "day_vineyard",
+  rooftop_city: "night_casona",
+  chapel_courtyard: "sunset_garden",
+};
+
+const MUST_HAVE_FACET_TO_LEGACY: Record<ExperienceValue, QuizAnswers["mustHave"]> = {
+  wine_tasting: "wine_tasting",
+  vendimia: "wine_tasting",
+  callejoneada: "callejoneada",
+  hot_air_balloon: "wine_tasting",
+  temazcal: "wine_tasting",
+  cheese_route: "wine_tasting",
+  fireworks: "fireworks",
+  gourmet_banquet: "gourmet_mexican_banquet",
+  mariachi_huapango: "callejoneada",
+  sierra_gorda_escape: "wine_tasting",
+};
+
+const DEFAULT_LEGACY_STYLE: QuizAnswers["style"] = "colonial";
+const DEFAULT_LEGACY_SETTING: QuizAnswers["setting"] = "sunset_garden";
+const DEFAULT_LEGACY_MUST_HAVE: QuizAnswers["mustHave"] = "wine_tasting";
+
+/**
+ * The old "experience" (step 3) answer is really about party scale/lodging
+ * (see `facetsFromLegacyExperience`): `lodging: "needed"` wins first
+ * (that's what `weekend_getaway` uniquely implies), then `scale` maps
+ * directly; a `medium` scale with no lodging need has no exact legacy
+ * match, so it defaults to `grand_traditional`.
+ */
+function legacyExperienceFromFacets(facets: Facets): QuizAnswers["experience"] {
+  if (facets.lodging === "needed") {
+    return "weekend_getaway";
+  }
+  if (facets.scale === "intimate") {
+    return "intimate_boutique";
+  }
+  return "grand_traditional";
+}
+
+/**
+ * Converts an adaptive-engine transcript into the legacy 4-answer shape
+ * `/api/generate-experience` still expects, by folding the transcript's
+ * facets and mapping each one onto its closest legacy answer id (sensible
+ * defaults when a facet is unknown or has no legacy equivalent). Used by
+ * `generateExperienceFromTranscript` (`src/lib/quiz-client.ts`) as a
+ * fallback while that route is migrated to accept a transcript directly.
+ */
+export function transcriptToLegacyAnswers(transcript: Transcript): QuizAnswers {
+  const facets = foldFacets(transcript.entries);
+
+  return {
+    style: facets.style ? STYLE_FACET_TO_LEGACY[facets.style] : DEFAULT_LEGACY_STYLE,
+    setting: facets.setting ? SETTING_FACET_TO_LEGACY[facets.setting] : DEFAULT_LEGACY_SETTING,
+    experience: legacyExperienceFromFacets(facets),
+    mustHave: facets.experience
+      ? MUST_HAVE_FACET_TO_LEGACY[facets.experience]
+      : DEFAULT_LEGACY_MUST_HAVE,
+  };
 }

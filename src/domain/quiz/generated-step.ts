@@ -1,11 +1,12 @@
 import { z } from "zod";
 
 import { loadKb } from "@/domain/kb/load";
-import { FacetsSchema, type ZoneValue } from "@/domain/kb/taxonomy";
+import { FacetsSchema, ZONE_VALUES, type ZoneValue } from "@/domain/kb/taxonomy";
 import type { Kb } from "@/domain/kb/types";
 import { getPhoto } from "@/domain/media/photos";
 
 import { facetsForLegacyStepOption, kbVenueRefs } from "./transcript";
+import type { TranscriptEntry } from "./transcript";
 import type { QuizOption, QuizStep } from "./types";
 
 /**
@@ -111,6 +112,64 @@ export type ResolvedStep = Omit<GeneratedStep, "options"> & {
   options: ResolvedOption[];
   source: "llm" | "static";
 };
+
+// --- resolved step/option Zod schemas (for validating the API response client-side) ---
+
+export const ResolvedOptionPhotoSchema = z
+  .object({
+    url: z.string().min(1),
+    alt: z.string().min(1),
+    credit: z.string().min(1),
+  })
+  .strict();
+
+export const ResolvedOptionVenueSchema = z
+  .object({
+    id: z.string().min(1),
+    name: z.string().min(1),
+    zone: z.enum(ZONE_VALUES),
+    rating: z.number().optional(),
+    userRatingCount: z.number().optional(),
+  })
+  .strict();
+
+export const ResolvedOptionSchema = GeneratedOptionSchema.extend({
+  photo: ResolvedOptionPhotoSchema,
+  venue: ResolvedOptionVenueSchema.optional(),
+});
+
+export const ResolvedStepSchema = GeneratedStepSchema.extend({
+  index: z.number().int().positive(),
+  options: z.array(ResolvedOptionSchema),
+  source: z.enum(["llm", "static"]),
+});
+
+/**
+ * Builds the transcript entry for choosing `option` within `step`: both a
+ * curated (`source: "static"`) and an LLM-generated (`source: "llm"`) step
+ * resolve to the same `ResolvedOption` shape, so the entry's `summary`,
+ * `facets` and `refs` all come straight off the chosen option — no step-id
+ * dispatch needed (contrast `entryFromCuratedOption`, which still has to
+ * derive facets/refs itself because it works from the raw curated
+ * `QuizOption`, not a resolved one).
+ */
+export function entryFromResolvedOption(
+  step: ResolvedStep,
+  option: ResolvedOption,
+): TranscriptEntry {
+  return {
+    stepId: step.id,
+    question: step.question,
+    topic: step.topic,
+    chosen: {
+      id: option.id,
+      title: option.title,
+      summary: option.description,
+      facets: option.facets,
+      refs: option.refs,
+    },
+  };
+}
 
 /**
  * Looks up `venueId` in `kb` and maps it to the compact venue summary a

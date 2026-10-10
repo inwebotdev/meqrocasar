@@ -6,6 +6,8 @@ import {
   entryFromCuratedOption,
   foldFacets,
   transcriptFromLegacyAnswers,
+  transcriptToLegacyAnswers,
+  type Transcript,
   type TranscriptEntry,
 } from "./transcript";
 
@@ -99,6 +101,62 @@ describe("transcriptFromLegacyAnswers", () => {
       setting: "day_vineyard",
       scale: "intimate",
       experience: "wine_tasting",
+    });
+  });
+});
+
+describe("transcriptToLegacyAnswers", () => {
+  it("maps directly-compatible facets onto their legacy ids", () => {
+    const transcript: Transcript = {
+      entries: [
+        makeEntry({ style: "rustic_vineyard" }),
+        makeEntry({ setting: "day_vineyard" }),
+        makeEntry({ scale: "intimate" }),
+        makeEntry({ experience: "wine_tasting" }),
+      ],
+    };
+
+    expect(transcriptToLegacyAnswers(transcript)).toEqual({
+      style: "rustic_vineyard",
+      setting: "day_vineyard",
+      experience: "intimate_boutique",
+      mustHave: "wine_tasting",
+    });
+  });
+
+  it("maps facet values with no exact legacy equivalent to a sensible default", () => {
+    const transcript: Transcript = {
+      entries: [
+        makeEntry({ style: "pueblo_magico" }),
+        makeEntry({ setting: "rooftop_city" }),
+        makeEntry({ experience: "hot_air_balloon" }),
+      ],
+    };
+
+    expect(transcriptToLegacyAnswers(transcript)).toEqual({
+      style: "boho_chic",
+      setting: "night_casona",
+      experience: "grand_traditional",
+      mustHave: "wine_tasting",
+    });
+  });
+
+  it("maps lodging: needed onto weekend_getaway regardless of scale", () => {
+    const transcript: Transcript = {
+      entries: [makeEntry({ scale: "grand", lodging: "needed" })],
+    };
+
+    expect(transcriptToLegacyAnswers(transcript).experience).toBe("weekend_getaway");
+  });
+
+  it("defaults every field to a valid legacy answer for an empty transcript", () => {
+    const answers = transcriptToLegacyAnswers({ entries: [] });
+
+    expect(answers).toEqual({
+      style: "colonial",
+      setting: "sunset_garden",
+      experience: "grand_traditional",
+      mustHave: "wine_tasting",
     });
   });
 });
