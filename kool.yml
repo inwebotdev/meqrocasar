@@ -17,4 +17,4 @@ scripts:
     - docker compose run --rm --no-deps -T app yarn types:check
     - docker compose run --rm --no-deps -T app yarn lint:check
   format:
-    - sh .githooks/format-staged.sh
+    - bash .githooks/format-staged.sh
