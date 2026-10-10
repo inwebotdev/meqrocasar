@@ -61,8 +61,33 @@ Definidas en [`.env.dist`](.env.dist); copia ese archivo a `.env` y completa lo 
 | `OPENROUTER_MODEL_FALLBACK` | No        | Usa el default `deepseek/deepseek-chat`.                                                       |
 | `OPENROUTER_TIMEOUT_MS`     | No        | Usa el default `8000` (ms) antes de pasar al modelo de respaldo o al fallback local.           |
 | `UNSPLASH_ACCESS_KEY`       | No        | Se usan las fotos estáticas curadas en `src/domain/images/static-fallback.ts`.                 |
+| `GOOGLE_PLACES_API_KEY`     | No        | `kool run kb:ingest` no corre y `GET /api/places/photo` responde 404 `places_disabled`.        |
+| `PLACES_PHOTO_CACHE_DIR`    | No        | Usa el default `.cache/places` (ruta relativa a la raíz del repo, ignorada por git).           |
 | `APP_URL`                   | No        | Usa el default `http://localhost:3000` (header `HTTP-Referer` de OpenRouter y URLs absolutas). |
 | `APP_PORT`                  | No        | Usa el default `3000` como puerto publicado por `docker-compose`.                              |
+
+## Base de conocimiento
+
+Las bodas reales de Querétaro (zonas, experiencias y recintos) viven en `data/kb/*.json`,
+validadas por `src/domain/kb/`. Los recintos se alimentan de dos fuentes:
+
+1. **Curados a mano** (`source: "curated"`, `confidence: 1`): los 12 recintos originales, con
+   `oneLiner`/`whyWeddings`/`highlights` escritos a mano.
+2. **Google Places (New)** (`source: "places"`, `confidence: 0.4` hasta que un futuro paso de
+   enriquecimiento los complete): resultados de búsqueda de texto por zona × categoría de boda.
+
+```bash
+kool run kb:ingest   # Google Places (New) -> data/kb/places.raw.json (snapshot committeado)
+kool run kb:build     # places.raw.json + venues.json actual -> data/kb/venues.json regenerado
+```
+
+`kb:ingest` requiere `GOOGLE_PLACES_API_KEY` (con **Places API (New)** habilitada y facturación
+activa en el proyecto de Google Cloud) y llama a `places:searchText` por cada una de las 10 zonas
+× 6 categorías de boda (hasta 2 páginas cada una, limitado a ~5 solicitudes/segundo, con
+reintento en 429/5xx). Text Search (Pro) tiene un nivel gratuito de 5,000 llamadas/mes, así que
+una actualización completa (~60-120 llamadas) no genera costo. Sin la API key, la app funciona
+igual sobre la base de conocimiento ya committeada. `GET /api/places/photo` sirve las fotos de
+Places con cache en disco de 30 días (`PLACES_PHOTO_CACHE_DIR`).
 
 ## Assets que debes agregar
 
