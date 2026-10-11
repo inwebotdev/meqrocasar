@@ -18,6 +18,8 @@ scripts:
     - docker compose run --rm --no-deps -T app yarn tsx scripts/kb/build-venues.ts
   kb:enrich:
     - docker compose run --rm --no-deps -T --env-from-file .env app yarn tsx scripts/kb/enrich-kb.ts
+  ai:bench:
+    - docker compose run --rm --no-deps -T --env-from-file .env app yarn tsx scripts/ai/bench-step-models.ts
   quality:
     - docker compose run --rm --no-deps -T app yarn format:check
     - docker compose run --rm --no-deps -T app yarn types:check

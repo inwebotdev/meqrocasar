@@ -15,7 +15,8 @@
     "test:watch": "vitest",
     "kb:ingest": "tsx scripts/kb/ingest-places.ts",
     "kb:build": "tsx scripts/kb/build-venues.ts",
-    "kb:enrich": "tsx scripts/kb/enrich-kb.ts"
+    "kb:enrich": "tsx scripts/kb/enrich-kb.ts",
+    "ai:bench": "tsx scripts/ai/bench-step-models.ts"
   },
   "dependencies": {
     "@remotion/player": "4.0.340",

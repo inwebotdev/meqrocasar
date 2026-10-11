@@ -16,6 +16,26 @@ function positiveIntWithDefault(defaultValue: number) {
   );
 }
 
+/**
+ * A boolean env var that falls back to `defaultValue` when absent or
+ * blank. Deliberately not `z.coerce.boolean()`: that coerces via
+ * `Boolean(value)`, so the string `"false"` (truthy, non-empty) would
+ * coerce to `true` — exactly backwards for a flag like `QUIZ_PREFETCH=false`.
+ */
+function booleanWithDefault(defaultValue: boolean) {
+  return z.preprocess((value) => {
+    if (typeof value !== "string") {
+      return value;
+    }
+
+    const trimmed = value.trim().toLowerCase();
+    if (trimmed === "") return undefined;
+    if (trimmed === "true" || trimmed === "1") return true;
+    if (trimmed === "false" || trimmed === "0") return false;
+    return value;
+  }, z.boolean().default(defaultValue));
+}
+
 const envSchema = z.object({
   OPENROUTER_API_KEY: optionalSecret,
   OPENROUTER_MODEL_PRIMARY: z.string().default("qwen/qwen-2.5-72b-instruct"),
@@ -23,16 +43,22 @@ const envSchema = z.object({
   OPENROUTER_TIMEOUT_MS: positiveIntWithDefault(8000),
   /**
    * The quiz engine's fast model for per-step generation (not the final
-   * generation's primary/fallback above). Defaults tuned from real runs
-   * against OpenRouter (see engine-prompt.ts/engine.ts history): several
-   * "fast" models either ignored the strict JSON schema or took 15-40s on
-   * this layer's deeply-nested step schema; `qwen-2.5-7b-instruct`
-   * consistently answered in under ~1.5s and validated cleanly.
+   * generation's primary/fallback above). Defaults from
+   * `docs/ai-step-benchmark.md` (`kool run ai:bench`): `qwen-2.5-7b-instruct`
+   * was 100% schema-valid-on-first-try and 100% Spanish-only on every
+   * benchmark run, at the lowest cost of any working candidate.
    */
   OPENROUTER_MODEL_FAST: z.string().default("qwen/qwen-2.5-7b-instruct"),
-  OPENROUTER_MODEL_FAST_FALLBACK: z.string().default("deepseek/deepseek-chat"),
+  /**
+   * `qwen3-30b-a3b` per the same benchmark — `deepseek-chat` (the previous
+   * default here) measured only 22-33% schema-valid and ~40s p50 against
+   * this layer's step schema, so it's no longer safe as the fallback.
+   */
+  OPENROUTER_MODEL_FAST_FALLBACK: z.string().default("qwen/qwen3-30b-a3b"),
   QUIZ_MAX_STEPS: positiveIntWithDefault(7),
   QUIZ_STEP_TIMEOUT_MS: positiveIntWithDefault(6000),
+  /** Speculative prefetch of every visible option's next step (`POST /api/quiz/prefetch`); see `src/domain/quiz/prefetch.ts`. */
+  QUIZ_PREFETCH: booleanWithDefault(true),
   UNSPLASH_ACCESS_KEY: optionalSecret,
   GOOGLE_PLACES_API_KEY: optionalSecret,
   PLACES_PHOTO_CACHE_DIR: z.string().trim().min(1).default(".cache/places"),

@@ -22,7 +22,7 @@ describe("estimateCostUsd", () => {
       completionTokens: 100_000,
     });
 
-    expect(cost).toBeCloseTo(0.5 * 0.28 + 0.1 * 0.42, 6);
+    expect(cost).toBeCloseTo(0.5 * 0.32 + 0.1 * 0.89, 6);
   });
 
   it("returns 0 for an unknown model rather than throwing", () => {

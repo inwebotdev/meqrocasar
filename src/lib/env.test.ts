@@ -15,7 +15,7 @@ describe("parseEnv", () => {
     expect(env.GOOGLE_PLACES_API_KEY).toBeUndefined();
     expect(env.PLACES_PHOTO_CACHE_DIR).toBe(".cache/places");
     expect(env.OPENROUTER_MODEL_FAST).toBe("qwen/qwen-2.5-7b-instruct");
-    expect(env.OPENROUTER_MODEL_FAST_FALLBACK).toBe("deepseek/deepseek-chat");
+    expect(env.OPENROUTER_MODEL_FAST_FALLBACK).toBe("qwen/qwen3-30b-a3b");
     expect(env.QUIZ_MAX_STEPS).toBe(7);
     expect(env.QUIZ_STEP_TIMEOUT_MS).toBe(6000);
   });
@@ -97,5 +97,20 @@ describe("parseEnv", () => {
 
     expect(env.QUIZ_MAX_STEPS).toBe(7);
     expect(env.QUIZ_STEP_TIMEOUT_MS).toBe(6000);
+  });
+
+  it("defaults QUIZ_PREFETCH to true when absent or blank", () => {
+    expect(parseEnv({ NODE_ENV: "test" }).QUIZ_PREFETCH).toBe(true);
+    expect(parseEnv({ NODE_ENV: "test", QUIZ_PREFETCH: "" }).QUIZ_PREFETCH).toBe(true);
+  });
+
+  it("parses QUIZ_PREFETCH=false as false, not as truthy-because-non-empty", () => {
+    expect(parseEnv({ NODE_ENV: "test", QUIZ_PREFETCH: "false" }).QUIZ_PREFETCH).toBe(false);
+    expect(parseEnv({ NODE_ENV: "test", QUIZ_PREFETCH: "0" }).QUIZ_PREFETCH).toBe(false);
+  });
+
+  it("parses QUIZ_PREFETCH=true/1 as true", () => {
+    expect(parseEnv({ NODE_ENV: "test", QUIZ_PREFETCH: "true" }).QUIZ_PREFETCH).toBe(true);
+    expect(parseEnv({ NODE_ENV: "test", QUIZ_PREFETCH: "1" }).QUIZ_PREFETCH).toBe(true);
   });
 });
