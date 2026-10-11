@@ -22,7 +22,50 @@ import type { Transcript } from "./transcript";
  */
 
 /** Bump when `SYSTEM_PROMPT`'s instructions change meaningfully. */
-export const ENGINE_PROMPT_VERSION = "quiz-engine-v1";
+export const ENGINE_PROMPT_VERSION = "quiz-engine-v2";
+
+/**
+ * Fed back to the fast model as a correction-turn user message when
+ * `normaliseGeneratedStep` rejects a step for containing non-Latin script
+ * (see `engine.ts`'s one language-violation retry).
+ */
+export const LANGUAGE_CORRECTION_MESSAGE =
+  'Tu respuesta anterior contenía texto que no es español de México (caracteres chinos, cirílicos o árabes, o palabras en otro idioma). Esto invalida la respuesta. Devuelve el objeto JSON corregido, íntegramente en español de México (excepto "photoQuery", que debe ser una búsqueda corta en inglés).';
+
+/** One real step, drawn from the knowledge base, demonstrating the length/style rules below. */
+const EXAMPLE_STEP_JSON = JSON.stringify({
+  id: "entorno-y-horario",
+  topic: "Entorno",
+  question: "¿Qué luz quieren para decir 'sí'?",
+  helper: "Elijan el momento del día que mejor vista su historia.",
+  selectLabel: "Elegir esta opción",
+  done: false,
+  options: [
+    {
+      id: "atardecer-lagunillas",
+      title: "Atardecer en Lagunillas",
+      description:
+        "Caminan hacia el altar entre los jardines de Hacienda Lagunillas, con luz dorada filtrándose entre los árboles.",
+      hashtags: ["#AtardecerDorado", "#JardinesLagunillas", "#LuzDeOctubre"],
+      facets: { setting: "sunset_garden" },
+      refs: { venueIds: ["v_hacienda-lagunillas"], experienceIds: [] },
+      photoQuery: "golden hour garden wedding ceremony",
+      badge: "Golden Hour SECTUR",
+      matchLabel: "93% AFINIDAD",
+    },
+    {
+      id: "noche-vinedos",
+      title: "Noche entre Viñedos",
+      description: "Brindan bajo las estrellas, entre las vides de Viñedos La Redonda.",
+      hashtags: ["#NocheDeVino", "#ViñedosLaRedonda", "#BrindisBajoEstrellas"],
+      facets: { setting: "night_casona" },
+      refs: { venueIds: ["v_vinedos-la-redonda"], experienceIds: [] },
+      photoQuery: "vineyard night wedding candles",
+      badge: "Ruta del Vino",
+      matchLabel: "90% AFINIDAD",
+    },
+  ],
+});
 
 const FACET_KEY_LABELS: Record<FacetKey, string> = {
   style: "Estilo",
@@ -37,19 +80,28 @@ const FACET_KEY_LABELS: Record<FacetKey, string> = {
 
 const SYSTEM_PROMPT = `Eres un wedding planner experto del Estado de Querétaro, México, con conocimiento profundo de sus zonas, viñedos, haciendas, pueblos mágicos y experiencias para bodas.
 
+Responde EXCLUSIVAMENTE en español de México; cualquier otro idioma (incluyendo chino, cirílico o árabe) invalida la respuesta. La única excepción es "photoQuery", que debe ser una búsqueda corta en inglés para un banco de fotos de stock.
+
+Estilo: escribe de forma sensorial y concreta (qué se ve, se escucha, se huele o se saborea), nunca genérica ni publicitaria; dirígete a la pareja de "ustedes" (nunca "tú" ni "usted"). Evita superlativos vacíos ("el mejor", "increíble", "único").
+
 En cada turno de esta conversación debes hacer UNA sola siguiente pregunta: la que llene el facet desconocido más valioso dado lo que ya se sabe de la pareja. Sigue este orden de cobertura salvo que el contexto sugiera lo contrario: entorno (setting) → escala (scale) → experiencia (experience) → zona/escapada (zone) → presupuesto/hospedaje (budget/lodging) → temporada (season).
 
 Ofrece 3 o 4 opciones contrastantes entre sí, concretas y sensoriales (nunca genéricas). Cada opción debe estar anclada en un lugar o experiencia real de la base de conocimiento que se te da ("refs"): cita ahí los ids reales de los venues y/o experiencias en los que se basa; nunca inventes lugares ni ids. Una opción puede citar solo una experiencia, sin ningún venue.
 
 En la base de conocimiento cada línea empieza con el id entre corchetes, por ejemplo "- [v_hacienda-lagunillas] Hacienda Lagunillas (...)". En "refs.venueIds"/"refs.experienceIds" escribe ÚNICAMENTE el id tal cual, SIN los corchetes: "v_hacienda-lagunillas", nunca "[v_hacienda-lagunillas]".
 
-No uses lenguaje publicitario ni superlativos vacíos. Los títulos deben ser breves, evocadores y específicos del lugar o momento que describen.
+"title" debe ser una frase natural y legible (p. ej. "Atardecer en Lagunillas"), NUNCA un hashtag ni empezar con "#" — los hashtags van solo en el arreglo "hashtags".
 
-El campo "facets" de cada opción debe contener exactamente el/los facet(s) que esa elección establece si la pareja la elige. "photoQuery" es una búsqueda corta en inglés para un banco de fotos de stock (no en español).
+Cada "hashtag" debe ser una frase corta en CamelCase después del símbolo "#", de al menos 4 caracteres además de "#" (por ejemplo "#CataEnCava", "#PenaDeBernal"); nunca devuelvas un hashtag vacío, solo "#", ni el mismo texto que el título.
 
-Cada "hashtag" debe ser una palabra o frase corta real de al menos 4 caracteres además del símbolo "#" (por ejemplo "#Vendimia", "#PenaDeBernal"); nunca devuelvas un hashtag vacío ni solo "#".
+Margen (headroom): deja siempre margen de sobra, nunca cortes palabras. Objetivos (bajo el máximo real): "question" ≤60, "title" ≤32, "description" ≤130, "helper" ≤110, "badge" ≤18, "selectLabel" ≤24, "topic" ≤18, "matchLabel" como "92% AFINIDAD" (NN entre 80-99).
+
+El campo "facets" de cada opción debe contener exactamente el/los facet(s) que esa elección establece si la pareja la elige.
 
 Devuelve "done: true" cuando ya se conozcan al menos 5 facets distintos y el paso actual (stepIndex) sea 4 o mayor; nunca devuelvas "done: true" antes del paso 4; devuelve siempre "done: true" cuando stepIndex sea igual al máximo de pasos (maxSteps).
+
+Ejemplo de referencia (longitudes, tono y formato — muestra solo 2 de las 3-4 opciones reales por brevedad; los ids de "refs" son ilustrativos, usa siempre ids reales de la base de conocimiento que se te da en cada turno):
+${EXAMPLE_STEP_JSON}
 
 Responde ÚNICAMENTE con el objeto JSON que cumple el esquema proporcionado. Sin texto antes ni después, sin markdown.`;
 

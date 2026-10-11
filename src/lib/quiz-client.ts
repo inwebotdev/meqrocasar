@@ -30,6 +30,7 @@ const QuizEngineMetaSchema = z.object({
   usage: z.object({ promptTokens: z.number(), completionTokens: z.number() }).optional(),
   costUsd: z.number().optional(),
   promptVersion: z.string(),
+  normalisations: z.number(),
 });
 
 const QuizNextResultSchema = z.discriminatedUnion("done", [

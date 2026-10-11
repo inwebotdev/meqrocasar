@@ -13,7 +13,11 @@ import type { ImageProvider } from "@/domain/images/provider";
 import { mockOpenRouterChat, mockUnsplashSearch } from "../../../test/msw/handlers";
 import { server } from "../../../test/msw/server";
 import { createQuizEngine } from "./engine";
-import { GeneratedStepSchema, LLM_STEP_JSON_SCHEMA, type GeneratedStep } from "./generated-step";
+import {
+  RAW_LLM_STEP_JSON_SCHEMA,
+  RawGeneratedStepSchema,
+  type RawGeneratedStep,
+} from "./generated-step";
 import type { Transcript, TranscriptEntry } from "./transcript";
 
 const PRIMARY_MODEL = "deepseek/deepseek-chat";
@@ -33,11 +37,11 @@ function baseConfig(overrides: Partial<OpenRouterConfig> = {}): OpenRouterConfig
 
 function buildLlmClient(
   overrides: Partial<OpenRouterConfig> = {},
-): StructuredClient<GeneratedStep> {
+): StructuredClient<RawGeneratedStep> {
   return createStructuredClient({
     config: baseConfig(overrides),
-    schema: GeneratedStepSchema,
-    jsonSchema: LLM_STEP_JSON_SCHEMA,
+    schema: RawGeneratedStepSchema,
+    jsonSchema: RAW_LLM_STEP_JSON_SCHEMA,
     name: "quiz_step",
     temperature: 0.8,
     maxTokens: 900,
@@ -49,12 +53,12 @@ function chatCompletion(content: string) {
 }
 
 interface StepOverrides {
-  options?: GeneratedStep["options"];
+  options?: RawGeneratedStep["options"];
   done?: boolean;
 }
 
-function makeGeneratedStep(overrides: StepOverrides = {}): GeneratedStep {
-  const options: GeneratedStep["options"] = overrides.options ?? [
+function makeGeneratedStep(overrides: StepOverrides = {}): RawGeneratedStep {
+  const options: RawGeneratedStep["options"] = overrides.options ?? [
     {
       id: "vendimia-redonda",
       title: "Vendimia al Atardecer",
@@ -141,7 +145,7 @@ function makeTranscript(count: number): Transcript {
   return { entries: makeEntries(count) };
 }
 
-const throwingLlm: StructuredClient<GeneratedStep> = {
+const throwingLlm: StructuredClient<RawGeneratedStep> = {
   generate() {
     throw new Error("the LLM must not be called for this test");
   },
@@ -199,6 +203,114 @@ describe("createQuizEngine", () => {
     expect(result.meta.fallbackUsed).toBe(false);
     expect(result.meta.model).toBe(PRIMARY_MODEL);
     expect(result.meta.attempts).toBe(1);
+    expect(result.meta.normalisations).toBe(0);
+  });
+
+  it("normalises a messy raw step (degenerate hashtag, hashtag-as-title) and counts the fixes in meta.normalisations", async () => {
+    const messy = makeGeneratedStep({
+      options: [
+        {
+          ...makeGeneratedStep().options[0]!,
+          title: "#VendimiaAlAtardecer",
+          hashtags: ["#", "#Vendimia", "#ValleDeColon"],
+        },
+        makeGeneratedStep().options[1]!,
+        makeGeneratedStep().options[2]!,
+        makeGeneratedStep().options[3]!,
+      ],
+    });
+
+    server.use(mockOpenRouterChat(() => chatCompletion(JSON.stringify(messy))));
+
+    const engine = createQuizEngine({
+      llm: buildLlmClient(),
+      images: createStaticImageProvider(),
+      maxSteps: 7,
+    });
+
+    const result = await engine.nextStep(makeTranscript(3));
+
+    expect(result.done).toBe(false);
+    if (result.done) return;
+    const messyOption = result.step.options.find((option) => option.id === "vendimia-redonda");
+    expect(messyOption?.title).toBe("VendimiaAlAtardecer");
+    expect(messyOption?.title.startsWith("#")).toBe(false);
+    expect(messyOption?.hashtags).toHaveLength(3);
+    expect(result.meta.normalisations).toBeGreaterThan(0);
+    expect(result.meta.fallbackUsed).toBe(false);
+  });
+
+  it("retries once on non-Latin script in the response, then falls back if it recurs", async () => {
+    const nonLatinStep = makeGeneratedStep({
+      options: [
+        { ...makeGeneratedStep().options[0]!, title: "你好世界" },
+        makeGeneratedStep().options[1]!,
+        makeGeneratedStep().options[2]!,
+        makeGeneratedStep().options[3]!,
+      ],
+    });
+
+    const bodies: Record<string, unknown>[] = [];
+    server.use(
+      mockOpenRouterChat(({ body }) => {
+        bodies.push(body);
+        return chatCompletion(JSON.stringify(nonLatinStep));
+      }),
+    );
+
+    const engine = createQuizEngine({
+      llm: buildLlmClient(),
+      images: createStaticImageProvider(),
+      maxSteps: 7,
+    });
+
+    const result = await engine.nextStep(makeTranscript(3));
+
+    expect(bodies).toHaveLength(2);
+    const correctionMessages = bodies[1]?.messages as Array<{ role: string; content: string }>;
+    expect(correctionMessages.at(-2)?.role).toBe("assistant");
+    expect(correctionMessages.at(-1)?.role).toBe("user");
+    expect(correctionMessages.at(-1)?.content).toContain("español de México");
+
+    expect(result.done).toBe(false);
+    if (result.done) return;
+    expect(result.step.source).toBe("static");
+    expect(result.meta.fallbackUsed).toBe(true);
+    expect(result.meta.attempts).toBe(2);
+  });
+
+  it("recovers from a language violation when the correction retry comes back clean", async () => {
+    const nonLatinStep = makeGeneratedStep({
+      options: [
+        { ...makeGeneratedStep().options[0]!, title: "你好世界" },
+        makeGeneratedStep().options[1]!,
+        makeGeneratedStep().options[2]!,
+        makeGeneratedStep().options[3]!,
+      ],
+    });
+    const cleanStep = makeGeneratedStep();
+
+    let callIndex = 0;
+    server.use(
+      mockOpenRouterChat(() => {
+        callIndex += 1;
+        return chatCompletion(JSON.stringify(callIndex === 1 ? nonLatinStep : cleanStep));
+      }),
+    );
+
+    const engine = createQuizEngine({
+      llm: buildLlmClient(),
+      images: createStaticImageProvider(),
+      maxSteps: 7,
+    });
+
+    const result = await engine.nextStep(makeTranscript(3));
+
+    expect(result.done).toBe(false);
+    if (result.done) return;
+    expect(result.step.source).toBe("llm");
+    expect(result.meta.fallbackUsed).toBe(false);
+    expect(result.meta.attempts).toBe(2);
   });
 
   it("drops options whose venue id isn't a real KB venue, keeping the rest", async () => {

@@ -7,17 +7,23 @@ import type { Kb } from "@/domain/kb/types";
 import type { ImageProvider } from "@/domain/images/provider";
 import { placesPhotoPath } from "@/domain/places/photo-url";
 
-import { buildStepMessages, ENGINE_PROMPT_VERSION } from "./engine-prompt";
+import {
+  buildStepMessages,
+  ENGINE_PROMPT_VERSION,
+  LANGUAGE_CORRECTION_MESSAGE,
+} from "./engine-prompt";
 import {
   resolveVenueSummary,
   resolvedStepFromCurated,
   type GeneratedOption,
   type GeneratedRefs,
   type GeneratedStep,
+  type RawGeneratedStep,
   type ResolvedOption,
   type ResolvedOptionPhoto,
   type ResolvedStep,
 } from "./generated-step";
+import { normaliseGeneratedStep } from "./normalise-step";
 import { QUIZ_STEPS } from "./questions";
 import type { QuizStep } from "./types";
 import { foldFacets, type Transcript, type TranscriptEntry } from "./transcript";
@@ -38,7 +44,10 @@ import { hashTranscript } from "./transcript-hash";
 const STATIC_MODEL = "local-fallback";
 
 /** Hard cap on the in-memory step cache (see `CreateQuizEngineOptions.cache`). */
-const MAX_CACHE_ENTRIES = 500;
+const MAX_CACHE_ENTRIES = 1000;
+
+/** How long a generated step stays warm in the cache (also covers speculative prefetch warm-ups — see `prefetch.ts`). */
+const CACHE_TTL_MS = 15 * 60 * 1000;
 
 export interface QuizEngineMeta {
   model: string;
@@ -51,6 +60,8 @@ export interface QuizEngineMeta {
   usage?: LlmUsage;
   costUsd?: number;
   promptVersion: string;
+  /** Number of `normaliseGeneratedStep` fixes applied to the raw LLM output (0 for a static/cached step). */
+  normalisations: number;
 }
 
 export type QuizEngineResult =
@@ -60,17 +71,26 @@ export interface QuizEngine {
   nextStep(transcript: Transcript): Promise<QuizEngineResult>;
 }
 
+/** One cached `nextStep` result, with the millis timestamp (per the engine's `now`) after which it's stale. */
+export interface QuizStepCacheEntry {
+  result: QuizEngineResult;
+  expiresAt: number;
+}
+
+/** The engine's step cache: see `CreateQuizEngineOptions.cache` — built as a module-level singleton in `src/lib/quiz-engine-deps.ts` so it's shared process-wide (including by the speculative-prefetch route). */
+export type QuizStepCache = Map<string, QuizStepCacheEntry>;
+
 export interface CreateQuizEngineOptions {
   /** Omitted (e.g. no OPENROUTER_API_KEY) to always use the curated static decks. */
-  llm?: StructuredClient<GeneratedStep>;
+  llm?: StructuredClient<RawGeneratedStep>;
   images: ImageProvider;
   /** Defaults to `loadKb()`. */
   kb?: Kb;
   maxSteps: number;
   /** Monotonic-ish millis clock, injected so tests never depend on real time. Defaults to `Date.now`. */
   now?: () => number;
-  /** In-memory LRU (max `MAX_CACHE_ENTRIES`), injected so tests can inspect/seed it. Defaults to a fresh `Map`. */
-  cache?: Map<string, QuizEngineResult>;
+  /** In-memory TTL LRU (max `MAX_CACHE_ENTRIES`, `CACHE_TTL_MS` TTL), injected so tests/callers can inspect/seed/share it. Defaults to a fresh `Map`. */
+  cache?: QuizStepCache;
 }
 
 // --- meta helpers ------------------------------------------------------
@@ -83,6 +103,7 @@ interface BuildMetaInput {
   source: "llm" | "static";
   attempts: number;
   usage?: LlmUsage;
+  normalisations?: number;
 }
 
 function buildMeta(input: BuildMetaInput): QuizEngineMeta {
@@ -96,6 +117,7 @@ function buildMeta(input: BuildMetaInput): QuizEngineMeta {
     usage: input.usage,
     costUsd: input.usage ? estimateCostUsd(input.model, input.usage) : undefined,
     promptVersion: ENGINE_PROMPT_VERSION,
+    normalisations: input.normalisations ?? 0,
   };
 }
 
@@ -112,25 +134,37 @@ function countKnownFacets(facets: Facets): number {
   return FACET_KEYS.filter((key) => facets[key] !== undefined).length;
 }
 
-// --- cache (simple insertion-order LRU over a Map) ------------------------
+// --- cache (TTL + insertion-order LRU over a Map) ------------------------
 
-function cacheGet(cache: Map<string, QuizEngineResult>, key: string): QuizEngineResult | undefined {
-  const value = cache.get(key);
-  if (value !== undefined) {
-    // Refresh recency: delete + re-insert moves it to the end of iteration order.
-    cache.delete(key);
-    cache.set(key, value);
+function cacheGet(
+  cache: QuizStepCache,
+  key: string,
+  now: () => number,
+): QuizEngineResult | undefined {
+  const entry = cache.get(key);
+  if (entry === undefined) {
+    return undefined;
   }
-  return value;
+
+  if (entry.expiresAt <= now()) {
+    cache.delete(key);
+    return undefined;
+  }
+
+  // Refresh recency: delete + re-insert moves it to the end of iteration order.
+  cache.delete(key);
+  cache.set(key, entry);
+  return entry.result;
 }
 
 function cacheSet(
-  cache: Map<string, QuizEngineResult>,
+  cache: QuizStepCache,
   key: string,
   value: QuizEngineResult,
+  now: () => number,
 ): void {
   cache.delete(key);
-  cache.set(key, value);
+  cache.set(key, { result: value, expiresAt: now() + CACHE_TTL_MS });
 
   while (cache.size > MAX_CACHE_ENTRIES) {
     const oldestKey: string | undefined = cache.keys().next().value;
@@ -283,7 +317,7 @@ async function resolveOptionPhoto(
 // --- the main generate-or-fallback pipeline ------------------------------
 
 interface GenerateContext {
-  llm: StructuredClient<GeneratedStep> | undefined;
+  llm: StructuredClient<RawGeneratedStep> | undefined;
   transcript: Transcript;
   entries: readonly TranscriptEntry[];
   facets: Facets;
@@ -321,10 +355,37 @@ async function generateStep(ctx: GenerateContext): Promise<QuizEngineResult> {
     });
   }
 
-  let candidate = primary.value;
   let model = primary.model;
   let usage = primary.usage;
   let attempts = primary.attempts.length;
+  let normalised = normaliseGeneratedStep(primary.value);
+
+  // The one thing normalisation can't fix itself: non-Latin script means
+  // the model answered off-language, so give it one explicit correction
+  // turn rather than silently mangling Chinese/Cyrillic/Arabic text.
+  if (!normalised.ok && normalised.reason === "language") {
+    const languageRetryMessages: ChatMessage[] = [
+      ...messages,
+      { role: "assistant", content: JSON.stringify(primary.value) },
+      { role: "user", content: LANGUAGE_CORRECTION_MESSAGE },
+    ];
+
+    const languageRetry = await llm.generate(languageRetryMessages);
+    attempts += languageRetry.attempts.length;
+
+    if (languageRetry.ok) {
+      model = languageRetry.model;
+      usage = languageRetry.usage;
+      normalised = normaliseGeneratedStep(languageRetry.value);
+    }
+  }
+
+  if (!normalised.ok) {
+    return staticFallbackResult({ entries, stepIndex, start, now, attempts });
+  }
+
+  let candidate = normalised.step;
+  const normalisations = normalised.fixes.length;
 
   let { options: validOptions, invalidIds } = filterOptions(candidate, kb);
 
@@ -339,10 +400,13 @@ async function generateStep(ctx: GenerateContext): Promise<QuizEngineResult> {
     attempts += retry.attempts.length;
 
     if (retry.ok) {
-      candidate = retry.value;
-      model = retry.model;
-      usage = retry.usage;
-      ({ options: validOptions, invalidIds } = filterOptions(candidate, kb));
+      const retryNormalised = normaliseGeneratedStep(retry.value);
+      if (retryNormalised.ok) {
+        candidate = retryNormalised.step;
+        model = retry.model;
+        usage = retry.usage;
+        ({ options: validOptions, invalidIds } = filterOptions(candidate, kb));
+      }
     }
   }
 
@@ -353,7 +417,16 @@ async function generateStep(ctx: GenerateContext): Promise<QuizEngineResult> {
   if (candidate.done) {
     return {
       done: true,
-      meta: buildMeta({ model, start, now, fallbackUsed: false, source: "llm", attempts, usage }),
+      meta: buildMeta({
+        model,
+        start,
+        now,
+        fallbackUsed: false,
+        source: "llm",
+        attempts,
+        usage,
+        normalisations,
+      }),
     };
   }
 
@@ -376,7 +449,16 @@ async function generateStep(ctx: GenerateContext): Promise<QuizEngineResult> {
   return {
     done: false,
     step,
-    meta: buildMeta({ model, start, now, fallbackUsed: false, source: "llm", attempts, usage }),
+    meta: buildMeta({
+      model,
+      start,
+      now,
+      fallbackUsed: false,
+      source: "llm",
+      attempts,
+      usage,
+      normalisations,
+    }),
   };
 }
 
@@ -397,7 +479,7 @@ export function createQuizEngine(options: CreateQuizEngineOptions): QuizEngine {
   const images = options.images;
   const maxSteps = options.maxSteps;
   const now = options.now ?? (() => Date.now());
-  const cache = options.cache ?? new Map<string, QuizEngineResult>();
+  const cache: QuizStepCache = options.cache ?? new Map();
 
   return {
     async nextStep(transcript: Transcript): Promise<QuizEngineResult> {
@@ -439,7 +521,7 @@ export function createQuizEngine(options: CreateQuizEngineOptions): QuizEngine {
       }
 
       const cacheKey = hashTranscript(transcript);
-      const cached = cacheGet(cache, cacheKey);
+      const cached = cacheGet(cache, cacheKey, now);
       if (cached) {
         return withCachedTiming(cached, start, now);
       }
@@ -457,7 +539,7 @@ export function createQuizEngine(options: CreateQuizEngineOptions): QuizEngine {
         now,
       });
 
-      cacheSet(cache, cacheKey, result);
+      cacheSet(cache, cacheKey, result, now);
       return result;
     },
   };

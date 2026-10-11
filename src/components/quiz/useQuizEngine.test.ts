@@ -49,7 +49,8 @@ const curatedMeta = {
   fallbackUsed: false,
   source: "static" as const,
   attempts: 0,
-  promptVersion: "quiz-engine-v1",
+  promptVersion: "quiz-engine-v2",
+  normalisations: 0,
 };
 
 function step(index: number): ResolvedStep {

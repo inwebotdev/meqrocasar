@@ -111,8 +111,15 @@ describe("buildStepMessages", () => {
     const userContent = messages[1]?.content ?? "";
     expect(userContent.length).toBeLessThan(6000);
 
+    // The fixed system message grew in the engine-quality layer (explicit
+    // language rule, headroom guidance, style guide, one few-shot example)
+    // to fix real truncation/language bugs — a deliberate, documented
+    // trade: a few hundred extra prompt tokens for materially better
+    // output, still comfortably inside any fast model's context window and
+    // a small fraction of a step's end-to-end latency (dominated by
+    // generation, not prompt processing).
     const totalChars = messages.reduce((sum, message) => sum + message.content.length, 0);
-    expect(totalChars).toBeLessThan(8000);
+    expect(totalChars).toBeLessThan(11000);
   });
 
   it("exports a stable prompt version string", () => {

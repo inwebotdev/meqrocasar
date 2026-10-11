@@ -86,6 +86,71 @@ export type GeneratedStep = z.infer<typeof GeneratedStepSchema>;
 /** JSON Schema for `GeneratedStepSchema`, passed verbatim as `response_format.json_schema.schema`. */
 export const LLM_STEP_JSON_SCHEMA = z.toJSONSchema(GeneratedStepSchema) as Record<string, unknown>;
 
+// --- raw (decode-headroom) schemas --------------------------------------
+
+/**
+ * Looser mirror of `GeneratedOptionSchema`/`GeneratedStepSchema`: every
+ * free-text field gets roughly 2x the real max, so a grammar-constrained
+ * decoder has headroom to naturally finish a sentence instead of
+ * hard-truncating mid-word exactly at the tight limit (the bug this layer
+ * fixes — see `normalise-step.ts`, which smart-truncates back down to the
+ * real max at a word boundary). Hashtags are only checked for count/length
+ * here; `normaliseGeneratedStep` fixes missing "#" prefixes and
+ * regenerates empty/degenerate ones. `refs`/`facets` are left exactly as
+ * strict as the real schema — those are controlled vocabulary, not
+ * free text, so there's no truncation/language risk to buy headroom for.
+ * Fields `normaliseGeneratedStep` defaults when empty (`hashtags`
+ * entries, `badge`, `selectLabel`) drop even the `.min(1)` a real field
+ * keeps, so a literally-empty string still reaches normalisation instead
+ * of failing shape validation before it gets the chance to default it.
+ *
+ * This is what's actually sent as `response_format.json_schema.schema`
+ * (`RAW_LLM_STEP_JSON_SCHEMA`) and what the quiz engine's structured
+ * client validates against (`RawGeneratedStepSchema`); `GeneratedStepSchema`
+ * only ever sees the output of `normaliseGeneratedStep`.
+ */
+export const RawGeneratedOptionSchema = z
+  .object({
+    id: z.string().regex(OPTION_ID_PATTERN),
+    title: z.string().min(1).max(80),
+    description: z.string().min(1).max(260),
+    hashtags: z.array(z.string().max(60)).length(3),
+    facets: FacetsSchema,
+    refs: GeneratedRefsSchema,
+    /** Short English stock-photo search query. */
+    photoQuery: z.string().min(1).max(100),
+    badge: z.string().max(50),
+    matchLabel: z.string().max(40),
+  })
+  .strict();
+
+export type RawGeneratedOption = z.infer<typeof RawGeneratedOptionSchema>;
+
+export const RawGeneratedStepSchema = z
+  .object({
+    id: z.string().min(1).max(60),
+    topic: z.string().min(1).max(50),
+    question: z.string().min(1).max(140),
+    helper: z.string().min(1).max(220),
+    selectLabel: z.string().max(60),
+    options: z.array(RawGeneratedOptionSchema).min(3).max(4),
+    done: z.boolean(),
+    doneReason: z.string().max(200).optional(),
+  })
+  .strict();
+
+export type RawGeneratedStep = z.infer<typeof RawGeneratedStepSchema>;
+
+/**
+ * JSON Schema for `RawGeneratedStepSchema` — see its doc comment for why
+ * this, not `GeneratedStepSchema`, is what's actually sent as
+ * `response_format.json_schema.schema` for the quiz engine's fast model.
+ */
+export const RAW_LLM_STEP_JSON_SCHEMA = z.toJSONSchema(RawGeneratedStepSchema) as Record<
+  string,
+  unknown
+>;
+
 // --- resolved step (what the UI consumes) --------------------------------
 
 export interface ResolvedOptionPhoto {
