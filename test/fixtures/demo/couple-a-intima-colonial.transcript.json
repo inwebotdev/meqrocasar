@@ -1,0 +1,128 @@
+{
+  "entries": [
+    {
+      "stepId": "style",
+      "question": "¿Qué vibra define su historia?",
+      "topic": "Estilo",
+      "chosen": {
+        "id": "colonial",
+        "title": "Colonial Imperial & Casonas",
+        "summary": "Patios claustrales de cantera virreinal rosa, fuentes coloniales, candiles de cristal y callejones de leyenda en el Centro Histórico.",
+        "facets": {
+          "style": "colonial"
+        },
+        "refs": {
+          "venueIds": ["v_casona-cinco-patios"],
+          "experienceIds": []
+        }
+      }
+    },
+    {
+      "stepId": "entorno-y-horario",
+      "question": "¿Prefieren un entorno más íntimo o lleno de vida?",
+      "topic": "Entorno",
+      "chosen": {
+        "id": "centro-historico-callejoneada",
+        "title": "Callejoneada en el Centro Histórico",
+        "summary": "Recorren los andadores de cantera rosa del Centro Histórico, con la luz dorada de la tarde cayendo sobre los patios coloniales.",
+        "facets": {
+          "setting": "chapel_courtyard"
+        },
+        "refs": {
+          "venueIds": ["v_centro-historico-callejoneada"],
+          "experienceIds": []
+        }
+      }
+    },
+    {
+      "stepId": "escala-y-experiencia",
+      "question": "¿Preferirían una celebración íntima o algo más grande? ¿Y qué tipo de…",
+      "topic": "Escala y experiencia",
+      "chosen": {
+        "id": "callejoneada-centro-historico",
+        "title": "Callejoneada en el Centro Histórico",
+        "summary": "Recorren los andadores de cantera del Centro Histórico, donde los esperan música tradicional y ponche con un toque colonial.",
+        "facets": {
+          "scale": "intimate"
+        },
+        "refs": {
+          "venueIds": [],
+          "experienceIds": ["callejoneada-centro-historico"]
+        }
+      }
+    },
+    {
+      "stepId": "mustHave",
+      "question": "¿Qué momento no puede faltar en su boda?",
+      "topic": "Elemento Infaltable",
+      "chosen": {
+        "id": "wine_tasting",
+        "title": "Cata de Vinos",
+        "summary": "Cata guiada en las cavas subterráneas de Finca Sala Vivé by Freixenet, entre burbujas de método tradicional y copas que brillan a la luz de las velas.",
+        "facets": {
+          "experience": "wine_tasting"
+        },
+        "refs": {
+          "venueIds": ["v_finca-sala-vive-freixenet"],
+          "experienceIds": []
+        }
+      }
+    },
+    {
+      "stepId": "zona-y-presupuesto",
+      "question": "¿Les interesa celebrar en un lugar del Centro Histórico o prefieren una zona…",
+      "topic": "Zona y Presupuesto",
+      "chosen": {
+        "id": "tequisquiapan",
+        "title": "Tequisquiapan",
+        "summary": "Celebra en el corazón colonial de Tequisquiapan, con sus calles adoquinadas y casas coloridas.",
+        "facets": {
+          "zone": "tequisquiapan"
+        },
+        "refs": {
+          "venueIds": ["v_placesfixturehotellasjacarandas", "v_hacienda-lagunillas"],
+          "experienceIds": []
+        }
+      }
+    },
+    {
+      "stepId": "presupuesto-hospedaje",
+      "question": "¿Tienen un rango de presupuesto específico para su boda? También podrían…",
+      "topic": "Presupuesto y Hospedaje",
+      "chosen": {
+        "id": "casona-cinco-patios",
+        "title": "Casona de los Cinco Patios",
+        "summary": "Celebren en un patio colonial virreinal con capacidad para hasta 280 invitados. Los invitados pueden alojarse en hoteles boutique cercanos en Tequisquiapan.",
+        "facets": {
+          "budget": "medio",
+          "lodging": "needed"
+        },
+        "refs": {
+          "venueIds": ["v_casona-cinco-patios"],
+          "experienceIds": []
+        }
+      }
+    },
+    {
+      "stepId": "temporada",
+      "question": "¿Cuál es su temporada favorita para celebrar?",
+      "topic": "Temporada",
+      "chosen": {
+        "id": "primavera-tequisquiapan",
+        "title": "Primavera en Tequisquiapan",
+        "summary": "Disfrutan de un recorrido por más de 30 viñedos y queserías artesanales, con catas y maridajes en la ruta del arte, queso y vino.",
+        "facets": {
+          "season": "primavera"
+        },
+        "refs": {
+          "venueIds": [
+            "v_tequisquiapan-pueblo-magico",
+            "v_vinedos-la-redonda",
+            "v_hacienda-viborillas"
+          ],
+          "experienceIds": ["ruta-arte-queso-vino"]
+        }
+      }
+    }
+  ]
+}

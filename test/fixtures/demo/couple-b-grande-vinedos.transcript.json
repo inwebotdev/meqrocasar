@@ -1,0 +1,123 @@
+{
+  "entries": [
+    {
+      "stepId": "style",
+      "question": "¿Qué vibra define su historia?",
+      "topic": "Estilo",
+      "chosen": {
+        "id": "rustic_vineyard",
+        "title": "Rústico Viñedo & Enológico",
+        "summary": "Atardeceres entre parras centenarias, barricas de roble americano, maridajes de quesos artesanales y brindis bajo las estrellas.",
+        "facets": {
+          "style": "rustic_vineyard"
+        },
+        "refs": {
+          "venueIds": ["v_vinedos-la-redonda"],
+          "experienceIds": []
+        }
+      }
+    },
+    {
+      "stepId": "entorno-y-horario",
+      "question": "¿Prefieren un entorno más íntimo o algo más abierto y expansivo?",
+      "topic": "Entorno",
+      "chosen": {
+        "id": "v_vinedos-la-redonda",
+        "title": "Viñedos La Redonda",
+        "summary": "Ceremonia en el viñedo más grande de Querétaro, con vista a la Peña de Bernal y un ambiente al aire libre.",
+        "facets": {
+          "setting": "rooftop_city"
+        },
+        "refs": {
+          "venueIds": ["v_vinedos-la-redonda"],
+          "experienceIds": []
+        }
+      }
+    },
+    {
+      "stepId": "escala-de-la-fiesta",
+      "question": "¿Prefieren una boda íntima o algo más grande?",
+      "topic": "Escala",
+      "chosen": {
+        "id": "boda-privada-vinedos-la-redonda",
+        "title": "Boda Privada en Viñedos La Redonda",
+        "summary": "Celebran su unión en la casona principal de Viñedos La Redonda, con capacidad para 550 invitados.",
+        "facets": {
+          "scale": "grand"
+        },
+        "refs": {
+          "venueIds": ["v_vinedos-la-redonda"],
+          "experienceIds": []
+        }
+      }
+    },
+    {
+      "stepId": "experiencia-quinzequiapan",
+      "question": "¿Les interesaría una cata de vinos al aire libre con vista a la Peña?",
+      "topic": "Experiencia",
+      "chosen": {
+        "id": "cata-vinos-de-cote",
+        "title": "Cata en Bodegas De Cote",
+        "summary": "Maridan cada copa de alta cocina de autor en un viñedo contemporáneo con lago artificial.",
+        "facets": {
+          "experience": "callejoneada"
+        },
+        "refs": {
+          "venueIds": [],
+          "experienceIds": ["cata-vinos-de-cote"]
+        }
+      }
+    },
+    {
+      "stepId": "zona-boda",
+      "question": "¿Les gustaría disfrutar de la boda en un entorno urbano con historia colonial…",
+      "topic": "Zona",
+      "chosen": {
+        "id": "centro-historico",
+        "title": "Centro Histórico",
+        "summary": "Caminan por calles empedradas y patios de cantera rosa bajo el cielo estrellado, entre las casonas del siglo XVIII.",
+        "facets": {
+          "zone": "centro_historico"
+        },
+        "refs": {
+          "venueIds": ["v_casona-cinco-patios", "v_centro-historico-callejoneada"],
+          "experienceIds": ["callejoneada-centro-historico"]
+        }
+      }
+    },
+    {
+      "stepId": "mustHave",
+      "question": "¿Qué momento no puede faltar en su boda?",
+      "topic": "Elemento Infaltable",
+      "chosen": {
+        "id": "wine_tasting",
+        "title": "Cata de Vinos",
+        "summary": "Cata guiada en las cavas subterráneas de Finca Sala Vivé by Freixenet, entre burbujas de método tradicional y copas que brillan a la luz de las velas.",
+        "facets": {
+          "experience": "wine_tasting"
+        },
+        "refs": {
+          "venueIds": ["v_finca-sala-vive-freixenet"],
+          "experienceIds": []
+        }
+      }
+    },
+    {
+      "stepId": "presupuesto-hacienda-viborillas",
+      "question": "¿Están buscando una boda dentro de su presupuesto o prefieren invertir más en…",
+      "topic": "Presupuesto",
+      "chosen": {
+        "id": "hacienda-viborillas-150k",
+        "title": "Hacienda Viborillas, 150k MXN",
+        "summary": "Celebra en la Hacienda Viborillas con un banquete gourmet y una vista impresionante de los jardines coloniales. La economía es tu prioridad.",
+        "facets": {
+          "budget": "exclusivo"
+        },
+        "refs": {
+          "venueIds": ["v_hacienda-viborillas"],
+          "experienceIds": []
+        }
+      }
+    }
+  ]
+}

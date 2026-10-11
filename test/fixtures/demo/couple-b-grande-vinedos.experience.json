@@ -1,0 +1,258 @@
+{
+  "conceptTitle": "Boda en el Tiempo de la Vendimia",
+  "palette": [
+    {
+      "hex": "#5B1A2B",
+      "name": "Vino de Barrica"
+    },
+    {
+      "hex": "#C9A227",
+      "name": "Oro Vendimia"
+    },
+    {
+      "hex": "#D9C7A3",
+      "name": "Beige Barrica"
+    },
+    {
+      "hex": "#4B5E3A",
+      "name": "Verde Viñedo"
+    }
+  ],
+  "narrative": "El atardecer se tiñe de dorado mientras las parras centenarias de Viñedos La Redonda se inclinan bajo el peso de las uvas, y las copas de vino se llenan con el brindis de la noche. Entre los viñedos, la casona colonial de Hacienda Viborillas espera con sus jardines iluminados por luces de hadas, donde los invitados se deleitan con maridajes de quesos artesanales en la cata guiada de Bodegas De Cote.\n\nBajo el cielo estrellado del Centro Histórico, los pasos de ustedes resuenan en los patios de cantera rosa, mientras el aroma del vino se mezcla con el de las flores de la casona de los Cinco Patios. La elegancia colonial se funde con la tradición encajada en cada rincón de la boda, desde la ceremonia en el viñedo más antiguo hasta la recepción en la cava subterránea de Freixenet, donde las burbujas brillan bajo la luz de las velas.",
+  "reelTagline": "Vendimia Dorada en Querétaro",
+  "searchQueries": [
+    "vineyard wedding golden hour",
+    "wine cellar reception",
+    "rustic garden ceremony"
+  ],
+  "venues": [
+    {
+      "id": "v_vinedos-la-redonda",
+      "name": "Viñedos La Redonda",
+      "zone": "Ezequiel Montes",
+      "municipality": "Ezequiel Montes",
+      "subtitle": "El viñedo más grande y antiguo de Querétaro, con vista a la Peña de Bernal.",
+      "capacity": 550,
+      "capacityApprox": true,
+      "features": [
+        "Jardines con Vista a la Peña de Bernal",
+        "Vendimia Anual",
+        "Eventos al Aire Libre"
+      ],
+      "priceCategory": "Medio-Alto",
+      "tags": [],
+      "aliases": ["La Redonda", "Viñedos la Redonda"],
+      "reason": "Por su extensa superficie y vista a la Peña de Bernal, ideal para bodas de gran escala con ambiente rústico y enológico.",
+      "role": "principal",
+      "photoUrl": "https://images.unsplash.com/photo-1762926627960-18e533c63134?auto=format&fit=crop&w=1200&q=80",
+      "photoAttribution": "shawn kim",
+      "oneLiner": "El viñedo más grande y antiguo de Querétaro, con vista a la Peña de Bernal.",
+      "whyWeddings": "Sus jardines entre vides centenarias y la vendimia anual crean el escenario perfecto para una boda rústica al aire libre, con capacidad para grandes celebraciones."
+    },
+    {
+      "id": "v_bodegas-de-cote",
+      "name": "Bodegas De Cote",
+      "zone": "Ezequiel Montes",
+      "municipality": "Ezequiel Montes",
+      "subtitle": "Viñedo contemporáneo con lago artificial y alta cocina de autor.",
+      "capacity": 120,
+      "capacityApprox": true,
+      "features": ["Lago Artificial", "Cava Privada", "Alta Cocina de Autor"],
+      "priceCategory": "Exclusivo",
+      "tags": [],
+      "aliases": ["De Cote Viñedos", "Bodegas de Cote Bernal"],
+      "reason": "Por su cava privada y lago artificial, perfecto para una cata de vinos y maridaje con alta cocina de autor.",
+      "role": "destacada",
+      "photoUrl": "https://images.unsplash.com/photo-1762621175799-5fc1e336e84a?auto=format&fit=crop&w=1200&q=80",
+      "photoAttribution": "Brunxs",
+      "oneLiner": "Viñedo contemporáneo con lago artificial y alta cocina de autor.",
+      "whyWeddings": "Su lago artificial, cava privada y cocina de autor crean una velada íntima y boho-moderna entre viñedos, ideal para cenas con candelabros a la luz de las velas."
+    },
+    {
+      "id": "v_hacienda-viborillas",
+      "name": "Hacienda Viborillas",
+      "zone": "Colón",
+      "municipality": "Colón",
+      "subtitle": "Hacienda virreinal del siglo XVIII con cavas centenarias y terrazas.",
+      "capacity": 400,
+      "capacityApprox": true,
+      "features": ["Cavas Subterráneas Centenarias", "Terrazas Panorámicas", "Jardines Coloniales"],
+      "priceCategory": "Exclusivo",
+      "tags": [],
+      "aliases": ["Viborillas Hacienda"],
+      "reason": "Por su elegancia colonial y capacidad para 400 invitados, ideal para una boda con banquete gourmet y vista a los jardines centenarios.",
+      "role": "destacada",
+      "photoUrl": "https://images.unsplash.com/photo-1536392706976-e486e2ba97af?auto=format&fit=crop&w=1200&q=80",
+      "photoAttribution": "M F",
+      "oneLiner": "Hacienda virreinal del siglo XVIII con cavas centenarias y terrazas.",
+      "whyWeddings": "Sus cavas subterráneas centenarias y terrazas panorámicas reciben grandes fiestas con cierre de fuegos artificiales sobre los jardines coloniales."
+    }
+  ],
+  "photos": [
+    {
+      "url": "https://images.unsplash.com/photo-1762926627960-18e533c63134?auto=format&fit=crop&w=1200&q=80",
+      "alt": "Viñedos La Redonda",
+      "credit": "shawn kim"
+    },
+    {
+      "url": "https://images.unsplash.com/photo-1762621175799-5fc1e336e84a?auto=format&fit=crop&w=1200&q=80",
+      "alt": "Bodegas De Cote",
+      "credit": "Brunxs"
+    },
+    {
+      "url": "https://images.unsplash.com/photo-1714686513923-15494ae02180?auto=format&fit=crop&w=1200&q=80",
+      "alt": "Patio colonial con arcos de cantera y una fuente central",
+      "credit": "Annie Wood"
+    }
+  ],
+  "transcript": {
+    "entries": [
+      {
+        "stepId": "style",
+        "question": "¿Qué vibra define su historia?",
+        "topic": "Estilo",
+        "chosen": {
+          "id": "rustic_vineyard",
+          "title": "Rústico Viñedo & Enológico",
+          "summary": "Atardeceres entre parras centenarias, barricas de roble americano, maridajes de quesos artesanales y brindis bajo las estrellas.",
+          "facets": {
+            "style": "rustic_vineyard"
+          },
+          "refs": {
+            "venueIds": ["v_vinedos-la-redonda"],
+            "experienceIds": []
+          }
+        }
+      },
+      {
+        "stepId": "entorno-y-horario",
+        "question": "¿Prefieren un entorno más íntimo o algo más abierto y expansivo?",
+        "topic": "Entorno",
+        "chosen": {
+          "id": "v_vinedos-la-redonda",
+          "title": "Viñedos La Redonda",
+          "summary": "Ceremonia en el viñedo más grande de Querétaro, con vista a la Peña de Bernal y un ambiente al aire libre.",
+          "facets": {
+            "setting": "rooftop_city"
+          },
+          "refs": {
+            "venueIds": ["v_vinedos-la-redonda"],
+            "experienceIds": []
+          }
+        }
+      },
+      {
+        "stepId": "escala-de-la-fiesta",
+        "question": "¿Prefieren una boda íntima o algo más grande?",
+        "topic": "Escala",
+        "chosen": {
+          "id": "boda-privada-vinedos-la-redonda",
+          "title": "Boda Privada en Viñedos La Redonda",
+          "summary": "Celebran su unión en la casona principal de Viñedos La Redonda, con capacidad para 550 invitados.",
+          "facets": {
+            "scale": "grand"
+          },
+          "refs": {
+            "venueIds": ["v_vinedos-la-redonda"],
+            "experienceIds": []
+          }
+        }
+      },
+      {
+        "stepId": "experiencia-quinzequiapan",
+        "question": "¿Les interesaría una cata de vinos al aire libre con vista a la Peña?",
+        "topic": "Experiencia",
+        "chosen": {
+          "id": "cata-vinos-de-cote",
+          "title": "Cata en Bodegas De Cote",
+          "summary": "Maridan cada copa de alta cocina de autor en un viñedo contemporáneo con lago artificial.",
+          "facets": {
+            "experience": "callejoneada"
+          },
+          "refs": {
+            "venueIds": [],
+            "experienceIds": ["cata-vinos-de-cote"]
+          }
+        }
+      },
+      {
+        "stepId": "zona-boda",
+        "question": "¿Les gustaría disfrutar de la boda en un entorno urbano con historia colonial…",
+        "topic": "Zona",
+        "chosen": {
+          "id": "centro-historico",
+          "title": "Centro Histórico",
+          "summary": "Caminan por calles empedradas y patios de cantera rosa bajo el cielo estrellado, entre las casonas del siglo XVIII.",
+          "facets": {
+            "zone": "centro_historico"
+          },
+          "refs": {
+            "venueIds": ["v_casona-cinco-patios", "v_centro-historico-callejoneada"],
+            "experienceIds": ["callejoneada-centro-historico"]
+          }
+        }
+      },
+      {
+        "stepId": "mustHave",
+        "question": "¿Qué momento no puede faltar en su boda?",
+        "topic": "Elemento Infaltable",
+        "chosen": {
+          "id": "wine_tasting",
+          "title": "Cata de Vinos",
+          "summary": "Cata guiada en las cavas subterráneas de Finca Sala Vivé by Freixenet, entre burbujas de método tradicional y copas que brillan a la luz de las velas.",
+          "facets": {
+            "experience": "wine_tasting"
+          },
+          "refs": {
+            "venueIds": ["v_finca-sala-vive-freixenet"],
+            "experienceIds": []
+          }
+        }
+      },
+      {
+        "stepId": "presupuesto-hacienda-viborillas",
+        "question": "¿Están buscando una boda dentro de su presupuesto o prefieren invertir más en…",
+        "topic": "Presupuesto",
+        "chosen": {
+          "id": "hacienda-viborillas-150k",
+          "title": "Hacienda Viborillas, 150k MXN",
+          "summary": "Celebra en la Hacienda Viborillas con un banquete gourmet y una vista impresionante de los jardines coloniales. La economía es tu prioridad.",
+          "facets": {
+            "budget": "exclusivo"
+          },
+          "refs": {
+            "venueIds": ["v_hacienda-viborillas"],
+            "experienceIds": []
+          }
+        }
+      }
+    ]
+  },
+  "facets": {
+    "style": "rustic_vineyard",
+    "setting": "rooftop_city",
+    "scale": "grand",
+    "experience": "wine_tasting",
+    "zone": "centro_historico",
+    "budget": "exclusivo"
+  },
+  "itineraryHint": "Viernes: cata en Bodegas De Cote · Sábado: ceremonia en Viñedos La Redonda · Domingo: recepción en Hacienda Viborillas",
+  "meta": {
+    "model": "qwen/qwen3-30b-a3b",
+    "fallbackUsed": false,
+    "durationMs": 3584,
+    "generatedAt": "2026-10-11T01:25:54.926Z",
+    "promptVersion": "experience-prompt-v1",
+    "attempts": [
+      {
+        "model": "qwen/qwen3-30b-a3b",
+        "outcome": "ok",
+        "durationMs": 389
+      }
+    ],
+    "usage": {
+      "promptTokens": 3381,
+      "completionTokens": 633
+    }
+  }
+}

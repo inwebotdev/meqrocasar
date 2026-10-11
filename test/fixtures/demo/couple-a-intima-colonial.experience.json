@@ -1,0 +1,261 @@
+{
+  "conceptTitle": "Catas y Calles bajo el Cielo Colonial",
+  "palette": [
+    {
+      "hex": "#A0522D",
+      "name": "Canela Colonial"
+    },
+    {
+      "hex": "#D2691E",
+      "name": "Rosa Cantera"
+    },
+    {
+      "hex": "#8B4513",
+      "name": "Café Antiguo"
+    },
+    {
+      "hex": "#C0A080",
+      "name": "Beige Viñedo"
+    }
+  ],
+  "narrative": "La brisa primaveral lleva el aroma de la canela y el vino añejo mientras recorren los andadores de cantera rosa del Centro Histórico, donde los pasos resonan bajo los candiles de cristal. En la cava subterránea de Freixenet, las copas brillan bajo la luz de velas, y entre burbujas de método tradicional, el vino se convierte en el protagonista de una cata que trasciende el tiempo. La noche se despliega en la Casona de los Cinco Patios, donde los patios coloniales, iluminados por faroles, acogen una celebración íntima entre los muros de una historia que respira en cada esquina.\n\nAmanecen en Tequisquiapan, donde el recorrido por la Ruta del Arte, Queso y Vino los lleva a degustar maridajes que fusionan tradición y creatividad. En la Hacienda Atongo, los jardines centenarios se tiñen de luz dorada, y el vino, servido en copas de cristal, se convierte en el hilo conductor de una jornada que mezcla el colonialismo con la elegancia de una boda en primavera.",
+  "reelTagline": "Catas y Calles bajo el Cielo Colonial",
+  "searchQueries": [
+    "colonial vineyard wedding",
+    "historic center ceremony",
+    "wine tasting reception"
+  ],
+  "venues": [
+    {
+      "id": "v_casona-cinco-patios",
+      "name": "Casona de los Cinco Patios",
+      "zone": "Centro Histórico",
+      "municipality": "Querétaro",
+      "subtitle": "Patios de cantera rosa virreinal en el corazón del Centro Histórico.",
+      "capacity": 280,
+      "capacityApprox": true,
+      "features": ["Patio de Cantera Rosa", "Cava Subterránea", "Certificación SECTUR"],
+      "priceCategory": "Medio-Alto",
+      "tags": [],
+      "aliases": ["Casona de los 5 Patios", "Casa del Conde de Regla"],
+      "reason": "Por su patio colonial virreinal con capacidad para hasta 280 invitados y la posibilidad de hospedaje en hoteles cercanos en Tequisquiapan.",
+      "role": "principal",
+      "photoUrl": "https://images.unsplash.com/photo-1714686513923-15494ae02180?auto=format&fit=crop&w=1200&q=80",
+      "photoAttribution": "Annie Wood",
+      "oneLiner": "Patios de cantera rosa virreinal en el corazón del Centro Histórico.",
+      "whyWeddings": "Cava subterránea, patio de cantera rosa certificado por SECTUR y callejoneadas nocturnas a un paso, ideal para una boda colonial en pleno Centro Histórico."
+    },
+    {
+      "id": "v_finca-sala-vive-freixenet",
+      "name": "Finca Sala Vivé by Freixenet",
+      "zone": "Ezequiel Montes",
+      "municipality": "Ezequiel Montes",
+      "subtitle": "Cavas subterráneas de método tradicional para una boda íntima entre burbujas.",
+      "capacity": 180,
+      "capacityApprox": true,
+      "features": ["Cava Subterránea", "Salones con Jardín", "Cata de Espumosos"],
+      "priceCategory": "Medio-Alto",
+      "tags": [],
+      "aliases": ["Sala Vivé by Freixenet", "Freixenet Querétaro"],
+      "reason": "Por su cava subterránea de método tradicional y cata guiada en el claustro de la finca, ideal para una boda íntima con experiencia vinícola.",
+      "role": "destacada",
+      "photoUrl": "https://images.unsplash.com/photo-1643087448435-72f70bd4ce88?auto=format&fit=crop&w=1200&q=80",
+      "photoAttribution": "David Goldman",
+      "oneLiner": "Cavas subterráneas de método tradicional para una boda íntima entre burbujas.",
+      "whyWeddings": "La cava subterránea y los salones con jardín de Freixenet ofrecen catas de espumosos y un ambiente íntimo y sofisticado para pocos invitados."
+    },
+    {
+      "id": "v_hacienda-atongo",
+      "name": "Hacienda Atongo",
+      "zone": "Tequisquiapan",
+      "municipality": "Tequisquiapan",
+      "subtitle": "Hacienda del siglo XVII con viñedo activo y jardines centenarios.",
+      "capacity": 150,
+      "capacityApprox": true,
+      "features": ["Viñedo Activo", "Arquitectura Rústica", "Jardines Centenarios"],
+      "priceCategory": "Medio",
+      "tags": [],
+      "aliases": ["Hacienda Atongo Tequisquiapan"],
+      "reason": "Por sus jardines centenarios y viñedo activo, perfectos para una celebración colonial en Tequisquiapan con ambiente íntimo.",
+      "role": "destacada",
+      "photoUrl": "https://images.unsplash.com/photo-1633118287620-f4ba5d7bdc9b?auto=format&fit=crop&w=1200&q=80",
+      "photoAttribution": "Anthea Lawrence",
+      "oneLiner": "Hacienda del siglo XVII con viñedo activo y jardines centenarios.",
+      "whyWeddings": "Su viñedo activo y arquitectura rústica permiten una boda diurna entre vides, con vendimia propia y jardines centenarios como telón de fondo."
+    }
+  ],
+  "photos": [
+    {
+      "url": "https://images.unsplash.com/photo-1714686513923-15494ae02180?auto=format&fit=crop&w=1200&q=80",
+      "alt": "Casona de los Cinco Patios",
+      "credit": "Annie Wood"
+    },
+    {
+      "url": "https://images.unsplash.com/photo-1643087448435-72f70bd4ce88?auto=format&fit=crop&w=1200&q=80",
+      "alt": "Finca Sala Vivé by Freixenet",
+      "credit": "David Goldman"
+    },
+    {
+      "url": "https://images.unsplash.com/photo-1762926628297-bbb137ed9968?auto=format&fit=crop&w=1200&q=80",
+      "alt": "Patio con arcos, columnas de cantera y buganvilias en flor",
+      "credit": "shawn kim"
+    }
+  ],
+  "transcript": {
+    "entries": [
+      {
+        "stepId": "style",
+        "question": "¿Qué vibra define su historia?",
+        "topic": "Estilo",
+        "chosen": {
+          "id": "colonial",
+          "title": "Colonial Imperial & Casonas",
+          "summary": "Patios claustrales de cantera virreinal rosa, fuentes coloniales, candiles de cristal y callejones de leyenda en el Centro Histórico.",
+          "facets": {
+            "style": "colonial"
+          },
+          "refs": {
+            "venueIds": ["v_casona-cinco-patios"],
+            "experienceIds": []
+          }
+        }
+      },
+      {
+        "stepId": "entorno-y-horario",
+        "question": "¿Prefieren un entorno más íntimo o lleno de vida?",
+        "topic": "Entorno",
+        "chosen": {
+          "id": "centro-historico-callejoneada",
+          "title": "Callejoneada en el Centro Histórico",
+          "summary": "Recorren los andadores de cantera rosa del Centro Histórico, con la luz dorada de la tarde cayendo sobre los patios coloniales.",
+          "facets": {
+            "setting": "chapel_courtyard"
+          },
+          "refs": {
+            "venueIds": ["v_centro-historico-callejoneada"],
+            "experienceIds": []
+          }
+        }
+      },
+      {
+        "stepId": "escala-y-experiencia",
+        "question": "¿Preferirían una celebración íntima o algo más grande? ¿Y qué tipo de…",
+        "topic": "Escala y experiencia",
+        "chosen": {
+          "id": "callejoneada-centro-historico",
+          "title": "Callejoneada en el Centro Histórico",
+          "summary": "Recorren los andadores de cantera del Centro Histórico, donde los esperan música tradicional y ponche con un toque colonial.",
+          "facets": {
+            "scale": "intimate"
+          },
+          "refs": {
+            "venueIds": [],
+            "experienceIds": ["callejoneada-centro-historico"]
+          }
+        }
+      },
+      {
+        "stepId": "mustHave",
+        "question": "¿Qué momento no puede faltar en su boda?",
+        "topic": "Elemento Infaltable",
+        "chosen": {
+          "id": "wine_tasting",
+          "title": "Cata de Vinos",
+          "summary": "Cata guiada en las cavas subterráneas de Finca Sala Vivé by Freixenet, entre burbujas de método tradicional y copas que brillan a la luz de las velas.",
+          "facets": {
+            "experience": "wine_tasting"
+          },
+          "refs": {
+            "venueIds": ["v_finca-sala-vive-freixenet"],
+            "experienceIds": []
+          }
+        }
+      },
+      {
+        "stepId": "zona-y-presupuesto",
+        "question": "¿Les interesa celebrar en un lugar del Centro Histórico o prefieren una zona…",
+        "topic": "Zona y Presupuesto",
+        "chosen": {
+          "id": "tequisquiapan",
+          "title": "Tequisquiapan",
+          "summary": "Celebra en el corazón colonial de Tequisquiapan, con sus calles adoquinadas y casas coloridas.",
+          "facets": {
+            "zone": "tequisquiapan"
+          },
+          "refs": {
+            "venueIds": ["v_placesfixturehotellasjacarandas", "v_hacienda-lagunillas"],
+            "experienceIds": []
+          }
+        }
+      },
+      {
+        "stepId": "presupuesto-hospedaje",
+        "question": "¿Tienen un rango de presupuesto específico para su boda? También podrían…",
+        "topic": "Presupuesto y Hospedaje",
+        "chosen": {
+          "id": "casona-cinco-patios",
+          "title": "Casona de los Cinco Patios",
+          "summary": "Celebren en un patio colonial virreinal con capacidad para hasta 280 invitados. Los invitados pueden alojarse en hoteles boutique cercanos en Tequisquiapan.",
+          "facets": {
+            "budget": "medio",
+            "lodging": "needed"
+          },
+          "refs": {
+            "venueIds": ["v_casona-cinco-patios"],
+            "experienceIds": []
+          }
+        }
+      },
+      {
+        "stepId": "temporada",
+        "question": "¿Cuál es su temporada favorita para celebrar?",
+        "topic": "Temporada",
+        "chosen": {
+          "id": "primavera-tequisquiapan",
+          "title": "Primavera en Tequisquiapan",
+          "summary": "Disfrutan de un recorrido por más de 30 viñedos y queserías artesanales, con catas y maridajes en la ruta del arte, queso y vino.",
+          "facets": {
+            "season": "primavera"
+          },
+          "refs": {
+            "venueIds": [
+              "v_tequisquiapan-pueblo-magico",
+              "v_vinedos-la-redonda",
+              "v_hacienda-viborillas"
+            ],
+            "experienceIds": ["ruta-arte-queso-vino"]
+          }
+        }
+      }
+    ]
+  },
+  "facets": {
+    "style": "colonial",
+    "setting": "chapel_courtyard",
+    "scale": "intimate",
+    "experience": "wine_tasting",
+    "zone": "tequisquiapan",
+    "budget": "medio",
+    "lodging": "needed",
+    "season": "primavera"
+  },
+  "itineraryHint": "Viernes: Ruta del Arte, Queso y Vino en Tequisquiapan · Sábado: Cata en Freixenet · Domingo: Celebración en Casona de los Cinco Patios",
+  "meta": {
+    "model": "qwen/qwen3-30b-a3b",
+    "fallbackUsed": false,
+    "durationMs": 3929,
+    "generatedAt": "2026-10-11T01:25:21.466Z",
+    "promptVersion": "experience-prompt-v1",
+    "attempts": [
+      {
+        "model": "qwen/qwen3-30b-a3b",
+        "outcome": "ok",
+        "durationMs": 367
+      }
+    ],
+    "usage": {
+      "promptTokens": 3422,
+      "completionTokens": 683
+    }
+  }
+}
