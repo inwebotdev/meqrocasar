@@ -150,9 +150,20 @@ Las bodas reales de Querétaro (zonas, experiencias y recintos) viven en `data/k
 validadas por `src/domain/kb/`. Los recintos se alimentan de dos fuentes:
 
 1. **Curados a mano** (`source: "curated"`, `confidence: 1`): los 12 recintos originales, con
-   `oneLiner`/`whyWeddings`/`highlights` escritos a mano.
+   `oneLiner`/`whyWeddings`/`highlights` escritos a mano. No tienen `rating`/`websiteUri` reales
+   (nunca pasaron por Places) — `VenueCard` simplemente no muestra esos elementos cuando faltan.
 2. **Google Places (New)** (`source: "places"`, `confidence: 0.4` hasta que el paso de
    enriquecimiento los complete): resultados de búsqueda de texto por zona × categoría de boda.
+
+**Estado actual committeado:** los 9 recintos `source: "places"` que vienen en `data/kb/venues.json`
+hoy son datos de **fixture** (`v_placesfixture*`, `placeId` falso, `websiteUri` en `example.com`,
+rating inventado) — un snapshot determinista para que `kool run test`/la demo sin red funcionen,
+no el resultado de un `kb:ingest` real. Si `GOOGLE_PLACES_API_KEY` apunta a un proyecto con
+**Places API (New)** deshabilitada (el error exacto es `PERMISSION_DENIED` / `SERVICE_DISABLED` en
+los logs de `GET /api/places/photo`), sus fotos fallan con 500 en vez de mostrar la foto real — es
+justo el síntoma que motiva la nota de **Places API (New)** arriba. Corre `kool run kb:ingest` con
+una key válida (API habilitada) para reemplazarlos por recintos reales con foto/rating/liga
+verdaderos; los 12 recintos curados no se ven afectados.
 
 El refresco completo de la base de conocimiento es una secuencia de tres pasos:
 
