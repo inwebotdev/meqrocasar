@@ -51,8 +51,16 @@ export interface PrefetchOutcome {
 /** Matches `GeneratedStep.options`'s own `min(3).max(4)` — there are never more options to warm than this. */
 const MAX_OPTIONS = 4;
 const MAX_CONCURRENCY = 4;
-/** A slow/hanging warm-up call is abandoned (left running in the background to still populate the cache) rather than blocking the response past this budget. */
-const PER_CALL_BUDGET_MS = 3000;
+/**
+ * Default per-call budget (overridable via `QUIZ_PREFETCH_BUDGET_MS`, see
+ * `src/lib/env.ts`): how long a warm-up call is tracked before it's
+ * abandoned for bookkeeping purposes. The HTTP route (`schedulePrefetch`)
+ * never waits on this — it's fire-and-forget — so this budget doesn't
+ * affect response latency; it just bounds how long `runPrefetch`'s own
+ * promise stays open, and a call that's still running past it keeps
+ * running and still warms the cache whenever it actually finishes.
+ */
+const PER_CALL_BUDGET_MS = 12_000;
 
 /** Runs `tasks` with at most `limit` in flight at once, preserving result order. */
 async function mapWithConcurrency<T, R>(
@@ -141,4 +149,34 @@ export async function runPrefetch(
   const warmed = results.filter((result) => result !== undefined && !result.meta.cached).length;
 
   return { warmed, durationMs: now() - start };
+}
+
+/** What `schedulePrefetch` returns: just how many options it kicked off, not whether/how they finished. */
+export interface PrefetchScheduled {
+  scheduled: number;
+}
+
+/**
+ * Fire-and-forget entry point for `POST /api/quiz/prefetch`: immediately
+ * returns how many options were scheduled to warm, without waiting on any
+ * of them. `runPrefetch` keeps running in the background (not awaited
+ * here) and lands its results in the engine's shared step cache — see its
+ * own doc comment for the warm-up mechanics. `onSettled`, when given, is
+ * called once that background work finishes (e.g. for a debug log); it
+ * never affects the return value or delays it.
+ */
+export function schedulePrefetch(
+  request: PrefetchRequest,
+  engine: QuizEngine,
+  now: () => number = Date.now,
+  budgetMs: number = PER_CALL_BUDGET_MS,
+  onSettled?: (outcome: PrefetchOutcome) => void,
+): PrefetchScheduled {
+  const scheduled = Math.min(request.options.length, MAX_OPTIONS);
+
+  void runPrefetch(request, engine, now, budgetMs)
+    .then((outcome) => onSettled?.(outcome))
+    .catch(() => undefined);
+
+  return { scheduled };
 }

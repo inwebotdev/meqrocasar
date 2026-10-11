@@ -1,3 +1,6 @@
+import { loadKb } from "@/domain/kb/load";
+import type { FacetKey, Facets } from "@/domain/kb/taxonomy";
+
 import {
   GeneratedStepSchema,
   RawGeneratedStepSchema,
@@ -11,9 +14,17 @@ import {
  * — applied *before* that schema ever sees the data, so none of these
  * fixes cost a correction turn: trimming/collapsing whitespace, stripping
  * a hashtag-style leading "#" off titles, dropping and regenerating
- * degenerate hashtags, smart-truncating over-long text at a word
- * boundary (never mid-word), coercing `matchLabel` into the
- * "NN% AFINIDAD" shape, and defaulting `badge`/`selectLabel` when empty.
+ * degenerate hashtags, and smart-truncating over-long text at a word
+ * boundary (never mid-word).
+ *
+ * The model no longer generates `badge`/`matchLabel` (option-level) or
+ * `selectLabel` (step-level) at all — see `RawGeneratedStepSchema`'s doc
+ * comment — so this module also *derives* all three deterministically
+ * (not a "fix": always applied, never recorded in `fixes`) and fills them
+ * onto the `GeneratedOption`/`GeneratedStep` the UI consumes: `badge`
+ * from the option's dominant facet, `matchLabel` from a seeded hash of
+ * the option id (stable across renders/prefetch), `selectLabel` from the
+ * step's topic.
  *
  * The one thing this can't fix is non-Spanish text: `ok: false, reason:
  * "language"` tells the caller (`engine.ts`) to run one correction retry
@@ -62,12 +73,68 @@ const OPTION_FIELD_MAX = {
   hashtag: 40,
 } as const;
 
+/** Used only when an option's facets object is somehow empty (defensive — the raw schema requires at least the facet(s) the option establishes). */
 const DEFAULT_BADGE = "Sugerencia SECTUR";
-const DEFAULT_SELECT_LABEL = "Elegir esta opción";
 const MIN_HASHTAG_WORD_LENGTH = 4;
-const MATCH_LABEL_MIN = 80;
-const MATCH_LABEL_MAX = 99;
-const DEFAULT_MATCH_PERCENT = 90;
+/** `matchLabel`'s seeded range — see `matchLabelForId`. */
+const MATCH_LABEL_MIN = 86;
+const MATCH_LABEL_MAX = 97;
+const MATCH_LABEL_RANGE = MATCH_LABEL_MAX - MATCH_LABEL_MIN + 1;
+
+/** Deterministic (stable across calls/prefetch) string hash — FNV-1a-ish, no crypto needed. */
+function hashString(value: string): number {
+  let hash = 0;
+  for (let index = 0; index < value.length; index += 1) {
+    hash = (hash * 31 + value.charCodeAt(index)) >>> 0;
+  }
+  return hash;
+}
+
+/** Seeds a `matchLabel` from the option id, so the same option always shows the same affinity (86-99%). */
+function matchLabelForId(id: string): string {
+  const percent = MATCH_LABEL_MIN + (hashString(id) % MATCH_LABEL_RANGE);
+  return `${percent}% AFINIDAD`;
+}
+
+/** The facet keys a badge can be derived from, in priority order when an option sets more than one. */
+const BADGE_FACET_PRIORITY: readonly FacetKey[] = [
+  "setting",
+  "experience",
+  "zone",
+  "scale",
+  "budget",
+  "season",
+];
+
+function badgeForZone(zoneId: string): string {
+  const zone = loadKb().zones.find((candidate) => candidate.id === zoneId);
+  return zone?.puebloMagico ? "Pueblo Mágico" : "Destino";
+}
+
+/** Derives an option's badge from the dominant facet it sets — see `BADGE_FACET_PRIORITY`. */
+function badgeForFacets(facets: Facets): string {
+  for (const key of BADGE_FACET_PRIORITY) {
+    const value = facets[key];
+    if (value === undefined) continue;
+
+    switch (key) {
+      case "setting":
+        return "Momento ideal";
+      case "experience":
+        return "Experiencia SECTUR";
+      case "zone":
+        return badgeForZone(value);
+      case "scale":
+        return "Escala";
+      case "budget":
+        return "Presupuesto";
+      case "season":
+        return "Temporada";
+    }
+  }
+
+  return DEFAULT_BADGE;
+}
 
 function cleanText(value: string): string {
   return value.trim().replace(/\s+/g, " ");
@@ -178,22 +245,6 @@ function normaliseHashtags(
   return result.slice(0, 3);
 }
 
-/** Extracts a percentage from free-text matchLabel and clamps it into 80–99, rendering "NN% AFINIDAD". */
-function coerceMatchLabel(raw: string, fixes: string[]): string {
-  const digits = raw.match(/\d{1,3}/);
-  const parsed = digits ? Number(digits[0]) : NaN;
-  const clamped = Number.isFinite(parsed)
-    ? Math.min(MATCH_LABEL_MAX, Math.max(MATCH_LABEL_MIN, Math.round(parsed)))
-    : DEFAULT_MATCH_PERCENT;
-  const value = `${clamped}% AFINIDAD`;
-
-  if (value !== raw) {
-    fixes.push("coerced-match-label");
-  }
-
-  return value;
-}
-
 function stripped(value: string, fixes: string[]): string {
   const cleaned = cleanText(value);
   if (cleaned !== value) {
@@ -227,14 +278,11 @@ function normaliseOption(
     "photo-query",
   );
 
-  let badge = stripped(raw.badge, fixes);
-  if (badge.length === 0) {
-    badge = DEFAULT_BADGE;
-    fixes.push("defaulted-badge");
-  }
-  badge = truncateField(badge, OPTION_FIELD_MAX.badge, fixes, "badge");
+  // Derived, not fixed: the model never sends these (see the module doc
+  // comment), so there's nothing to "repair" here — just compute them.
+  const badge = truncateField(badgeForFacets(raw.facets), OPTION_FIELD_MAX.badge, [], "badge");
+  const matchLabel = matchLabelForId(raw.id);
 
-  const matchLabel = coerceMatchLabel(stripped(raw.matchLabel, fixes), fixes);
   const hashtags = normaliseHashtags(
     raw.hashtags.map((tag) => stripped(tag, fixes)),
     title,
@@ -261,17 +309,24 @@ function collectRawStrings(raw: ReturnType<typeof RawGeneratedStepSchema.parse>)
     raw.topic,
     raw.question,
     raw.helper,
-    raw.selectLabel,
     raw.doneReason ?? "",
     ...raw.options.flatMap((option) => [
       option.title,
       option.description,
       option.photoQuery,
-      option.badge,
-      option.matchLabel,
       ...option.hashtags,
     ]),
   ];
+}
+
+/** Derives the step's `selectLabel` from its (already cleaned/truncated) topic — the model no longer sends one. */
+function selectLabelForTopic(topic: string): string {
+  return truncateField(
+    `Elegir esta ${topic.toLowerCase()}`,
+    STEP_FIELD_MAX.selectLabel,
+    [],
+    "select-label",
+  );
 }
 
 /**
@@ -309,12 +364,7 @@ export function normaliseGeneratedStep(raw: unknown): NormaliseStepResult {
     "helper",
   );
 
-  let selectLabel = stripped(step.selectLabel, fixes);
-  if (selectLabel.length === 0) {
-    selectLabel = DEFAULT_SELECT_LABEL;
-    fixes.push("defaulted-select-label");
-  }
-  selectLabel = truncateField(selectLabel, STEP_FIELD_MAX.selectLabel, fixes, "select-label");
+  const selectLabel = selectLabelForTopic(topic);
 
   const doneReasonRaw =
     step.doneReason !== undefined ? stripped(step.doneReason, fixes) : undefined;

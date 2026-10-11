@@ -113,4 +113,33 @@ describe("parseEnv", () => {
     expect(parseEnv({ NODE_ENV: "test", QUIZ_PREFETCH: "true" }).QUIZ_PREFETCH).toBe(true);
     expect(parseEnv({ NODE_ENV: "test", QUIZ_PREFETCH: "1" }).QUIZ_PREFETCH).toBe(true);
   });
+
+  it("defaults QUIZ_PREFETCH_BUDGET_MS to 12000 when absent or blank", () => {
+    expect(parseEnv({ NODE_ENV: "test" }).QUIZ_PREFETCH_BUDGET_MS).toBe(12000);
+    expect(
+      parseEnv({ NODE_ENV: "test", QUIZ_PREFETCH_BUDGET_MS: "" }).QUIZ_PREFETCH_BUDGET_MS,
+    ).toBe(12000);
+  });
+
+  it("overrides QUIZ_PREFETCH_BUDGET_MS from a string", () => {
+    expect(
+      parseEnv({ NODE_ENV: "test", QUIZ_PREFETCH_BUDGET_MS: "20000" }).QUIZ_PREFETCH_BUDGET_MS,
+    ).toBe(20000);
+  });
+
+  it("leaves OPENROUTER_PROVIDER_ORDER undefined when absent or blank", () => {
+    expect(parseEnv({ NODE_ENV: "test" }).OPENROUTER_PROVIDER_ORDER).toBeUndefined();
+    expect(
+      parseEnv({ NODE_ENV: "test", OPENROUTER_PROVIDER_ORDER: "  " }).OPENROUTER_PROVIDER_ORDER,
+    ).toBeUndefined();
+  });
+
+  it("parses OPENROUTER_PROVIDER_ORDER into a trimmed list of provider names", () => {
+    const env = parseEnv({
+      NODE_ENV: "test",
+      OPENROUTER_PROVIDER_ORDER: "Cerebras, Groq ,SambaNova",
+    });
+
+    expect(env.OPENROUTER_PROVIDER_ORDER).toEqual(["Cerebras", "Groq", "SambaNova"]);
+  });
 });

@@ -19,7 +19,7 @@
  * script runs this under `docker compose run --env-from-file .env`, so
  * the key is already in the environment by the time this file executes.
  */
-import { mkdir, writeFile } from "node:fs/promises";
+import { appendFile, mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 
 import { createStructuredClient } from "../../src/domain/ai/structured";
@@ -39,6 +39,8 @@ import {
 } from "../../src/domain/quiz/transcript";
 
 const MODELS_ENDPOINT = "https://openrouter.ai/api/v1/models";
+const ENDPOINTS_ENDPOINT = (modelId: string) =>
+  `https://openrouter.ai/api/v1/models/${modelId}/endpoints`;
 const APP_URL = process.env.APP_URL?.trim() || "http://localhost:3000";
 const APP_TITLE = "Querétaro Romance AI";
 const MAX_STEPS = 7;
@@ -70,6 +72,38 @@ const EXTRA_FAMILY_PREFIXES = ["qwen/", "deepseek/", "z-ai/glm", "moonshotai/kim
 const EXTRA_KEYWORDS = ["flash", "turbo", "mini"];
 const MAX_EXTRA_CANDIDATES = 4;
 
+/**
+ * `--providers=Cerebras,Groq,SambaNova`: when given, also benchmarks these
+ * candidate models through that provider order (`provider: { order,
+ * allow_fallbacks: true }`, same as `OPENROUTER_PROVIDER_ORDER` in
+ * `src/lib/env.ts`), each against the default (unordered) routing, so the
+ * speed gain (or lack of one) from pinning fast providers is visible
+ * before it's set as the default. Availability is verified per model via
+ * `GET /api/v1/models/{id}/endpoints` before any calls are made to it.
+ */
+const PROVIDER_BENCH_CANDIDATES = [
+  "qwen/qwen-2.5-7b-instruct",
+  "qwen/qwen3-32b",
+  "meta-llama/llama-3.3-70b-instruct",
+  "openai/gpt-oss-120b",
+] as const;
+
+/** Fewer repeats than the base benchmark (`RUNS_PER_TRANSCRIPT`): this section already doubles calls (default vs. ordered routing) across 4 models. */
+const PROVIDER_BENCH_RUNS_PER_TRANSCRIPT = 2;
+
+function parseProvidersFlag(argv: readonly string[]): string[] | undefined {
+  const flag = argv.find((arg) => arg.startsWith("--providers="));
+  if (!flag) return undefined;
+
+  const value = flag.slice("--providers=".length).trim();
+  if (!value) return undefined;
+
+  return value
+    .split(",")
+    .map((entry) => entry.trim())
+    .filter((entry) => entry.length > 0);
+}
+
 // The real `GeneratedStepSchema` maxima — "truncated" means a field landed
 // within 2 chars of one of these.
 const FIELD_MAX = {
@@ -100,6 +134,52 @@ async function fetchAvailableModelIds(): Promise<Set<string>> {
   }
   const body = (await response.json()) as { data?: OpenRouterModelListing[] };
   return new Set((body.data ?? []).map((model) => model.id));
+}
+
+/**
+ * Pulls the provider names actually serving `modelId`, from `GET
+ * /api/v1/models/{id}/endpoints`. Defensive about the exact response
+ * shape (not pinned down anywhere authoritative): scans every endpoint
+ * object for whichever plausible "provider name" field is present.
+ * Returns `[]` (never throws) on any HTTP/shape failure, so a bad
+ * endpoint id just means "no providers matched" rather than aborting the
+ * whole run.
+ */
+async function fetchModelProviders(modelId: string): Promise<string[]> {
+  try {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 8000);
+    const response = await fetch(ENDPOINTS_ENDPOINT(modelId), { signal: controller.signal });
+    clearTimeout(timer);
+    if (!response.ok) return [];
+
+    const body = (await response.json()) as {
+      data?: { endpoints?: Record<string, unknown>[] };
+    };
+    const endpoints = body.data?.endpoints ?? [];
+
+    const names: string[] = [];
+    for (const endpoint of endpoints) {
+      const candidate = ["provider_name", "provider", "tag", "name"]
+        .map((key) => endpoint[key])
+        .find((value): value is string => typeof value === "string" && value.length > 0);
+      if (candidate) names.push(candidate);
+    }
+    return names;
+  } catch {
+    return [];
+  }
+}
+
+/** Case-insensitive intersection of `requested` (as given on `--providers=`) with `available`, preserving `requested`'s order. */
+function matchRequestedProviders(
+  requested: readonly string[],
+  available: readonly string[],
+): string[] {
+  const availableLower = new Map(available.map((name) => [name.toLowerCase(), name] as const));
+  return requested
+    .map((name) => availableLower.get(name.toLowerCase()))
+    .filter((name): name is string => name !== undefined);
 }
 
 function pickExtraCandidates(
@@ -187,7 +267,12 @@ function isTruncated(step: GeneratedStep): boolean {
   return checks.some(([value, max]) => value.length >= max - 2);
 }
 
-async function runOnce(apiKey: string, model: string, transcript: Transcript): Promise<RunResult> {
+async function runOnce(
+  apiKey: string,
+  model: string,
+  transcript: Transcript,
+  providerOrder?: string[],
+): Promise<RunResult> {
   const facets = foldFacets(transcript.entries);
   const digest = buildDigest(facets, { maxVenues: 20, maxExperiences: 10, maxChars: 4500 });
   const messages = buildStepMessages({
@@ -206,6 +291,7 @@ async function runOnce(apiKey: string, model: string, transcript: Transcript): P
       timeoutMs: TIMEOUT_MS,
       appUrl: APP_URL,
       appTitle: APP_TITLE,
+      providerOrder,
     },
     schema: GeneratedStepSchema,
     jsonSchema: LLM_STEP_JSON_SCHEMA,
@@ -339,6 +425,145 @@ function formatRow(report: ModelReport): string {
 const TABLE_HEADER = `| Model | p50 (ms) | p95 (ms) | Schema-valid 1st try | Spanish-only | Truncation | Avg tokens | Cost/step | ok/total |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |`;
 
+// --- provider benchmark (`--providers=...`) --------------------------------
+
+interface ProviderBenchReport {
+  model: string;
+  condition: "default" | "ordered";
+  providerOrder?: string[];
+  report: ModelReport;
+}
+
+interface ProviderTask {
+  model: string;
+  condition: "default" | "ordered";
+  providerOrder?: string[];
+}
+
+/**
+ * Benchmarks `PROVIDER_BENCH_CANDIDATES` through `requestedProviders`
+ * (`provider: { order, allow_fallbacks: true }`), each against the
+ * model's default (unordered) routing for comparison. Skips a candidate
+ * entirely (with a logged reason) when none of `requestedProviders`
+ * actually serve it per `GET /api/v1/models/{id}/endpoints`.
+ */
+async function runProviderBenchmark(
+  apiKey: string,
+  requestedProviders: readonly string[],
+  transcripts: readonly NamedTranscript[],
+): Promise<ProviderBenchReport[]> {
+  const tasks: ProviderTask[] = [];
+
+  for (const model of PROVIDER_BENCH_CANDIDATES) {
+    console.log(`[ai:bench] Checking endpoints for "${model}"…`);
+    const availableProviders = await fetchModelProviders(model);
+    const matched = matchRequestedProviders(requestedProviders, availableProviders);
+
+    if (matched.length === 0) {
+      console.log(
+        `[ai:bench] Skipping provider benchmark for "${model}": none of [${requestedProviders.join(", ")}] serve it` +
+          (availableProviders.length > 0
+            ? ` (available: ${availableProviders.join(", ")}).`
+            : " (no endpoints found for this model id)."),
+      );
+      continue;
+    }
+
+    tasks.push({ model, condition: "default" });
+    tasks.push({ model, condition: "ordered", providerOrder: matched });
+  }
+
+  const perTask = await mapWithConcurrency(tasks, TASK_CONCURRENCY, async (task) => {
+    const runs: RunResult[] = [];
+    for (const { transcript } of transcripts) {
+      for (let i = 0; i < PROVIDER_BENCH_RUNS_PER_TRANSCRIPT; i += 1) {
+        runs.push(await runOnce(apiKey, task.model, transcript, task.providerOrder));
+      }
+    }
+    return { task, runs };
+  });
+
+  // `aggregate` is keyed by the real model id (so `estimateCostUsd` still
+  // resolves real pricing) — the condition/providerOrder are carried
+  // alongside for `formatProviderRow` to render, not folded into the id.
+  return perTask.map(({ task, runs }) => ({
+    model: task.model,
+    condition: task.condition,
+    providerOrder: task.providerOrder,
+    report: aggregate(task.model, runs),
+  }));
+}
+
+function formatProviderRow(entry: ProviderBenchReport): string {
+  const routing =
+    entry.condition === "ordered" && entry.providerOrder
+      ? `ordered: ${entry.providerOrder.join(" > ")}`
+      : "default";
+  return `| ${entry.model} | ${routing} | ${entry.report.p50Ms} | ${entry.report.p95Ms} | ${entry.report.schemaValidFirstAttemptPct.toFixed(0)}% | ${entry.report.spanishOnlyPct.toFixed(0)}% | ${entry.report.okCount}/${entry.report.totalCount} |`;
+}
+
+const PROVIDER_TABLE_HEADER = `| Model | Routing | p50 (ms) | p95 (ms) | Schema-valid 1st try | Spanish-only | ok/total |
+| --- | --- | --- | --- | --- | --- | --- |`;
+
+/**
+ * `--providers=...` entry point: runs only the provider-routing
+ * benchmark (not the full base benchmark, which would be far more than
+ * the handful of calls this needs) and *appends* a dated section to
+ * `docs/ai-step-benchmark.md` rather than overwriting the file, so the
+ * base benchmark's own decision section is preserved.
+ */
+async function runProviderBenchmarkMain(
+  apiKey: string,
+  requestedProviders: string[],
+): Promise<void> {
+  const transcripts = buildTranscripts();
+  const callCount =
+    PROVIDER_BENCH_CANDIDATES.length * 2 * transcripts.length * PROVIDER_BENCH_RUNS_PER_TRANSCRIPT;
+  console.log(
+    `[ai:bench] Provider benchmark: [${requestedProviders.join(", ")}] against ${PROVIDER_BENCH_CANDIDATES.length} candidate model(s), up to ${callCount} calls…`,
+  );
+
+  const results = await runProviderBenchmark(apiKey, requestedProviders, transcripts);
+
+  console.log("");
+  console.log(PROVIDER_TABLE_HEADER);
+  for (const entry of results) {
+    console.log(formatProviderRow(entry));
+  }
+
+  const totalCost = results.reduce(
+    (sum, entry) => sum + entry.report.costPerStepUsd * entry.report.okCount,
+    0,
+  );
+  console.log("");
+  console.log(
+    `[ai:bench] Estimated total cost of this provider run: $${totalCost.toFixed(4)} USD.`,
+  );
+
+  const date = new Date().toISOString().slice(0, 10);
+  const docPath = path.resolve(process.cwd(), "docs/ai-step-benchmark.md");
+  const section = `\n## Provider benchmark (\`--providers=${requestedProviders.join(",")}\`)
+
+Generated ${date} by \`scripts/ai/bench-step-models.ts --providers=${requestedProviders.join(",")}\`:
+${PROVIDER_BENCH_CANDIDATES.length} candidate model(s) x up to 2 routing conditions (default vs.
+\`provider: { order: [${requestedProviders.join(", ")}], allow_fallbacks: true }\`) x
+${transcripts.length} transcripts x ${PROVIDER_BENCH_RUNS_PER_TRANSCRIPT} runs each, through the
+real engine prompt. A candidate is skipped when none of the requested providers serve it per
+\`GET /api/v1/models/{id}/endpoints\`.
+
+${PROVIDER_TABLE_HEADER}
+${results.map(formatProviderRow).join("\n")}
+
+Total estimated cost of this run: $${totalCost.toFixed(4)} USD.
+`;
+
+  await mkdir(path.dirname(docPath), { recursive: true });
+  await appendFile(docPath, section, "utf8");
+  console.log(
+    `[ai:bench] Appended the provider benchmark section to ${path.relative(process.cwd(), docPath)}.`,
+  );
+}
+
 async function main(): Promise<void> {
   const apiKey = process.env.OPENROUTER_API_KEY?.trim();
   if (!apiKey) {
@@ -346,6 +571,12 @@ async function main(): Promise<void> {
       "[ai:bench] OPENROUTER_API_KEY is not set. Add it to .env (see .env.dist) and re-run `kool run ai:bench`.",
     );
     process.exitCode = 1;
+    return;
+  }
+
+  const providersFlag = parseProvidersFlag(process.argv.slice(2));
+  if (providersFlag) {
+    await runProviderBenchmarkMain(apiKey, providersFlag);
     return;
   }
 

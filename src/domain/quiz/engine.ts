@@ -2,7 +2,7 @@ import { estimateCostUsd } from "@/domain/ai/pricing";
 import type { ChatMessage, LlmUsage, StructuredClient } from "@/domain/ai/structured";
 import { buildDigest } from "@/domain/kb/digest";
 import { loadKb } from "@/domain/kb/load";
-import { FACET_KEYS, type Facets } from "@/domain/kb/taxonomy";
+import type { Facets } from "@/domain/kb/taxonomy";
 import type { Kb } from "@/domain/kb/types";
 import type { ImageProvider } from "@/domain/images/provider";
 import { placesPhotoPath } from "@/domain/places/photo-url";
@@ -48,6 +48,16 @@ const MAX_CACHE_ENTRIES = 1000;
 
 /** How long a generated step stays warm in the cache (also covers speculative prefetch warm-ups — see `prefetch.ts`). */
 const CACHE_TTL_MS = 15 * 60 * 1000;
+
+/**
+ * The engine never honors a model-returned `done: true` before this many
+ * entries have been answered — a premature "done" (the model still has
+ * to return `options` either way, see `RawGeneratedStepSchema`) is
+ * downgraded into a normal step built from those options instead. Only
+ * `QUIZ_MAX_STEPS` (checked before the LLM is even called, see
+ * `nextStep`) can force a stop earlier than this.
+ */
+const MIN_ANSWERED_ENTRIES_BEFORE_DONE = 5;
 
 export interface QuizEngineMeta {
   model: string;
@@ -128,10 +138,6 @@ function withCachedTiming(
 ): QuizEngineResult {
   const meta: QuizEngineMeta = { ...result.meta, cached: true, durationMs: now() - start };
   return result.done ? { done: true, meta } : { done: false, step: result.step, meta };
-}
-
-function countKnownFacets(facets: Facets): number {
-  return FACET_KEYS.filter((key) => facets[key] !== undefined).length;
 }
 
 // --- cache (TTL + insertion-order LRU over a Map) ------------------------
@@ -414,7 +420,12 @@ async function generateStep(ctx: GenerateContext): Promise<QuizEngineResult> {
     return staticFallbackResult({ entries, stepIndex, start, now, attempts });
   }
 
-  if (candidate.done) {
+  // The model is instructed never to return `done: true` before 5
+  // answered entries (`engine-prompt.ts`), but it's generative output, not
+  // a guarantee — enforce it here too. A premature `done` still comes
+  // with real `options` (the schema requires them either way), so it's
+  // downgraded into a normal step instead of discarded.
+  if (candidate.done && entries.length >= MIN_ANSWERED_ENTRIES_BEFORE_DONE) {
     return {
       done: true,
       meta: buildMeta({
@@ -503,9 +514,12 @@ export function createQuizEngine(options: CreateQuizEngineOptions): QuizEngine {
 
       const facets = foldFacets(entries);
       const stepIndex = entries.length + 1;
-      const knownFacetCount = countKnownFacets(facets);
 
-      const hardStop = stepIndex > maxSteps || (entries.length >= 4 && knownFacetCount >= 5);
+      // The only hard stop that skips the LLM entirely: `QUIZ_MAX_STEPS`
+      // reached. Stopping earlier (from 5 answered entries on) is the
+      // model's own call via `done: true` in its response — see
+      // `generateStep`/`MIN_ANSWERED_ENTRIES_BEFORE_DONE`.
+      const hardStop = stepIndex > maxSteps;
       if (hardStop) {
         return {
           done: true,

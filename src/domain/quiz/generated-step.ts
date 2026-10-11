@@ -100,9 +100,17 @@ export const LLM_STEP_JSON_SCHEMA = z.toJSONSchema(GeneratedStepSchema) as Recor
  * strict as the real schema — those are controlled vocabulary, not
  * free text, so there's no truncation/language risk to buy headroom for.
  * Fields `normaliseGeneratedStep` defaults when empty (`hashtags`
- * entries, `badge`, `selectLabel`) drop even the `.min(1)` a real field
- * keeps, so a literally-empty string still reaches normalisation instead
- * of failing shape validation before it gets the chance to default it.
+ * entries) drop even the `.min(1)` a real field keeps, so a
+ * literally-empty string still reaches normalisation instead of failing
+ * shape validation before it gets the chance to default it.
+ *
+ * `badge`, `matchLabel` (option-level) and `selectLabel` (step-level) are
+ * deliberately NOT part of this raw shape at all: the model no longer
+ * generates them (fewer output tokens → faster cold steps).
+ * `normaliseGeneratedStep` derives all three deterministically instead
+ * (badge from the option's dominant facet, matchLabel from a seeded hash
+ * of the option id, selectLabel from the step's topic) and fills them
+ * onto the real `GeneratedOption`/`GeneratedStep` the UI consumes.
  *
  * This is what's actually sent as `response_format.json_schema.schema`
  * (`RAW_LLM_STEP_JSON_SCHEMA`) and what the quiz engine's structured
@@ -119,8 +127,6 @@ export const RawGeneratedOptionSchema = z
     refs: GeneratedRefsSchema,
     /** Short English stock-photo search query. */
     photoQuery: z.string().min(1).max(100),
-    badge: z.string().max(50),
-    matchLabel: z.string().max(40),
   })
   .strict();
 
@@ -132,7 +138,6 @@ export const RawGeneratedStepSchema = z
     topic: z.string().min(1).max(50),
     question: z.string().min(1).max(140),
     helper: z.string().min(1).max(220),
-    selectLabel: z.string().max(60),
     options: z.array(RawGeneratedOptionSchema).min(3).max(4),
     done: z.boolean(),
     doneReason: z.string().max(200).optional(),

@@ -5,6 +5,8 @@ import {
   entryFromResolvedOption,
   GeneratedOptionSchema,
   GeneratedStepSchema,
+  RawGeneratedOptionSchema,
+  RawGeneratedStepSchema,
   ResolvedStepSchema,
   resolvedStepFromCurated,
 } from "./generated-step";
@@ -98,6 +100,58 @@ describe("GeneratedStepSchema", () => {
 
   it("rejects an unknown property (strict)", () => {
     const result = GeneratedStepSchema.safeParse({ ...validStep(), extra: "nope" });
+    expect(result.success).toBe(false);
+  });
+});
+
+function validRawOption(overrides: Partial<Record<string, unknown>> = {}) {
+  return {
+    id: "vendimia-redonda",
+    title: "Vendimia al Atardecer",
+    description: "Una tarde entre las vides, copa en mano, mientras el sol se despide.",
+    hashtags: ["#Vendimia", "#ValleDeColon", "#AtardecerQueretano"],
+    facets: { experience: "vendimia" },
+    refs: { venueIds: ["v_vinedos-la-redonda"], experienceIds: [] },
+    photoQuery: "vineyard harvest sunset wedding",
+    ...overrides,
+  };
+}
+
+function validRawStep(overrides: Partial<Record<string, unknown>> = {}) {
+  return {
+    id: "step-2",
+    topic: "Experiencia",
+    question: "¿Qué momento no puede faltar?",
+    helper: "Elige la experiencia que mejor describe su celebración.",
+    options: [
+      validRawOption(),
+      validRawOption({ id: "cata-de-cote" }),
+      validRawOption({ id: "globo-tqp" }),
+    ],
+    done: false,
+    ...overrides,
+  };
+}
+
+describe("RawGeneratedOptionSchema / RawGeneratedStepSchema", () => {
+  it("accepts a well-formed raw option/step without badge, matchLabel or selectLabel", () => {
+    expect(RawGeneratedOptionSchema.safeParse(validRawOption()).success).toBe(true);
+    expect(RawGeneratedStepSchema.safeParse(validRawStep()).success).toBe(true);
+  });
+
+  it("rejects a raw option carrying badge/matchLabel — the model must not send them (strict schema)", () => {
+    expect(RawGeneratedOptionSchema.safeParse(validRawOption({ badge: "Algo" })).success).toBe(
+      false,
+    );
+    expect(
+      RawGeneratedOptionSchema.safeParse(validRawOption({ matchLabel: "90% AFINIDAD" })).success,
+    ).toBe(false);
+  });
+
+  it("rejects a raw step carrying selectLabel — the model must not send it (strict schema)", () => {
+    const result = RawGeneratedStepSchema.safeParse(
+      validRawStep({ selectLabel: "Elegir esta opción" }),
+    );
     expect(result.success).toBe(false);
   });
 });

@@ -67,8 +67,6 @@ function makeGeneratedStep(overrides: StepOverrides = {}): RawGeneratedStep {
       facets: { experience: "vendimia" },
       refs: { venueIds: ["v_vinedos-la-redonda"], experienceIds: ["vendimia-la-redonda"] },
       photoQuery: "vineyard harvest sunset wedding",
-      badge: "Ruta del Vino",
-      matchLabel: "96% AFINIDAD",
     },
     {
       id: "cata-de-cote",
@@ -78,8 +76,6 @@ function makeGeneratedStep(overrides: StepOverrides = {}): RawGeneratedStep {
       facets: { scale: "intimate" },
       refs: { venueIds: ["v_bodegas-de-cote"], experienceIds: [] },
       photoQuery: "wine cellar intimate wedding dinner",
-      badge: "Boutique SECTUR",
-      matchLabel: "94% AFINIDAD",
     },
     {
       id: "globo-tqp",
@@ -89,8 +85,6 @@ function makeGeneratedStep(overrides: StepOverrides = {}): RawGeneratedStep {
       facets: { zone: "tequisquiapan" },
       refs: { venueIds: [], experienceIds: ["vendimia-freixenet"] },
       photoQuery: "hot air balloon sunrise wedding",
-      badge: "Aventura SECTUR",
-      matchLabel: "90% AFINIDAD",
     },
     {
       id: "ruta-queso",
@@ -100,8 +94,6 @@ function makeGeneratedStep(overrides: StepOverrides = {}): RawGeneratedStep {
       facets: { experience: "cheese_route" },
       refs: { venueIds: [], experienceIds: ["ruta-arte-queso-vino"] },
       photoQuery: "artisan cheese and wine tasting",
-      badge: "Sabores SECTUR",
-      matchLabel: "89% AFINIDAD",
     },
   ];
 
@@ -110,7 +102,6 @@ function makeGeneratedStep(overrides: StepOverrides = {}): RawGeneratedStep {
     topic: "Experiencia",
     question: "¿Qué experiencia no puede faltar en su celebración?",
     helper: "Elige el momento que mejor represente su historia.",
-    selectLabel: "Elegir esta Experiencia",
     done: overrides.done ?? false,
     options,
   };
@@ -446,10 +437,10 @@ describe("createQuizEngine", () => {
     expect(result.meta.attempts).toBe(0);
   });
 
-  it("hard-stops once 5+ facets are known after 4 entries, without calling the LLM", async () => {
-    const engine = createQuizEngine({ llm: throwingLlm, images: throwingImages, maxSteps: 7 });
-
-    // 5 distinct facet keys across 4 entries (style+setting from the first entry).
+  it("does not hard-stop before maxSteps even when 5+ facets are already known after 4 entries", async () => {
+    // 5 distinct facet keys across 4 entries (style+setting from the first entry) — this
+    // used to force a hard stop; now the engine still calls the LLM and lets the model
+    // (not a facet-count heuristic) decide when to stop, bounded only by QUIZ_MAX_STEPS.
     const entries: TranscriptEntry[] = [
       {
         stepId: "gen-1",
@@ -501,13 +492,21 @@ describe("createQuizEngine", () => {
       },
     ];
 
+    server.use(mockOpenRouterChat(() => chatCompletion(JSON.stringify(makeGeneratedStep()))));
+
+    const engine = createQuizEngine({
+      llm: buildLlmClient(),
+      images: createStaticImageProvider(),
+      maxSteps: 7,
+    });
+
     const result = await engine.nextStep({ entries });
 
-    expect(result.done).toBe(true);
-    expect(result.meta.source).toBe("static");
+    expect(result.meta.source).toBe("llm");
+    expect(result.done).toBe(false);
   });
 
-  it("maps the model's own done: true into an engine-level done result", async () => {
+  it("ignores a premature done:true from the model before 5 answered entries, building a real step from its options instead", async () => {
     server.use(
       mockOpenRouterChat(() => chatCompletion(JSON.stringify(makeGeneratedStep({ done: true })))),
     );
@@ -518,7 +517,29 @@ describe("createQuizEngine", () => {
       maxSteps: 7,
     });
 
+    // Only 4 entries answered — below MIN_ANSWERED_ENTRIES_BEFORE_DONE (5).
     const result = await engine.nextStep(makeTranscript(4));
+
+    expect(result.done).toBe(false);
+    if (result.done) return;
+    expect(result.step.source).toBe("llm");
+    expect(result.step.options.length).toBeGreaterThanOrEqual(3);
+    expect(result.meta.source).toBe("llm");
+    expect(result.meta.fallbackUsed).toBe(false);
+  });
+
+  it("maps the model's own done: true into an engine-level done result once 5+ entries are answered", async () => {
+    server.use(
+      mockOpenRouterChat(() => chatCompletion(JSON.stringify(makeGeneratedStep({ done: true })))),
+    );
+
+    const engine = createQuizEngine({
+      llm: buildLlmClient(),
+      images: createStaticImageProvider(),
+      maxSteps: 7,
+    });
+
+    const result = await engine.nextStep(makeTranscript(5));
 
     expect(result.done).toBe(true);
     expect(result.meta.source).toBe("llm");

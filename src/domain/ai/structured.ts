@@ -22,6 +22,14 @@ export interface OpenRouterConfig {
   appTitle: string;
   /** Defaults to `https://openrouter.ai/api/v1`. */
   baseUrl?: string;
+  /**
+   * Optional provider routing order (e.g. `["Cerebras", "Groq"]`), sent as
+   * `provider: { order, allow_fallbacks: true }` so OpenRouter tries the
+   * listed providers first (for speed) but still falls back to any other
+   * provider rather than failing outright. Omitted/empty leaves provider
+   * selection to OpenRouter's own defaults.
+   */
+  providerOrder?: string[];
 }
 
 export type LlmOutcome =
@@ -198,6 +206,11 @@ async function callModel<T>(
   const timer = setTimeout(() => controller.abort(), config.timeoutMs);
   const start = Date.now();
 
+  const provider =
+    config.providerOrder && config.providerOrder.length > 0
+      ? { require_parameters: true, order: config.providerOrder, allow_fallbacks: true }
+      : { require_parameters: true };
+
   try {
     const response = await fetchImpl(`${baseUrl}/chat/completions`, {
       method: "POST",
@@ -221,7 +234,7 @@ async function callModel<T>(
             schema: jsonSchema,
           },
         },
-        provider: { require_parameters: true },
+        provider,
       }),
       signal: controller.signal,
     });

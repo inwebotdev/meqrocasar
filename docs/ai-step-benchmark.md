@@ -86,3 +86,51 @@ option while the couple is still looking at the current one, so the
 common case (choosing one of the options actually shown) is a cache hit,
 not a cold call. See the real-conversation numbers in the final report
 for cold vs. warm `durationMs`.
+
+## Provider benchmark (`--providers=Cerebras,Groq,SambaNova`)
+
+Generated 2026-10-11 by `scripts/ai/bench-step-models.ts --providers=Cerebras,Groq,SambaNova`
+(two runs; numbers below are the second, cleaner run — see the decision note for why both
+pointed the same direction): 4 candidate fast-provider models x up to 2 routing conditions
+(default vs. `provider: { order: [Cerebras, Groq, SambaNova], allow_fallbacks: true }`) x 3
+transcripts x 2 runs each, through the real engine prompt. A candidate is skipped entirely when
+none of the requested providers actually serve it per `GET /api/v1/models/{id}/endpoints` — that
+ruled out `qwen/qwen-2.5-7b-instruct` (current default fast model: only served by Phala) and
+`qwen/qwen3-32b` (served by DeepInfra/Tenstorrent/SiliconFlow) before any calls were made.
+
+| Model                             | Routing                              | p50 (ms) | p95 (ms) | Schema-valid 1st try | Spanish-only | ok/total |
+| --------------------------------- | ------------------------------------ | -------- | -------- | -------------------- | ------------ | -------- |
+| meta-llama/llama-3.3-70b-instruct | default                              | 26464    | 40030    | 17%                  | 100%         | 2/6      |
+| meta-llama/llama-3.3-70b-instruct | ordered: Groq > SambaNova            | 40029    | 40046    | 0%                   | 0%           | 0/6      |
+| openai/gpt-oss-120b               | default                              | 30251    | 46240    | 0%                   | 0%           | 0/6      |
+| openai/gpt-oss-120b               | ordered: Cerebras > Groq > SambaNova | 4454     | 5581     | 0%                   | 100%         | 1/6      |
+
+Total estimated cost of this run: $0.0000 USD (every "ok" run failed before producing billable
+completion tokens worth counting, or was the one-off success below $0.00005).
+
+### Decision: keep the current defaults
+
+**No change to `OPENROUTER_MODEL_FAST`/`OPENROUTER_MODEL_FAST_FALLBACK`/`OPENROUTER_PROVIDER_ORDER`.**
+None of the 4 fast-provider candidates cleared the bar for a default switch (p50 ≤ 2.5s **and**
+100% Spanish **and** ≥ 90% schema-valid):
+
+- `openai/gpt-oss-120b` through `Cerebras > Groq > SambaNova` is clearly the _fastest_ result in
+  this whole benchmark (4.4s p50, one run landing in ~1.4s) — but only 1 of 6 calls actually
+  returned a valid step; the rest failed outright (provider-side rejection of the strict
+  `response_format`/schema request, the same failure mode several base-benchmark candidates hit).
+  17% valid is nowhere near the 90% floor.
+- `meta-llama/llama-3.3-70b-instruct` was never fast (26–33s p50 on default routing) and got
+  _worse_, not better, pinned to `Groq > SambaNova` (0/6 valid, every call timing out at 40s) —
+  Groq/SambaNova's hosted endpoints for this model don't currently accept this app's strict
+  structured-output request at all.
+- `qwen/qwen-2.5-7b-instruct` (today's default) and `qwen/qwen3-32b` aren't served by any of
+  Cerebras/Groq/SambaNova at all, so pinning `OPENROUTER_PROVIDER_ORDER` to those three providers
+  would actively break the current, reliable fast model — confirming the provider-order knob
+  has to stay off (unset) for the current model choice.
+
+In short: the three fast inference providers probed here either don't serve the current reliable
+fast models, or serve the candidates that are fast on them unreliably for this app's strict
+JSON-schema request. The existing `qwen/qwen-2.5-7b-instruct` / `qwen/qwen3-30b-a3b` pair (see the
+main table/decision above) remains the default; `OPENROUTER_PROVIDER_ORDER` stays unset in
+`.env.dist`/`src/lib/env.ts`. Cold-step latency is instead addressed by prefetch landing more
+often (12s background budget, see the perf commit) rather than by provider routing.

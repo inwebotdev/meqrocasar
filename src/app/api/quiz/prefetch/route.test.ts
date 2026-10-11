@@ -64,15 +64,17 @@ describe("POST /api/quiz/prefetch", () => {
   beforeEach(() => {
     getQuizEngineMock.mockReset();
     getEnvMock.mockReset();
-    getEnvMock.mockReturnValue({ QUIZ_PREFETCH: true });
+    getEnvMock.mockReturnValue({ QUIZ_PREFETCH: true, QUIZ_PREFETCH_BUDGET_MS: 12000 });
   });
 
-  it("200: warms the engine once per option and reports warmed/durationMs", async () => {
-    const nextStep = vi.fn().mockResolvedValue({
-      done: false,
-      step: undefined,
-      meta: curatedMeta,
-    });
+  it("200: responds immediately with { scheduled }, without waiting for the engine", async () => {
+    let resolveNextStep: (() => void) | undefined;
+    const nextStep = vi.fn(
+      () =>
+        new Promise((resolve) => {
+          resolveNextStep = () => resolve({ done: false, step: undefined, meta: curatedMeta });
+        }),
+    );
     getQuizEngineMock.mockReturnValue({ nextStep });
 
     const response = await POST(makeRequest(validBody()));
@@ -80,9 +82,21 @@ describe("POST /api/quiz/prefetch", () => {
     expect(response.status).toBe(200);
     const body = await response.json();
     expect(body.ok).toBe(true);
-    expect(body.data.warmed).toBe(2);
-    expect(typeof body.data.durationMs).toBe("number");
-    expect(nextStep).toHaveBeenCalledTimes(2);
+    expect(body.data).toEqual({ scheduled: 2 });
+    // The response above already resolved without the engine call settling.
+    resolveNextStep?.();
+  });
+
+  it("schedules exactly one engine call per option, eventually", async () => {
+    const nextStep = vi.fn().mockResolvedValue({
+      done: false,
+      step: undefined,
+      meta: curatedMeta,
+    });
+    getQuizEngineMock.mockReturnValue({ nextStep });
+
+    await POST(makeRequest(validBody()));
+    await vi.waitFor(() => expect(nextStep).toHaveBeenCalledTimes(2));
   });
 
   it("200: a disabled QUIZ_PREFETCH flag short-circuits without calling the engine", async () => {
@@ -94,7 +108,7 @@ describe("POST /api/quiz/prefetch", () => {
 
     expect(response.status).toBe(200);
     const body = await response.json();
-    expect(body.data).toEqual({ warmed: 0, durationMs: 0 });
+    expect(body.data).toEqual({ scheduled: 0 });
     expect(getQuizEngineMock).not.toHaveBeenCalled();
     expect(nextStep).not.toHaveBeenCalled();
   });

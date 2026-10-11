@@ -10,7 +10,8 @@ import { getEnv } from "./env";
 
 const APP_TITLE = "Querétaro Romance AI";
 const QUIZ_STEP_TEMPERATURE = 0.8;
-const QUIZ_STEP_MAX_TOKENS = 900;
+/** Slimmer per-step output (no `badge`/`matchLabel`/`selectLabel` — derived deterministically, see `normalise-step.ts`) needs less headroom than before. */
+const QUIZ_STEP_MAX_TOKENS = 700;
 
 /**
  * Module-level singleton: shared by every `createQuizEngine()` call for
@@ -33,6 +34,7 @@ function buildEngine(): QuizEngine {
           timeoutMs: env.QUIZ_STEP_TIMEOUT_MS,
           appUrl: env.APP_URL,
           appTitle: APP_TITLE,
+          providerOrder: env.OPENROUTER_PROVIDER_ORDER,
         },
         // The raw/lenient schema, not the tight `GeneratedStepSchema`:
         // `normaliseGeneratedStep` (called from `engine.ts`) is what

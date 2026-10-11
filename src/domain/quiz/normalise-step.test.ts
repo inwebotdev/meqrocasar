@@ -12,8 +12,6 @@ function validOption(overrides: Partial<Record<string, unknown>> = {}) {
     facets: { experience: "vendimia" },
     refs: { venueIds: ["v_vinedos-la-redonda"], experienceIds: [] },
     photoQuery: "vineyard harvest sunset wedding",
-    badge: "Ruta del Vino",
-    matchLabel: "96% AFINIDAD",
     ...overrides,
   };
 }
@@ -24,7 +22,6 @@ function validStep(overrides: Partial<Record<string, unknown>> = {}) {
     topic: "Experiencia",
     question: "¿Qué momento no puede faltar?",
     helper: "Elige la experiencia que mejor describe su celebración.",
-    selectLabel: "Elegir esta Experiencia",
     options: [validOption(), validOption({ id: "cata-de-cote" }), validOption({ id: "globo-tqp" })],
     done: false,
     ...overrides,
@@ -44,6 +41,20 @@ describe("normaliseGeneratedStep", () => {
   it("rejects a malformed shape (missing required fields)", () => {
     const result = normaliseGeneratedStep({ nope: true });
     expect(result).toEqual({ ok: false, reason: "shape" });
+  });
+
+  it("rejects a raw step still carrying badge/matchLabel/selectLabel (the model must not send them)", () => {
+    const withBadge = validStep({
+      options: [
+        validOption({ badge: "Algo" }),
+        validOption({ id: "cata-de-cote" }),
+        validOption({ id: "globo-tqp" }),
+      ],
+    });
+    expect(normaliseGeneratedStep(withBadge)).toEqual({ ok: false, reason: "shape" });
+
+    const withSelectLabel = validStep({ selectLabel: "Elegir esta opción" });
+    expect(normaliseGeneratedStep(withSelectLabel)).toEqual({ ok: false, reason: "shape" });
   });
 
   it("trims and collapses internal whitespace", () => {
@@ -125,48 +136,86 @@ describe("normaliseGeneratedStep", () => {
     expect(longDescription.startsWith(description.slice(0, -1).trimEnd())).toBe(true);
   });
 
-  it("coerces matchLabel into the 'NN% AFINIDAD' shape, clamped to 80-99", () => {
-    const step = validStep({
+  it("derives matchLabel deterministically from the option id, seeded into 86-97% AFINIDAD", () => {
+    const result = normaliseGeneratedStep(validStep());
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+
+    for (const option of result.step.options) {
+      expect(option.matchLabel).toMatch(/^\d{2}% AFINIDAD$/);
+      const percent = Number(option.matchLabel.match(/^(\d{2})%/)?.[1]);
+      expect(percent).toBeGreaterThanOrEqual(86);
+      expect(percent).toBeLessThanOrEqual(97);
+    }
+
+    // Stable across calls for the same id.
+    const again = normaliseGeneratedStep(validStep());
+    expect(again.ok).toBe(true);
+    if (!again.ok) return;
+    expect(again.step.options[0]?.matchLabel).toBe(result.step.options[0]?.matchLabel);
+
+    // Different ids get (almost always) different labels, proving it's
+    // seeded by id rather than a single constant.
+    const labels = new Set(result.step.options.map((option) => option.matchLabel));
+    expect(labels.size).toBeGreaterThan(1);
+  });
+
+  it("derives badge from the option's dominant facet", () => {
+    const cases: Array<[Record<string, unknown>, string]> = [
+      [{ setting: "sunset_garden" }, "Momento ideal"],
+      [{ experience: "wine_tasting" }, "Experiencia SECTUR"],
+      [{ scale: "intimate" }, "Escala"],
+      [{ budget: "medio_alto" }, "Presupuesto"],
+      [{ season: "otono" }, "Temporada"],
+    ];
+
+    for (const [facets, expectedBadge] of cases) {
+      const step = validStep({
+        options: [
+          validOption({ facets }),
+          validOption({ id: "opt-b" }),
+          validOption({ id: "opt-c" }),
+        ],
+      });
+      const result = normaliseGeneratedStep(step);
+      expect(result.ok).toBe(true);
+      if (!result.ok) continue;
+      expect(result.step.options[0]?.badge).toBe(expectedBadge);
+    }
+  });
+
+  it("derives the zone badge as 'Pueblo Mágico' for a pueblo mágico zone and 'Destino' otherwise", () => {
+    const puebloMagicoStep = validStep({
       options: [
-        validOption({ matchLabel: "la pareja encaja al 120%!!" }),
-        validOption({ id: "cata-de-cote", matchLabel: "linda opcion" }),
-        validOption({ id: "globo-tqp", matchLabel: "55% afinidad" }),
+        validOption({ facets: { zone: "bernal" } }),
+        validOption({ id: "opt-b" }),
+        validOption({ id: "opt-c" }),
+      ],
+    });
+    const destinoStep = validStep({
+      options: [
+        validOption({ facets: { zone: "colon" } }),
+        validOption({ id: "opt-b" }),
+        validOption({ id: "opt-c" }),
       ],
     });
 
-    const result = normaliseGeneratedStep(step);
-    expect(result.ok).toBe(true);
-    if (!result.ok) return;
-    expect(result.step.options[0]?.matchLabel).toBe("99% AFINIDAD");
-    expect(result.step.options[1]?.matchLabel).toBe("90% AFINIDAD");
-    expect(result.step.options[2]?.matchLabel).toBe("80% AFINIDAD");
-    expect(result.fixes).toContain("coerced-match-label");
+    const puebloMagicoResult = normaliseGeneratedStep(puebloMagicoStep);
+    const destinoResult = normaliseGeneratedStep(destinoStep);
+
+    expect(puebloMagicoResult.ok).toBe(true);
+    expect(destinoResult.ok).toBe(true);
+    if (!puebloMagicoResult.ok || !destinoResult.ok) return;
+
+    expect(puebloMagicoResult.step.options[0]?.badge).toBe("Pueblo Mágico");
+    expect(destinoResult.step.options[0]?.badge).toBe("Destino");
   });
 
-  it("defaults badge to 'Sugerencia SECTUR' when empty", () => {
-    const step = validStep({
-      options: [
-        validOption({ badge: "   " }),
-        validOption({ id: "cata-de-cote" }),
-        validOption({ id: "globo-tqp" }),
-      ],
-    });
-
-    const result = normaliseGeneratedStep(step);
+  it("derives selectLabel from the step's topic", () => {
+    const result = normaliseGeneratedStep(validStep({ topic: "Experiencia" }));
     expect(result.ok).toBe(true);
     if (!result.ok) return;
-    expect(result.step.options[0]?.badge).toBe("Sugerencia SECTUR");
-    expect(result.fixes).toContain("defaulted-badge");
-  });
-
-  it("defaults selectLabel to 'Elegir esta opción' when empty", () => {
-    const step = validStep({ selectLabel: "" });
-
-    const result = normaliseGeneratedStep(step);
-    expect(result.ok).toBe(true);
-    if (!result.ok) return;
-    expect(result.step.selectLabel).toBe("Elegir esta opción");
-    expect(result.fixes).toContain("defaulted-select-label");
+    expect(result.step.selectLabel).toBe("Elegir esta experiencia");
   });
 
   it("rejects with reason 'language' when any field contains CJK text", () => {

@@ -24,6 +24,7 @@ function buildService(): ExperienceService {
           timeoutMs: env.OPENROUTER_TIMEOUT_MS,
           appUrl: env.APP_URL,
           appTitle: APP_TITLE,
+          providerOrder: env.OPENROUTER_PROVIDER_ORDER,
         },
         schema: LlmExperienceV2Schema,
         jsonSchema: LLM_EXPERIENCE_V2_JSON_SCHEMA as Record<string, unknown>,

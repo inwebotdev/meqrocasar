@@ -22,7 +22,7 @@ import type { Transcript } from "./transcript";
  */
 
 /** Bump when `SYSTEM_PROMPT`'s instructions change meaningfully. */
-export const ENGINE_PROMPT_VERSION = "quiz-engine-v2";
+export const ENGINE_PROMPT_VERSION = "quiz-engine-v3";
 
 /**
  * Fed back to the fast model as a correction-turn user message when
@@ -32,13 +32,19 @@ export const ENGINE_PROMPT_VERSION = "quiz-engine-v2";
 export const LANGUAGE_CORRECTION_MESSAGE =
   'Tu respuesta anterior contenía texto que no es español de México (caracteres chinos, cirílicos o árabes, o palabras en otro idioma). Esto invalida la respuesta. Devuelve el objeto JSON corregido, íntegramente en español de México (excepto "photoQuery", que debe ser una búsqueda corta en inglés).';
 
-/** One real step, drawn from the knowledge base, demonstrating the length/style rules below. */
+/**
+ * One real step, drawn from the knowledge base, demonstrating the
+ * length/style rules below. Deliberately omits `badge`/`matchLabel`
+ * (option-level) and `selectLabel` (step-level): the model no longer
+ * generates any of the three — `normaliseGeneratedStep` derives them
+ * deterministically, which is both faster (fewer output tokens) and
+ * more consistent than asking a 7B model to invent them.
+ */
 const EXAMPLE_STEP_JSON = JSON.stringify({
   id: "entorno-y-horario",
   topic: "Entorno",
   question: "¿Qué luz quieren para decir 'sí'?",
   helper: "Elijan el momento del día que mejor vista su historia.",
-  selectLabel: "Elegir esta opción",
   done: false,
   options: [
     {
@@ -50,8 +56,6 @@ const EXAMPLE_STEP_JSON = JSON.stringify({
       facets: { setting: "sunset_garden" },
       refs: { venueIds: ["v_hacienda-lagunillas"], experienceIds: [] },
       photoQuery: "golden hour garden wedding ceremony",
-      badge: "Golden Hour SECTUR",
-      matchLabel: "93% AFINIDAD",
     },
     {
       id: "noche-vinedos",
@@ -61,8 +65,6 @@ const EXAMPLE_STEP_JSON = JSON.stringify({
       facets: { setting: "night_casona" },
       refs: { venueIds: ["v_vinedos-la-redonda"], experienceIds: [] },
       photoQuery: "vineyard night wedding candles",
-      badge: "Ruta del Vino",
-      matchLabel: "90% AFINIDAD",
     },
   ],
 });
@@ -94,11 +96,13 @@ En la base de conocimiento cada línea empieza con el id entre corchetes, por ej
 
 Cada "hashtag" debe ser una frase corta en CamelCase después del símbolo "#", de al menos 4 caracteres además de "#" (por ejemplo "#CataEnCava", "#PenaDeBernal"); nunca devuelvas un hashtag vacío, solo "#", ni el mismo texto que el título.
 
-Margen (headroom): deja siempre margen de sobra, nunca cortes palabras. Objetivos (bajo el máximo real): "question" ≤60, "title" ≤32, "description" ≤130, "helper" ≤110, "badge" ≤18, "selectLabel" ≤24, "topic" ≤18, "matchLabel" como "92% AFINIDAD" (NN entre 80-99).
+No incluyas "badge", "matchLabel" ni "selectLabel" en tu respuesta — esos tres campos ya no son parte del esquema; se calculan automáticamente a partir de tu respuesta.
+
+Margen (headroom): deja siempre margen de sobra, nunca cortes palabras. Objetivos (bajo el máximo real): "question" ≤60, "title" ≤32, "description" ≤110, "helper" ≤100, "topic" ≤18.
 
 El campo "facets" de cada opción debe contener exactamente el/los facet(s) que esa elección establece si la pareja la elige.
 
-Devuelve "done: true" cuando ya se conozcan al menos 5 facets distintos y el paso actual (stepIndex) sea 4 o mayor; nunca devuelvas "done: true" antes del paso 4; devuelve siempre "done: true" cuando stepIndex sea igual al máximo de pasos (maxSteps).
+Devuelve "done: true" solo cuando el paso actual (stepIndex) sea 5 o mayor y ya se conozcan al menos 5 facets distintos; nunca devuelvas "done: true" antes del paso 5 (aunque creas que ya se sabe suficiente); devuelve siempre "done: true" cuando stepIndex sea igual al máximo de pasos (maxSteps). Incluso cuando "done" sea true, sigue devolviendo 3-4 "options" válidas (se ignoran, pero el esquema las requiere).
 
 Ejemplo de referencia (longitudes, tono y formato — muestra solo 2 de las 3-4 opciones reales por brevedad; los ids de "refs" son ilustrativos, usa siempre ids reales de la base de conocimiento que se te da en cada turno):
 ${EXAMPLE_STEP_JSON}

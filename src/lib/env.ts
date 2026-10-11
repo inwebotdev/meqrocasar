@@ -71,6 +71,34 @@ const envSchema = z.object({
   QUIZ_STEP_TIMEOUT_MS: positiveIntWithDefault(6000),
   /** Speculative prefetch of every visible option's next step (`POST /api/quiz/prefetch`); see `src/domain/quiz/prefetch.ts`. */
   QUIZ_PREFETCH: booleanWithDefault(true),
+  /**
+   * Per-option background budget for `POST /api/quiz/prefetch` (see
+   * `src/domain/quiz/prefetch.ts`). The route itself never waits on this —
+   * it schedules the warm-up calls and responds immediately with
+   * `{ scheduled }` — so this only bounds how long a warm-up call is left
+   * running before it's abandoned (the cache write it would have made is
+   * simply skipped), not the HTTP response time.
+   */
+  QUIZ_PREFETCH_BUDGET_MS: positiveIntWithDefault(12000),
+  /**
+   * Optional OpenRouter provider routing order (comma-separated, e.g.
+   * "Cerebras,Groq,SambaNova"), passed as `provider: { order, allow_fallbacks: true }`
+   * on every `createStructuredClient` request. Empty/absent leaves provider
+   * selection to OpenRouter's defaults. See `docs/ai-step-benchmark.md` for
+   * the provider benchmark this was tuned against.
+   */
+  OPENROUTER_PROVIDER_ORDER: z
+    .string()
+    .trim()
+    .optional()
+    .transform((value) =>
+      value
+        ? value
+            .split(",")
+            .map((entry) => entry.trim())
+            .filter((entry) => entry.length > 0)
+        : undefined,
+    ),
   UNSPLASH_ACCESS_KEY: optionalSecret,
   GOOGLE_PLACES_API_KEY: optionalSecret,
   PLACES_PHOTO_CACHE_DIR: z.string().trim().min(1).default(".cache/places"),

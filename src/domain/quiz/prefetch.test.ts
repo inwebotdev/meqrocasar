@@ -5,6 +5,7 @@ import {
   buildPrefetchEntry,
   PrefetchRequestSchema,
   runPrefetch,
+  schedulePrefetch,
   type PrefetchRequest,
 } from "./prefetch";
 import type { Transcript } from "./transcript";
@@ -177,5 +178,66 @@ describe("runPrefetch", () => {
 
     const outcome = await runPrefetch(request, engine, () => 0, 20);
     expect(outcome.warmed).toBe(0);
+  });
+});
+
+describe("schedulePrefetch", () => {
+  it("returns { scheduled } synchronously, without waiting for the engine", () => {
+    const request = makeRequest(3);
+    let called = 0;
+    const engine: QuizEngine = {
+      nextStep: () =>
+        new Promise(() => {
+          // Never resolves: proves schedulePrefetch doesn't await this.
+          called += 1;
+        }),
+    };
+
+    const result = schedulePrefetch(request, engine, () => 0);
+
+    expect(result).toEqual({ scheduled: 3 });
+    expect(called).toBe(3);
+  });
+
+  it("caps `scheduled` at 4 even when more options are sent", () => {
+    const request = {
+      ...makeRequest(3),
+      options: [...makeRequest(3).options, makeOption("opt-4"), makeOption("opt-5")],
+    };
+    const engine: QuizEngine = {
+      nextStep: () =>
+        new Promise(() => {
+          /* never resolves */
+        }),
+    };
+
+    const result = schedulePrefetch(request, engine, () => 0);
+    expect(result).toEqual({ scheduled: 4 });
+  });
+
+  it("eventually calls nextStep once per option in the background", async () => {
+    const nextStep = vi.fn(
+      async () => ({ done: false, step: undefined, meta: meta() }) as unknown as QuizEngineResult,
+    );
+    const engine: QuizEngine = { nextStep };
+    const request = makeRequest(3);
+
+    schedulePrefetch(request, engine, () => 0);
+
+    await vi.waitFor(() => expect(nextStep).toHaveBeenCalledTimes(3));
+  });
+
+  it("calls onSettled with the background runPrefetch outcome once it finishes", async () => {
+    const nextStep = vi.fn(
+      async () => ({ done: false, step: undefined, meta: meta() }) as unknown as QuizEngineResult,
+    );
+    const engine: QuizEngine = { nextStep };
+    const request = makeRequest(2);
+    const onSettled = vi.fn();
+
+    schedulePrefetch(request, engine, () => 0, 12_000, onSettled);
+
+    await vi.waitFor(() => expect(onSettled).toHaveBeenCalledTimes(1));
+    expect(onSettled).toHaveBeenCalledWith(expect.objectContaining({ warmed: 2 }));
   });
 });
