@@ -11,26 +11,29 @@ import { QUIZ_STEPS } from "@/domain/quiz/questions";
 const { push } = vi.hoisted(() => ({ push: vi.fn() }));
 vi.mock("next/navigation", () => ({ useRouter: () => ({ push }) }));
 
-const { fetchNextStep, generateExperienceFromTranscript, ApiClientErrorMock } = vi.hoisted(() => {
-  class ApiClientErrorMock extends Error {
-    code: string;
-    status?: number;
-    constructor(params: { code: string; status?: number; message: string }) {
-      super(params.message);
-      this.name = "ApiClientError";
-      this.code = params.code;
-      this.status = params.status;
+const { fetchNextStep, generateExperienceFromTranscript, prefetchNextSteps, ApiClientErrorMock } =
+  vi.hoisted(() => {
+    class ApiClientErrorMock extends Error {
+      code: string;
+      status?: number;
+      constructor(params: { code: string; status?: number; message: string }) {
+        super(params.message);
+        this.name = "ApiClientError";
+        this.code = params.code;
+        this.status = params.status;
+      }
     }
-  }
-  return {
-    fetchNextStep: vi.fn(),
-    generateExperienceFromTranscript: vi.fn(),
-    ApiClientErrorMock,
-  };
-});
+    return {
+      fetchNextStep: vi.fn(),
+      generateExperienceFromTranscript: vi.fn(),
+      prefetchNextSteps: vi.fn().mockResolvedValue(undefined),
+      ApiClientErrorMock,
+    };
+  });
 vi.mock("@/lib/quiz-client", () => ({
   fetchNextStep,
   generateExperienceFromTranscript,
+  prefetchNextSteps,
   ApiClientError: ApiClientErrorMock,
 }));
 
@@ -119,7 +122,8 @@ const curatedMeta = {
   fallbackUsed: false,
   source: "static" as const,
   attempts: 0,
-  promptVersion: "quiz-engine-v1",
+  promptVersion: "quiz-engine-v2",
+  normalisations: 0,
 };
 
 const llmMeta = { ...curatedMeta, model: "deepseek/deepseek-chat", source: "llm" as const };

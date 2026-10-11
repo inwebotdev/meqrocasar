@@ -11,26 +11,29 @@ import { quizEngineReducer } from "./useQuizEngine";
 const { push } = vi.hoisted(() => ({ push: vi.fn() }));
 vi.mock("next/navigation", () => ({ useRouter: () => ({ push }) }));
 
-const { fetchNextStep, generateExperienceFromTranscript, ApiClientErrorMock } = vi.hoisted(() => {
-  class ApiClientErrorMock extends Error {
-    code: string;
-    status?: number;
-    constructor(params: { code: string; status?: number; message: string }) {
-      super(params.message);
-      this.name = "ApiClientError";
-      this.code = params.code;
-      this.status = params.status;
+const { fetchNextStep, generateExperienceFromTranscript, prefetchNextSteps, ApiClientErrorMock } =
+  vi.hoisted(() => {
+    class ApiClientErrorMock extends Error {
+      code: string;
+      status?: number;
+      constructor(params: { code: string; status?: number; message: string }) {
+        super(params.message);
+        this.name = "ApiClientError";
+        this.code = params.code;
+        this.status = params.status;
+      }
     }
-  }
-  return {
-    fetchNextStep: vi.fn(),
-    generateExperienceFromTranscript: vi.fn(),
-    ApiClientErrorMock,
-  };
-});
+    return {
+      fetchNextStep: vi.fn(),
+      generateExperienceFromTranscript: vi.fn(),
+      prefetchNextSteps: vi.fn(),
+      ApiClientErrorMock,
+    };
+  });
 vi.mock("@/lib/quiz-client", () => ({
   fetchNextStep,
   generateExperienceFromTranscript,
+  prefetchNextSteps,
   ApiClientError: ApiClientErrorMock,
 }));
 
@@ -168,6 +171,8 @@ describe("useQuizEngine", () => {
   beforeEach(() => {
     fetchNextStep.mockReset();
     generateExperienceFromTranscript.mockReset();
+    prefetchNextSteps.mockReset();
+    prefetchNextSteps.mockResolvedValue(undefined);
     saveResult.mockReset();
     saveTranscript.mockReset();
     push.mockReset();
@@ -249,6 +254,24 @@ describe("useQuizEngine", () => {
     await waitFor(() => expect(generateExperienceFromTranscript).toHaveBeenCalled());
     await waitFor(() => expect(saveResult).toHaveBeenCalledWith(validResult));
     await waitFor(() => expect(push).toHaveBeenCalledWith("/resultados"));
+  });
+
+  it("prefetches the next steps once per rendered step, with all of that step's option ids", async () => {
+    const step0 = step(0);
+    fetchNextStep.mockResolvedValueOnce({ done: false, step: step0, meta: curatedMeta });
+    fetchNextStep.mockResolvedValueOnce({ done: false, step: step(1), meta: curatedMeta });
+    const { result } = renderHook(() => useQuizEngine());
+
+    await waitFor(() => expect(result.current.state.status).toBe("answering"));
+    await waitFor(() => expect(prefetchNextSteps).toHaveBeenCalledTimes(1));
+    expect(prefetchNextSteps).toHaveBeenCalledWith({ entries: [] }, step0);
+
+    const option = result.current.step!.options[0]!;
+    act(() => result.current.choose(option));
+    await waitOutSelectAnimation();
+
+    await waitFor(() => expect(result.current.step?.id).toBe("setting"));
+    await waitFor(() => expect(prefetchNextSteps).toHaveBeenCalledTimes(2));
   });
 
   it("surfaces a step-fetch failure as status error, and retry() re-requests the same entries", async () => {

@@ -4,8 +4,13 @@ import type { ApiResponse } from "@/domain/api/envelope";
 import { ExperienceResultSchema } from "@/domain/experience/schema";
 import type { ExperienceResult } from "@/domain/experience/types";
 import type { QuizEngineResult } from "@/domain/quiz/engine";
-import { ResolvedStepSchema } from "@/domain/quiz/generated-step";
-import { transcriptToLegacyAnswers, type Transcript } from "@/domain/quiz/transcript";
+import { ResolvedStepSchema, type ResolvedStep } from "@/domain/quiz/generated-step";
+import {
+  TranscriptRefsSchema,
+  transcriptToLegacyAnswers,
+  type Transcript,
+} from "@/domain/quiz/transcript";
+import { FacetsSchema } from "@/domain/kb/taxonomy";
 
 import { ApiClientError, type ApiClientErrorCode, type FetchLike } from "./api-client";
 
@@ -13,11 +18,12 @@ export { ApiClientError, type ApiClientErrorCode, type FetchLike };
 
 /**
  * Client for the adaptive quiz engine: `fetchNextStep` drives
- * `POST /api/quiz/next`, `generateExperienceFromTranscript` drives
- * `POST /api/generate-experience` with a transcript-shaped body, falling
- * back to the legacy `QuizAnswers` shape when the route doesn't accept it
- * yet. Same error-handling shape as `api-client.ts` (`ApiClientError`,
- * reused here rather than duplicated).
+ * `POST /api/quiz/next`, `prefetchNextSteps` fires `POST /api/quiz/prefetch`
+ * (fire-and-forget, errors swallowed — see `useQuizEngine`),
+ * `generateExperienceFromTranscript` drives `POST /api/generate-experience`
+ * with a transcript-shaped body, falling back to the legacy `QuizAnswers`
+ * shape when the route doesn't accept it yet. Same error-handling shape as
+ * `api-client.ts` (`ApiClientError`, reused here rather than duplicated).
  */
 
 const QuizEngineMetaSchema = z.object({
@@ -98,6 +104,68 @@ export async function fetchNextStep(
   }
 
   return parsed.data;
+}
+
+// --- speculative prefetch (POST /api/quiz/prefetch) -----------------------
+
+const PrefetchResultSchema = z.object({
+  warmed: z.number(),
+  durationMs: z.number(),
+});
+
+export type PrefetchResult = z.infer<typeof PrefetchResultSchema>;
+
+const PrefetchOptionInputSchema = z.object({
+  id: z.string().min(1),
+  title: z.string().min(1),
+  summary: z.string().min(1),
+  facets: FacetsSchema,
+  refs: TranscriptRefsSchema,
+});
+
+function toPrefetchOption(option: ResolvedStep["options"][number]) {
+  return PrefetchOptionInputSchema.parse({
+    id: option.id,
+    title: option.title,
+    summary: option.description,
+    facets: option.facets,
+    refs: option.refs,
+  });
+}
+
+/**
+ * Fires `POST /api/quiz/prefetch` for every option of `step` (the current
+ * transcript plus one would-be entry per option), warming the engine's
+ * step cache so that whichever option the couple actually picks resolves
+ * as a near-instant cache hit on the next `fetchNextStep` call. Called
+ * fire-and-forget from `useQuizEngine` once a step renders: never throws,
+ * resolves `undefined` on any failure (network, disabled flag, bad
+ * response) instead.
+ */
+export async function prefetchNextSteps(
+  transcript: Transcript,
+  step: ResolvedStep,
+  fetchImpl: FetchLike = fetch,
+): Promise<PrefetchResult | undefined> {
+  try {
+    const body = {
+      transcript,
+      options: step.options.map(toPrefetchOption),
+      stepId: step.id,
+      question: step.question,
+      topic: step.topic,
+    };
+
+    const { envelope } = await postJson("/api/quiz/prefetch", body, fetchImpl);
+    if (!envelope.ok) {
+      return undefined;
+    }
+
+    const parsed = PrefetchResultSchema.safeParse(envelope.data);
+    return parsed.success ? parsed.data : undefined;
+  } catch {
+    return undefined;
+  }
 }
 
 async function postGenerateExperience(

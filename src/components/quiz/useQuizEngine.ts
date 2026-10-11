@@ -10,7 +10,12 @@ import {
   type ResolvedStep,
 } from "@/domain/quiz/generated-step";
 import type { TranscriptEntry } from "@/domain/quiz/transcript";
-import { ApiClientError, fetchNextStep, generateExperienceFromTranscript } from "@/lib/quiz-client";
+import {
+  ApiClientError,
+  fetchNextStep,
+  generateExperienceFromTranscript,
+  prefetchNextSteps,
+} from "@/lib/quiz-client";
 import { saveResult } from "@/lib/results-store";
 import { saveTranscript } from "@/lib/transcript-store";
 
@@ -20,7 +25,9 @@ import { saveTranscript } from "@/lib/transcript-store";
  * every `choose`/`back`/`retry` replays the transcript so far against the
  * engine (cached server-side, so `back` is instant). When the engine
  * reports `done: true`, generates the final experience and navigates to
- * `/resultados`.
+ * `/resultados`. Once a step renders (`status: "answering"`), fires a
+ * fire-and-forget `prefetchNextSteps` for it, so whichever option the
+ * couple picks is already warm by the time `choose` re-requests it.
  */
 
 export type QuizEngineStatus = "loading-step" | "answering" | "generating" | "error";
@@ -222,6 +229,18 @@ export function useQuizEngine(): UseQuizEngineResult {
       }
     };
   }, []);
+
+  useEffect(() => {
+    if (state.status !== "answering" || !state.step) {
+      return;
+    }
+
+    void prefetchNextSteps({ entries: state.entries }, state.step);
+    // Fires exactly once per rendered step (keyed on the step object
+    // itself, which only changes when a new step loads): `state.entries`
+    // is the same array reference for the lifetime of that step.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [state.status, state.step]);
 
   const choose = useCallback(
     (option: ResolvedOption) => {
