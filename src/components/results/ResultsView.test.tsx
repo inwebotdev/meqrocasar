@@ -2,9 +2,13 @@ import { describe, expect, it } from "vitest";
 import { render, screen, within } from "@testing-library/react";
 
 import { ToastProvider } from "@/components/ui";
-import { buildFallbackExperience } from "@/domain/experience/fallback";
+import {
+  buildFallbackExperience,
+  buildFallbackExperienceFromFacets,
+} from "@/domain/experience/fallback";
 import type { ExperienceMeta, ExperienceResult } from "@/domain/experience/types";
 import type { QuizAnswers } from "@/domain/quiz/schema";
+import { foldFacets, transcriptFromLegacyAnswers } from "@/domain/quiz/transcript";
 
 import { ResultsView } from "./ResultsView";
 
@@ -129,5 +133,30 @@ describe("ResultsView", () => {
     renderResultsView(result);
 
     expect(screen.getByText("Modo demo sin IA (fallback local)")).toBeInTheDocument();
+  });
+
+  it("renders a transcript-based result: itinerary hint pill and step count in the footer", () => {
+    const transcript = transcriptFromLegacyAnswers(ANSWERS);
+    const facets = foldFacets(transcript.entries);
+    const result: ExperienceResult = {
+      ...buildFallbackExperienceFromFacets(facets, transcript),
+      itineraryHint: "Viernes: cata · Sábado: ceremonia · Domingo: brunch",
+      meta: {
+        model: "qwen/qwen3-30b-a3b",
+        fallbackUsed: false,
+        durationMs: 2500,
+        generatedAt: "2026-01-01T00:00:00.000Z",
+        usage: { promptTokens: 1000, completionTokens: 500 },
+      },
+    };
+
+    renderResultsView(result);
+
+    expect(
+      screen.getByText("Viernes: cata · Sábado: ceremonia · Domingo: brunch"),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText((text) => text.startsWith(`${transcript.entries.length} pasos ·`)),
+    ).toBeInTheDocument();
   });
 });

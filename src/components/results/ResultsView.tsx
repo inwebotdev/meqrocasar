@@ -47,13 +47,17 @@ export function ResultsView({ result }: ResultsViewProps) {
 
       <MoodboardCard result={result} />
 
-      <NarrativeCard title={result.conceptTitle} narrative={result.narrative} />
+      <NarrativeCard
+        title={result.conceptTitle}
+        narrative={result.narrative}
+        itineraryHint={result.itineraryHint}
+      />
 
       <VenueList venues={result.venues} />
 
       <ResultActions result={result} />
 
-      <MetaFooter meta={result.meta} />
+      <MetaFooter meta={result.meta} transcript={result.transcript} />
     </div>
   );
 }

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 
-import { Button, Card, Chip, Icon, Pill } from "@/components/ui";
+import { Button, Card, Chip, Icon, LinkButton, Pill } from "@/components/ui";
 import type { ExperienceVenue } from "@/domain/experience/types";
 import { getPhoto } from "@/domain/media/photos";
 import type { Venue } from "@/domain/venues/types";
@@ -22,12 +22,38 @@ function isExperienceVenue(venue: ExperienceVenue | Venue): venue is ExperienceV
   return "role" in venue;
 }
 
+interface ResolvedPhoto {
+  url: string;
+  alt: string;
+  caption?: string;
+}
+
+/** Prefers a KB-sourced venue's real Places/registry `photoUrl`; falls back to the legacy photo registry by `photoId`. */
+function resolvePhoto(venue: ExperienceVenue | Venue): ResolvedPhoto {
+  if (isExperienceVenue(venue) && venue.photoUrl) {
+    return { url: venue.photoUrl, alt: venue.name, caption: venue.photoAttribution };
+  }
+
+  const photo = getPhoto(venue.photoId as Venue["photoId"]);
+  return { url: photo.url, alt: photo.alt };
+}
+
+function formatRatingCount(count: number): string {
+  return count.toLocaleString("es-MX");
+}
+
 export function VenueCard({ venue, role, reason }: VenueCardProps) {
   const [showReason, setShowReason] = useState(false);
   const effectiveRole = role ?? (isExperienceVenue(venue) ? venue.role : undefined);
   const effectiveReason = reason ?? (isExperienceVenue(venue) ? venue.reason : undefined);
-  const photo = getPhoto(venue.photoId);
+  const photo = resolvePhoto(venue);
   const badge = effectiveRole ? ROLE_BADGE[effectiveRole] : undefined;
+
+  const rating = isExperienceVenue(venue) ? venue.rating : undefined;
+  const userRatingCount = isExperienceVenue(venue) ? venue.userRatingCount : undefined;
+  const address = isExperienceVenue(venue) ? venue.address : undefined;
+  const websiteUri = isExperienceVenue(venue) ? venue.websiteUri : undefined;
+  const googleMapsUri = isExperienceVenue(venue) ? venue.googleMapsUri : undefined;
 
   function handleDetailsClick() {
     if (effectiveReason) {
@@ -60,6 +86,17 @@ export function VenueCard({ venue, role, reason }: VenueCardProps) {
             </span>
           </Pill>
         )}
+        {typeof rating === "number" && (
+          <Pill
+            tone="gold"
+            icon="star"
+            className="absolute top-space-sm left-space-sm shadow-lg backdrop-blur-sm"
+          >
+            {rating.toFixed(1)}
+            {typeof userRatingCount === "number" &&
+              ` (${formatRatingCount(userRatingCount)} reseñas)`}
+          </Pill>
+        )}
         <Pill
           tone="glass-light"
           icon="location_on"
@@ -67,6 +104,11 @@ export function VenueCard({ venue, role, reason }: VenueCardProps) {
         >
           {venue.zone}
         </Pill>
+        {photo.caption && (
+          <span className="absolute right-space-sm bottom-space-sm font-label-sm text-label-sm text-white/80">
+            {photo.caption}
+          </span>
+        )}
       </div>
       <div className="space-y-space-sm p-space-md">
         <div>
@@ -75,6 +117,12 @@ export function VenueCard({ venue, role, reason }: VenueCardProps) {
             {venue.subtitle} • Capacidad: {venue.capacityApprox ? "~" : ""}
             {venue.capacity} invitados
           </p>
+          {address && (
+            <p className="flex items-center gap-1 font-body-sm text-body-sm text-on-surface-variant">
+              <Icon name="location_on" size={14} className="text-on-surface-variant" />
+              {address}
+            </p>
+          )}
         </div>
         <div className="flex flex-wrap gap-space-xs">
           {venue.features.map((feature) => (
@@ -83,6 +131,32 @@ export function VenueCard({ venue, role, reason }: VenueCardProps) {
             </Chip>
           ))}
         </div>
+        {(websiteUri || googleMapsUri) && (
+          <div className="flex flex-wrap gap-space-xs">
+            {websiteUri && (
+              <LinkButton
+                href={websiteUri}
+                target="_blank"
+                rel="noopener noreferrer"
+                variant="surface"
+                trailingIcon="open_in_new"
+              >
+                Sitio web
+              </LinkButton>
+            )}
+            {googleMapsUri && (
+              <LinkButton
+                href={googleMapsUri}
+                target="_blank"
+                rel="noopener noreferrer"
+                variant="soft"
+                trailingIcon="map"
+              >
+                Ver en Google Maps
+              </LinkButton>
+            )}
+          </div>
+        )}
         <div className="flex items-center justify-between pt-space-xs">
           <div className="font-label-md text-label-md font-bold text-secondary">
             Categoría: {venue.priceCategory}

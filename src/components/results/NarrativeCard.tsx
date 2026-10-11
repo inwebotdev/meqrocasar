@@ -1,11 +1,12 @@
-import { Card, Icon } from "@/components/ui";
+import { Card, Icon, Pill } from "@/components/ui";
 
 export interface NarrativeCardProps {
   title: string;
   narrative: string;
+  itineraryHint?: string;
 }
 
-export function NarrativeCard({ title, narrative }: NarrativeCardProps) {
+export function NarrativeCard({ title, narrative, itineraryHint }: NarrativeCardProps) {
   const paragraphs = narrative.split("\n\n").filter(Boolean);
 
   return (
@@ -30,6 +31,13 @@ export function NarrativeCard({ title, narrative }: NarrativeCardProps) {
           </p>
         ))}
       </div>
+      {itineraryHint && (
+        <div className="flex flex-wrap items-center gap-space-xs pt-space-xs">
+          <Pill tone="secondary-soft" icon="event_available">
+            {itineraryHint}
+          </Pill>
+        </div>
+      )}
     </Card>
   );
 }
