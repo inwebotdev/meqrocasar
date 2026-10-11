@@ -5,11 +5,7 @@ import { ExperienceResultSchema } from "@/domain/experience/schema";
 import type { ExperienceResult } from "@/domain/experience/types";
 import type { QuizEngineResult } from "@/domain/quiz/engine";
 import { ResolvedStepSchema, type ResolvedStep } from "@/domain/quiz/generated-step";
-import {
-  TranscriptRefsSchema,
-  transcriptToLegacyAnswers,
-  type Transcript,
-} from "@/domain/quiz/transcript";
+import { TranscriptRefsSchema, type Transcript } from "@/domain/quiz/transcript";
 import { FacetsSchema } from "@/domain/kb/taxonomy";
 
 import { ApiClientError, type ApiClientErrorCode, type FetchLike } from "./api-client";
@@ -21,9 +17,11 @@ export { ApiClientError, type ApiClientErrorCode, type FetchLike };
  * `POST /api/quiz/next`, `prefetchNextSteps` fires `POST /api/quiz/prefetch`
  * (fire-and-forget, errors swallowed — see `useQuizEngine`),
  * `generateExperienceFromTranscript` drives `POST /api/generate-experience`
- * with a transcript-shaped body, falling back to the legacy `QuizAnswers`
- * shape when the route doesn't accept it yet. Same error-handling shape as
- * `api-client.ts` (`ApiClientError`, reused here rather than duplicated).
+ * with a transcript-shaped body (the route accepts it directly — see
+ * `transcriptToLegacyAnswers` in `@/domain/quiz/transcript` for the
+ * legacy-body adapter, kept only for tests that still exercise the old
+ * shape). Same error-handling shape as `api-client.ts` (`ApiClientError`,
+ * reused here rather than duplicated).
  */
 
 const QuizEngineMetaSchema = z.object({
@@ -196,26 +194,13 @@ async function postGenerateExperience(
 }
 
 /**
- * Calls `POST /api/generate-experience` with `{ transcript }`. While that
- * route still only accepts the legacy `QuizAnswers` body, it responds 400
- * `invalid_answers`; on exactly that failure, this retries once with
- * `transcriptToLegacyAnswers(transcript)` instead. Any other failure (network,
- * a different error code, an invalid payload) propagates as-is.
+ * Calls `POST /api/generate-experience` with `{ transcript }`. Any
+ * failure (network, a non-ok envelope, an invalid payload) propagates as
+ * `ApiClientError`.
  */
 export async function generateExperienceFromTranscript(
   transcript: Transcript,
   fetchImpl: FetchLike = fetch,
 ): Promise<ExperienceResult> {
-  try {
-    return await postGenerateExperience({ transcript }, fetchImpl);
-  } catch (error) {
-    const shouldFallBack =
-      error instanceof ApiClientError && error.status === 400 && error.code === "invalid_answers";
-
-    if (!shouldFallBack) {
-      throw error;
-    }
-
-    return postGenerateExperience(transcriptToLegacyAnswers(transcript), fetchImpl);
-  }
+  return postGenerateExperience({ transcript }, fetchImpl);
 }

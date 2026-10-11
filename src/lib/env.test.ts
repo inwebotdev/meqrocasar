@@ -6,8 +6,8 @@ describe("parseEnv", () => {
   it("applies defaults when optional variables are absent", () => {
     const env = parseEnv({ NODE_ENV: "test" });
 
-    expect(env.OPENROUTER_MODEL_PRIMARY).toBe("qwen/qwen-2.5-72b-instruct");
-    expect(env.OPENROUTER_MODEL_FALLBACK).toBe("deepseek/deepseek-chat");
+    expect(env.OPENROUTER_MODEL_PRIMARY).toBe("qwen/qwen3-30b-a3b");
+    expect(env.OPENROUTER_MODEL_FALLBACK).toBe("qwen/qwen-2.5-7b-instruct");
     expect(env.OPENROUTER_TIMEOUT_MS).toBe(8000);
     expect(env.APP_URL).toBe("http://localhost:3000");
     expect(env.OPENROUTER_API_KEY).toBeUndefined();

@@ -38,8 +38,20 @@ function booleanWithDefault(defaultValue: boolean) {
 
 const envSchema = z.object({
   OPENROUTER_API_KEY: optionalSecret,
-  OPENROUTER_MODEL_PRIMARY: z.string().default("qwen/qwen-2.5-72b-instruct"),
-  OPENROUTER_MODEL_FALLBACK: z.string().default("deepseek/deepseek-chat"),
+  /**
+   * Final-generation (`POST /api/generate-experience`) primary/fallback
+   * models. Defaults from `docs/ai-step-benchmark.md` (`kool run ai:bench`):
+   * `qwen-2.5-72b-instruct` and `deepseek-chat` (the previous defaults here)
+   * measured 0% and 22% schema-valid respectively against this app's real
+   * OpenRouter traffic, with ~40s p50s — i.e. they time out far more often
+   * than they succeed. `qwen3-30b-a3b` and `qwen-2.5-7b-instruct` were the
+   * two reliable candidates in that same run, so they're the default pair
+   * here too (same models as `OPENROUTER_MODEL_FAST`/`_FAST_FALLBACK`
+   * below, just ordered primary-first since the final generation can
+   * afford the slightly heavier model as its first attempt).
+   */
+  OPENROUTER_MODEL_PRIMARY: z.string().default("qwen/qwen3-30b-a3b"),
+  OPENROUTER_MODEL_FALLBACK: z.string().default("qwen/qwen-2.5-7b-instruct"),
   OPENROUTER_TIMEOUT_MS: positiveIntWithDefault(8000),
   /**
    * The quiz engine's fast model for per-step generation (not the final

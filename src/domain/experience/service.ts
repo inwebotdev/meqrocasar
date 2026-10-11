@@ -1,20 +1,41 @@
-import type { LlmAttempt, LlmFailure, LlmSuccess } from "@/domain/ai/openrouter";
-import { SYSTEM_PROMPT_VERSION } from "@/domain/ai/prompt";
+import {
+  EXPERIENCE_DIGEST_OPTIONS,
+  EXPERIENCE_PROMPT_VERSION,
+  buildExperienceMessages,
+} from "@/domain/ai/experience-prompt";
+import type { LlmAttempt, StructuredClient } from "@/domain/ai/structured";
+import { buildDigest } from "@/domain/kb/digest";
+import { loadKb } from "@/domain/kb/load";
+import type { Facets } from "@/domain/kb/taxonomy";
+import type { Kb } from "@/domain/kb/types";
 import type { ImageProvider } from "@/domain/images/provider";
 import type { QuizAnswers } from "@/domain/quiz/schema";
+import {
+  foldFacets,
+  legacyAnswersFromFacets,
+  transcriptFromLegacyAnswers,
+  type Transcript,
+} from "@/domain/quiz/transcript";
 
-import { assembleVenues, buildFallbackExperience } from "./fallback";
-import { ExperienceResultSchema } from "./schema";
-import type { ExperienceAttempt, ExperienceResult } from "./types";
+import { assembleVenuesFromKb } from "./assemble";
+import { buildFallbackExperience, buildFallbackExperienceFromFacets } from "./fallback";
+import { ExperienceResultSchema, type LlmExperienceV2 } from "./schema";
+import type {
+  ExperienceAttempt,
+  ExperienceResult,
+  ExperiencePhoto,
+  ExperienceVenue,
+} from "./types";
 
-export interface ExperienceLlm {
-  generate(answers: QuizAnswers): Promise<LlmSuccess | LlmFailure>;
-}
+/** Either a real adaptive-engine transcript, or the legacy 4-answer shape (converted internally). */
+export type ExperienceServiceInput = { transcript: Transcript } | QuizAnswers;
 
 export interface ExperienceServiceDeps {
   /** Omitted (e.g. no OPENROUTER_API_KEY) to always use the local fallback. */
-  llm?: ExperienceLlm;
+  llm?: StructuredClient<LlmExperienceV2>;
   images: ImageProvider;
+  /** Defaults to `loadKb()`. */
+  kb?: Kb;
   /** Monotonic-ish millis clock, injected so tests never depend on real time. Defaults to `Date.now`. */
   now?: () => number;
   /** Wall clock for `meta.generatedAt`. Defaults to `() => new Date()`. */
@@ -22,14 +43,66 @@ export interface ExperienceServiceDeps {
 }
 
 export interface ExperienceService {
-  generate(answers: QuizAnswers): Promise<ExperienceResult>;
+  generate(input: ExperienceServiceInput): Promise<ExperienceResult>;
+}
+
+function isTranscriptInput(input: ExperienceServiceInput): input is { transcript: Transcript } {
+  return "transcript" in input;
 }
 
 function toExperienceAttempt(attempt: LlmAttempt): ExperienceAttempt {
   return { model: attempt.model, outcome: attempt.outcome, durationMs: attempt.durationMs };
 }
 
+/** Up to `max` photos straight from the recommended venues' real Places/KB photo, in venue order. */
+function photosFromVenues(venues: readonly ExperienceVenue[], max: number): ExperiencePhoto[] {
+  const photos: ExperiencePhoto[] = [];
+
+  for (const venue of venues) {
+    if (photos.length >= max) break;
+    if (!venue.photoUrl) continue;
+
+    photos.push({
+      url: venue.photoUrl,
+      alt: venue.name,
+      credit: venue.photoAttribution ?? venue.name,
+    });
+  }
+
+  return photos;
+}
+
+/**
+ * Merges the recommended venues' real photos (preferred, slots 1-2) with
+ * the Unsplash/registry search results (filling the rest), deduplicated
+ * by url, always resolving exactly 3 photos.
+ */
+function mergePhotos(
+  venuePhotos: readonly ExperiencePhoto[],
+  searchedPhotos: readonly ExperiencePhoto[],
+): ExperiencePhoto[] {
+  const result: ExperiencePhoto[] = [];
+  const usedUrls = new Set<string>();
+
+  for (const photo of [...venuePhotos, ...searchedPhotos]) {
+    if (result.length >= 3) break;
+    if (usedUrls.has(photo.url)) continue;
+    usedUrls.add(photo.url);
+    result.push(photo);
+  }
+
+  const lastSearched = searchedPhotos.at(-1);
+  while (result.length < 3 && lastSearched) {
+    result.push(lastSearched);
+  }
+
+  return result.slice(0, 3);
+}
+
 interface FallbackContext {
+  input: ExperienceServiceInput;
+  facets: Facets;
+  transcript: Transcript;
   attempts?: LlmAttempt[];
   start: number;
   now: () => number;
@@ -37,12 +110,18 @@ interface FallbackContext {
 }
 
 async function buildLocalFallback(
-  answers: QuizAnswers,
   images: ImageProvider,
+  legacyAnswersForImages: QuizAnswers,
   ctx: FallbackContext,
 ): Promise<ExperienceResult> {
-  const fallback = buildFallbackExperience(answers);
-  const photos = await images.resolve(fallback.searchQueries, answers);
+  // The legacy input path reuses `buildFallbackExperience` directly (byte-for-byte
+  // the same deterministic result as before this layer), while a real adaptive
+  // transcript uses the facets-keyed variant (same tables, mapped facets).
+  const fallback = isTranscriptInput(ctx.input)
+    ? buildFallbackExperienceFromFacets(ctx.facets, ctx.transcript)
+    : buildFallbackExperience(ctx.input);
+
+  const photos = await images.resolve(fallback.searchQueries, legacyAnswersForImages);
 
   return {
     ...fallback,
@@ -52,43 +131,65 @@ async function buildLocalFallback(
       fallbackUsed: true,
       durationMs: ctx.now() - ctx.start,
       generatedAt: ctx.clock().toISOString(),
-      promptVersion: SYSTEM_PROMPT_VERSION,
+      promptVersion: EXPERIENCE_PROMPT_VERSION,
       attempts: ctx.attempts?.map(toExperienceAttempt),
     },
   };
 }
 
 /**
- * Builds the experience service: generates a wedding experience from quiz
- * answers, trying the LLM (when configured) and always falling back to the
- * deterministic local experience on any failure — including an LLM
- * success whose assembled result unexpectedly fails final validation.
- * Never throws for provider failures.
+ * Builds the experience service: generates a wedding experience from the
+ * couple's full adaptive-quiz transcript (or the legacy 4-answer shape,
+ * converted via `transcriptFromLegacyAnswers`) and the knowledge-base
+ * digest for their facets, trying the LLM (when configured) and always
+ * falling back to the deterministic local experience on any failure —
+ * including an LLM success whose assembled result unexpectedly fails
+ * final validation. Never throws for provider failures.
  */
 export function createExperienceService(deps: ExperienceServiceDeps): ExperienceService {
   const now = deps.now ?? (() => Date.now());
   const clock = deps.clock ?? (() => new Date());
+  const kb = deps.kb ?? loadKb();
 
   return {
-    async generate(answers: QuizAnswers): Promise<ExperienceResult> {
+    async generate(input: ExperienceServiceInput): Promise<ExperienceResult> {
       const start = now();
 
+      const transcript = isTranscriptInput(input)
+        ? input.transcript
+        : transcriptFromLegacyAnswers(input);
+      const facets = foldFacets(transcript.entries);
+      // A legacy caller already has real `QuizAnswers`; a real transcript has
+      // none, so `images.resolve` (which still takes the legacy shape — see
+      // `ImageProvider`) gets the closest legacy equivalent instead.
+      const legacyAnswersForImages = isTranscriptInput(input)
+        ? legacyAnswersFromFacets(facets)
+        : input;
+
+      const fallbackCtx: FallbackContext = { input, facets, transcript, start, now, clock };
+
       if (!deps.llm) {
-        return buildLocalFallback(answers, deps.images, { start, now, clock });
+        return buildLocalFallback(deps.images, legacyAnswersForImages, fallbackCtx);
       }
 
-      const llmResult = await deps.llm.generate(answers);
+      const digest = buildDigest(facets, EXPERIENCE_DIGEST_OPTIONS);
+      const messages = buildExperienceMessages({ transcript, facets, digest });
+      const llmResult = await deps.llm.generate(messages);
 
       if (!llmResult.ok) {
-        return buildLocalFallback(answers, deps.images, {
+        return buildLocalFallback(deps.images, legacyAnswersForImages, {
+          ...fallbackCtx,
           attempts: llmResult.attempts,
-          start,
-          now,
-          clock,
         });
       }
 
-      const photos = await deps.images.resolve(llmResult.value.searchQueries, answers);
+      const venues = assembleVenuesFromKb(llmResult.value.recommendedVenues, facets, kb);
+      const venuePhotos = photosFromVenues(venues, 2);
+      const searchedPhotos = await deps.images.resolve(
+        llmResult.value.searchQueries,
+        legacyAnswersForImages,
+      );
+      const photos = mergePhotos(venuePhotos, searchedPhotos);
 
       const candidate: ExperienceResult = {
         conceptTitle: llmResult.value.conceptTitle,
@@ -99,15 +200,18 @@ export function createExperienceService(deps: ExperienceServiceDeps): Experience
         narrative: llmResult.value.narrative,
         reelTagline: llmResult.value.reelTagline,
         searchQueries: llmResult.value.searchQueries,
-        venues: assembleVenues(llmResult.value.recommendedVenues, answers),
+        venues,
         photos,
-        answers,
+        answers: isTranscriptInput(input) ? undefined : input,
+        transcript,
+        facets,
+        itineraryHint: llmResult.value.itineraryHint,
         meta: {
           model: llmResult.model,
           fallbackUsed: false,
           durationMs: now() - start,
           generatedAt: clock().toISOString(),
-          promptVersion: SYSTEM_PROMPT_VERSION,
+          promptVersion: EXPERIENCE_PROMPT_VERSION,
           attempts: llmResult.attempts.map(toExperienceAttempt),
           usage: llmResult.usage,
         },
@@ -121,11 +225,9 @@ export function createExperienceService(deps: ExperienceServiceDeps): Experience
       // Defensive: the assembled result somehow failed validation (e.g. an
       // unexpected empty venues array). Fall back to the local experience
       // rather than ever returning something that doesn't match the contract.
-      return buildLocalFallback(answers, deps.images, {
+      return buildLocalFallback(deps.images, legacyAnswersForImages, {
+        ...fallbackCtx,
         attempts: llmResult.attempts,
-        start,
-        now,
-        clock,
       });
     },
   };

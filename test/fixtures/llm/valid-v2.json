@@ -1,0 +1,23 @@
+{
+  "conceptTitle": "Atardecer Dorado entre Viñedos de Ezequiel Montes",
+  "colorPalette": [
+    { "hex": "#5B1A2B", "name": "Vino de Barrica" },
+    { "hex": "#4B5E3A", "name": "Verde Viñedo" },
+    { "hex": "#C9A227", "name": "Oro Vendimia" },
+    { "hex": "#D9C7A3", "name": "Beige Barrica" }
+  ],
+  "narrative": "La pareja imagina su boda entre las hileras centenarias de Viñedos La Redonda, con la Peña de Bernal asomando en el horizonte mientras el sol se despide entre las vides. El aroma a uva recién cortada se mezcla con el perfume de las flores de temporada, y cada brindis se siente como parte del paisaje.\n\nAl caer la noche, la celebración sigue entre velas y copas de vino de la región, cerrando un día que combina tierra, vino y romance en Querétaro.",
+  "searchQueries": [
+    "vineyard sunset wedding mexico",
+    "wine cellar candlelight wedding",
+    "rustic vineyard wedding couple"
+  ],
+  "recommendedVenues": [
+    {
+      "venueId": "v_vinedos-la-redonda",
+      "reason": "Sus jardines con vista a la Peña de Bernal son el escenario ideal para una ceremonia diurna entre vides."
+    }
+  ],
+  "reelTagline": "Romance entre Viñedos de Querétaro",
+  "itineraryHint": "Viernes: cata en La Redonda · Sábado: ceremonia al atardecer · Domingo: brunch en el viñedo"
+}

@@ -1,11 +1,26 @@
+import { z } from "zod";
+
 import { ExperienceResultSchema } from "@/domain/experience/schema";
+import type { ExperienceServiceInput } from "@/domain/experience/service";
 import type { ExperienceResult } from "@/domain/experience/types";
 import { QuizAnswersSchema } from "@/domain/quiz/schema";
+import { TranscriptSchema } from "@/domain/quiz/transcript";
 import type { ApiResponse } from "@/domain/api/envelope";
 import { getExperienceService } from "@/lib/experience-deps";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+
+/**
+ * Accepts either the new transcript-based body (`{ transcript }`, up to 8
+ * entries — see `TranscriptSchema`) or the legacy 4-answer body
+ * (`{ style, setting, experience, mustHave }`), so older clients and
+ * `quiz-client.ts`'s legacy-conversion test path both keep working.
+ */
+const RequestBodySchema = z.union([
+  z.object({ transcript: TranscriptSchema }).strict(),
+  QuizAnswersSchema,
+]);
 
 function jsonResponse<T>(body: ApiResponse<T>, status: number): Response {
   return Response.json(body, { status, headers: { "Cache-Control": "no-store" } });
@@ -21,7 +36,7 @@ export async function POST(request: Request): Promise<Response> {
     return jsonResponse({ ok: false, error: { code: "invalid_json", message } }, 400);
   }
 
-  const parsed = QuizAnswersSchema.safeParse(payload);
+  const parsed = RequestBodySchema.safeParse(payload);
 
   if (!parsed.success) {
     return jsonResponse(
@@ -29,7 +44,7 @@ export async function POST(request: Request): Promise<Response> {
         ok: false,
         error: {
           code: "invalid_answers",
-          message: "The request body doesn't match the expected quiz answers shape.",
+          message: "The request body doesn't match the expected transcript or quiz answers shape.",
           issues: parsed.error.issues,
         },
       },
@@ -39,7 +54,8 @@ export async function POST(request: Request): Promise<Response> {
 
   try {
     const service = getExperienceService();
-    const data: ExperienceResult = await service.generate(parsed.data);
+    const input: ExperienceServiceInput = parsed.data;
+    const data: ExperienceResult = await service.generate(input);
 
     // Defensive, should already be guaranteed by the service.
     ExperienceResultSchema.parse(data);

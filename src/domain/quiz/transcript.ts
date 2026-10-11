@@ -225,16 +225,14 @@ function legacyExperienceFromFacets(facets: Facets): QuizAnswers["experience"] {
 }
 
 /**
- * Converts an adaptive-engine transcript into the legacy 4-answer shape
- * `/api/generate-experience` still expects, by folding the transcript's
- * facets and mapping each one onto its closest legacy answer id (sensible
- * defaults when a facet is unknown or has no legacy equivalent). Used by
- * `generateExperienceFromTranscript` (`src/lib/quiz-client.ts`) as a
- * fallback while that route is migrated to accept a transcript directly.
+ * Maps a folded `Facets` onto the closest legacy 4-answer `QuizAnswers`
+ * shape (sensible defaults when a facet is unknown or has no legacy
+ * equivalent). Shared by `transcriptToLegacyAnswers` (below) and by
+ * `buildFallbackExperienceFromFacets` (`src/domain/experience/fallback.ts`),
+ * which reuses the legacy deterministic fallback tables (keyed by legacy
+ * style × setting) for the adaptive-engine fallback path too.
  */
-export function transcriptToLegacyAnswers(transcript: Transcript): QuizAnswers {
-  const facets = foldFacets(transcript.entries);
-
+export function legacyAnswersFromFacets(facets: Facets): QuizAnswers {
   return {
     style: facets.style ? STYLE_FACET_TO_LEGACY[facets.style] : DEFAULT_LEGACY_STYLE,
     setting: facets.setting ? SETTING_FACET_TO_LEGACY[facets.setting] : DEFAULT_LEGACY_SETTING,
@@ -243,4 +241,15 @@ export function transcriptToLegacyAnswers(transcript: Transcript): QuizAnswers {
       ? MUST_HAVE_FACET_TO_LEGACY[facets.experience]
       : DEFAULT_LEGACY_MUST_HAVE,
   };
+}
+
+/**
+ * Converts an adaptive-engine transcript into the legacy 4-answer shape,
+ * by folding the transcript's facets and delegating to
+ * `legacyAnswersFromFacets`. Kept as a test/adapter helper now that
+ * `/api/generate-experience` accepts a transcript directly (see
+ * `src/lib/quiz-client.ts`'s `generateExperienceFromTranscript`).
+ */
+export function transcriptToLegacyAnswers(transcript: Transcript): QuizAnswers {
+  return legacyAnswersFromFacets(foldFacets(transcript.entries));
 }

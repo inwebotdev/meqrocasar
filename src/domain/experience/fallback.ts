@@ -1,6 +1,8 @@
+import type { Facets } from "@/domain/kb/taxonomy";
 import { photosForAnswers } from "@/domain/media/photos-for-answers";
 import { getOption } from "@/domain/quiz/questions";
 import type { QuizAnswers } from "@/domain/quiz/schema";
+import { legacyAnswersFromFacets, type Transcript } from "@/domain/quiz/transcript";
 import { matchVenue, rankVenues } from "@/domain/venues/match";
 import type { Venue } from "@/domain/venues/types";
 
@@ -259,5 +261,30 @@ export function buildFallbackExperience(answers: QuizAnswers): Omit<ExperienceRe
     venues,
     photos: photosForAnswers(answers, 3),
     answers,
+  };
+}
+
+/**
+ * Deterministic, offline experience built from the couple's folded
+ * `Facets` instead of the legacy 4-answer shape: maps the facets onto
+ * their closest legacy answer ids (`legacyAnswersFromFacets`) and reuses
+ * the exact same deterministic tables as `buildFallbackExperience`
+ * (keyed by legacy style × setting), so a transcript that never reaches
+ * the LLM still gets a sensible, fully offline result. `transcript` and
+ * `facets` are attached to the result (and `answers` omitted) so the UI
+ * and `MetaFooter` can tell this came from the adaptive engine.
+ */
+export function buildFallbackExperienceFromFacets(
+  facets: Facets,
+  transcript?: Transcript,
+): Omit<ExperienceResult, "meta"> {
+  const legacyAnswers = legacyAnswersFromFacets(facets);
+  const base = buildFallbackExperience(legacyAnswers);
+
+  return {
+    ...base,
+    answers: undefined,
+    transcript,
+    facets,
   };
 }

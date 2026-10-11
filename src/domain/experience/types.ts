@@ -1,3 +1,5 @@
+import type { Facets } from "@/domain/kb/taxonomy";
+import type { Transcript } from "@/domain/quiz/transcript";
 import type { QuizAnswers } from "@/domain/quiz/schema";
 import type { Venue } from "@/domain/venues/types";
 
@@ -6,9 +8,32 @@ export interface PaletteColor {
   name: string;
 }
 
-export interface ExperienceVenue extends Venue {
+/**
+ * A venue recommended as part of a generated experience. Structurally
+ * compatible with `Venue` (so the legacy fallback path's venues, which
+ * are real catalog `Venue`s, satisfy this unchanged) but doesn't `extend`
+ * it: `zone` widens to a plain es-MX display string and `tags`/`photoId`
+ * become non-authoritative, because a KB-sourced venue
+ * (`assembleVenuesFromKb`) spans the wider `kb/taxonomy` zone vocabulary
+ * and has no legacy photo-registry id of its own.
+ */
+export interface ExperienceVenue extends Omit<Venue, "zone" | "photoId"> {
+  zone: string;
+  /** Omitted for a KB-sourced venue — those render from `photoUrl` instead. */
+  photoId?: Venue["photoId"];
   reason: string;
   role: "principal" | "destacada";
+  /** Google rating (0-5), when the venue has real Places data. */
+  rating?: number;
+  userRatingCount?: number;
+  address?: string;
+  websiteUri?: string;
+  googleMapsUri?: string;
+  /** Proxied Places photo path, or a registry/Unsplash URL. */
+  photoUrl?: string;
+  photoAttribution?: string;
+  oneLiner?: string;
+  whyWeddings?: string;
 }
 
 export interface ExperiencePhoto {
@@ -52,6 +77,13 @@ export interface ExperienceResult {
   venues: ExperienceVenue[];
   /** Always exactly 3 photos. */
   photos: ExperiencePhoto[];
-  answers: QuizAnswers;
+  /** Omitted when generated from a transcript rather than the legacy 4-answer shape. */
+  answers?: QuizAnswers;
+  /** Present when generated from (or converted to) a transcript. */
+  transcript?: Transcript;
+  /** The folded facets the transcript/answers resolved to. */
+  facets?: Facets;
+  /** A short weekend-itinerary hint, e.g. "Viernes: ... · Sábado: ... · Domingo: ...". */
+  itineraryHint?: string;
   meta: ExperienceMeta;
 }
