@@ -3,19 +3,19 @@
 import { useState } from "react";
 
 import { SectionHeader } from "@/components/ui";
-import type { Venue, Zone } from "@/domain/venues/types";
+import type { KbCatalogVenue, KbCatalogZone } from "@/domain/kb/catalog";
 import { cn } from "@/lib/cn";
 
 import { VenueCard } from "./VenueCard";
 
 export interface CatalogScreenProps {
-  venues: readonly Venue[];
-  zones: readonly Zone[];
+  venues: readonly KbCatalogVenue[];
+  zones: readonly KbCatalogZone[];
 }
 
 const ALL_ZONES_LABEL = "Todas" as const;
 
-type ZoneFilter = Zone | typeof ALL_ZONES_LABEL;
+type ZoneFilter = KbCatalogZone["id"] | typeof ALL_ZONES_LABEL;
 
 export function CatalogScreen({ venues, zones }: CatalogScreenProps) {
   const [selectedZone, setSelectedZone] = useState<ZoneFilter>(ALL_ZONES_LABEL);
@@ -23,9 +23,7 @@ export function CatalogScreen({ venues, zones }: CatalogScreenProps) {
   const filteredVenues =
     selectedZone === ALL_ZONES_LABEL
       ? venues
-      : venues.filter((venue) => venue.zone === selectedZone);
-
-  const zoneFilters: readonly ZoneFilter[] = [ALL_ZONES_LABEL, ...zones];
+      : venues.filter((venue) => venue.zoneId === selectedZone);
 
   return (
     <div className="flex flex-col gap-y-space-lg">
@@ -37,14 +35,27 @@ export function CatalogScreen({ venues, zones }: CatalogScreenProps) {
       />
 
       <div className="-mx-margin flex gap-space-xs overflow-x-auto px-margin pb-1">
-        {zoneFilters.map((zone) => {
-          const isActive = zone === selectedZone;
+        <button
+          type="button"
+          aria-pressed={selectedZone === ALL_ZONES_LABEL}
+          onClick={() => setSelectedZone(ALL_ZONES_LABEL)}
+          className={cn(
+            "shrink-0 rounded-full px-space-md py-1.5 font-label-sm text-label-sm font-bold whitespace-nowrap transition-colors",
+            selectedZone === ALL_ZONES_LABEL
+              ? "bg-primary text-on-primary shadow-lg"
+              : "bg-primary/5 text-primary hover:bg-primary/10",
+          )}
+        >
+          {ALL_ZONES_LABEL}
+        </button>
+        {zones.map((zone) => {
+          const isActive = zone.id === selectedZone;
           return (
             <button
-              key={zone}
+              key={zone.id}
               type="button"
               aria-pressed={isActive}
-              onClick={() => setSelectedZone(zone)}
+              onClick={() => setSelectedZone(zone.id)}
               className={cn(
                 "shrink-0 rounded-full px-space-md py-1.5 font-label-sm text-label-sm font-bold whitespace-nowrap transition-colors",
                 isActive
@@ -52,7 +63,7 @@ export function CatalogScreen({ venues, zones }: CatalogScreenProps) {
                   : "bg-primary/5 text-primary hover:bg-primary/10",
               )}
             >
-              {zone}
+              {zone.label}
             </button>
           );
         })}

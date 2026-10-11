@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import { EXPERIENCE_IDS, MUST_HAVE_IDS, SETTING_IDS, STYLE_IDS } from "@/domain/quiz/questions";
 import type { QuizAnswers } from "@/domain/quiz/schema";
 
-import { assembleVenues, buildFallbackExperience } from "./fallback";
+import { buildFallbackExperience } from "./fallback";
 import { ExperienceResultSchema } from "./schema";
 
 function allAnswerCombinations(): QuizAnswers[] {
@@ -68,55 +68,5 @@ describe("buildFallbackExperience", () => {
       expect(fallback.venues[0]?.role).toBe("principal");
       expect(fallback.venues[1]?.role).toBe("destacada");
     }
-  });
-});
-
-describe("assembleVenues", () => {
-  const answers: QuizAnswers = {
-    style: "rustic_vineyard",
-    setting: "day_vineyard",
-    experience: "intimate_boutique",
-    mustHave: "wine_tasting",
-  };
-
-  it("maps matched LLM venues and marks the first as principal", () => {
-    const venues = assembleVenues(
-      [
-        {
-          name: "Viñedos La Redonda",
-          zone: "Ezequiel Montes",
-          reason: "Por su conexión con el estilo rústico y los viñedos elegidos por la pareja.",
-        },
-      ],
-      answers,
-    );
-
-    expect(venues[0]?.id).toBe("vinedos-la-redonda");
-    expect(venues[0]?.role).toBe("principal");
-    expect(venues).toHaveLength(2);
-    expect(venues[1]?.role).toBe("destacada");
-  });
-
-  it("drops unmatched venues and fills with rankVenues", () => {
-    const venues = assembleVenues(
-      [{ name: "Hacienda Inventada del Sol", zone: "Nowhere", reason: "x".repeat(25) }],
-      answers,
-    );
-
-    expect(venues).toHaveLength(2);
-    expect(venues.every((venue) => venue.name !== "Hacienda Inventada del Sol")).toBe(true);
-  });
-
-  it("dedupes repeated venues", () => {
-    const venues = assembleVenues(
-      [
-        { name: "Viñedos La Redonda", zone: "Ezequiel Montes", reason: "x".repeat(25) },
-        { name: "La Redonda", zone: "Ezequiel Montes", reason: "y".repeat(25) },
-      ],
-      answers,
-    );
-
-    const ids = venues.map((venue) => venue.id);
-    expect(new Set(ids).size).toBe(ids.length);
   });
 });

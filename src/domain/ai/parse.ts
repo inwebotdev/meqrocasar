@@ -1,7 +1,3 @@
-import { z } from "zod";
-
-import { LlmExperienceSchema, type LlmExperience } from "@/domain/experience/schema";
-
 /**
  * Strips a ```json fenced block (or a bare ``` fenced block) around the
  * first fence pair found, if any; otherwise returns the text unchanged.
@@ -68,42 +64,4 @@ function findBalancedObject(text: string): string | undefined {
 export function extractJsonObject(text: string): string | undefined {
   const stripped = stripFences(text);
   return findBalancedObject(stripped) ?? findBalancedObject(text);
-}
-
-export type ParseLlmExperienceResult =
-  | { ok: true; value: LlmExperience }
-  | { ok: false; reason: "no-json" | "invalid-json" | "schema"; detail: string };
-
-/**
- * Tolerantly parses raw LLM output into an `LlmExperience`: extracts the
- * JSON object (fences/prose tolerated), parses it, and validates it
- * against `LlmExperienceSchema`. Never throws; `detail` carries the
- * `JSON.parse` message or the flattened Zod issues, meant to be fed back
- * to the model in a correction retry turn.
- */
-export function parseLlmExperience(text: string): ParseLlmExperienceResult {
-  const jsonText = extractJsonObject(text);
-
-  if (jsonText === undefined) {
-    return {
-      ok: false,
-      reason: "no-json",
-      detail: "No se encontró un objeto JSON en la respuesta.",
-    };
-  }
-
-  let parsed: unknown;
-  try {
-    parsed = JSON.parse(jsonText);
-  } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
-    return { ok: false, reason: "invalid-json", detail: message };
-  }
-
-  const result = LlmExperienceSchema.safeParse(parsed);
-  if (!result.success) {
-    return { ok: false, reason: "schema", detail: JSON.stringify(z.flattenError(result.error)) };
-  }
-
-  return { ok: true, value: result.data };
 }

@@ -3,10 +3,9 @@ import { photosForAnswers } from "@/domain/media/photos-for-answers";
 import { getOption } from "@/domain/quiz/questions";
 import type { QuizAnswers } from "@/domain/quiz/schema";
 import { legacyAnswersFromFacets, type Transcript } from "@/domain/quiz/transcript";
-import { matchVenue, rankVenues } from "@/domain/venues/match";
+import { rankVenues } from "@/domain/venues/match";
 import type { Venue } from "@/domain/venues/types";
 
-import type { LlmExperience } from "./schema";
 import type { ExperienceResult, ExperienceVenue, PaletteColor } from "./types";
 
 type StyleId = QuizAnswers["style"];
@@ -178,54 +177,6 @@ function reasonFor(answers: QuizAnswers, venueTags: readonly string[]): string {
   const overlap = venueTags.slice(0, 2).join(" y ");
   const styleTitle = getOption("style", answers.style).title;
   return `Resuena con el estilo ${styleTitle} que eligieron, por su conexión con ${overlap}.`;
-}
-
-const VENUES_FALLBACK_POOL = 12;
-
-/**
- * Maps LLM-recommended venues to real catalog venues via `matchVenue`,
- * drops anything unmatched, dedupes, and fills up to 2 entries with
- * `rankVenues` when fewer than 2 were matched. The first entry is always
- * `principal`, the rest `destacada`.
- */
-export function assembleVenues(
-  llmVenues: readonly LlmExperience["recommendedVenues"][number][],
-  answers: QuizAnswers,
-): ExperienceVenue[] {
-  const result: ExperienceVenue[] = [];
-  const seenIds = new Set<string>();
-
-  for (const candidate of llmVenues) {
-    if (result.length >= 2) break;
-
-    const venue = matchVenue(candidate.name);
-    if (!venue || seenIds.has(venue.id)) continue;
-
-    seenIds.add(venue.id);
-    result.push({
-      ...venue,
-      reason: candidate.reason,
-      role: result.length === 0 ? "principal" : "destacada",
-    });
-  }
-
-  if (result.length < 2) {
-    const fallbackRanked = rankVenues(answers, VENUES_FALLBACK_POOL);
-
-    for (const venue of fallbackRanked) {
-      if (result.length >= 2) break;
-      if (seenIds.has(venue.id)) continue;
-
-      seenIds.add(venue.id);
-      result.push({
-        ...venue,
-        reason: reasonFor(answers, venue.tags),
-        role: result.length === 0 ? "principal" : "destacada",
-      });
-    }
-  }
-
-  return result;
 }
 
 function toExperienceVenue(

@@ -7,41 +7,6 @@ import { TranscriptSchema } from "@/domain/quiz/transcript";
 import { VENUE_TAG_VALUES } from "@/domain/venues/types";
 
 /**
- * Shape the LLM (OpenRouter) must return. Passed to `response_format` via
- * `LLM_EXPERIENCE_JSON_SCHEMA` and used to validate the model's response
- * before it is processed into an `ExperienceResult`.
- */
-export const LlmExperienceSchema = z.object({
-  conceptTitle: z.string().min(4).max(80),
-  colorPalette: z
-    .array(
-      z.object({
-        hex: z.string().regex(/^#[0-9A-Fa-f]{6}$/),
-        name: z.string().min(2).max(30),
-      }),
-    )
-    .length(4),
-  narrative: z.string().min(120).max(1400),
-  searchQueries: z.array(z.string().min(3).max(60)).length(3),
-  recommendedVenues: z
-    .array(
-      z.object({
-        name: z.string().min(1),
-        zone: z.string().min(1),
-        reason: z.string().min(20).max(300),
-      }),
-    )
-    .min(1)
-    .max(3),
-  reelTagline: z.string().min(4).max(60),
-});
-
-export type LlmExperience = z.infer<typeof LlmExperienceSchema>;
-
-/** JSON Schema for the OpenRouter `response_format` (structured outputs). */
-export const LLM_EXPERIENCE_JSON_SCHEMA = z.toJSONSchema(LlmExperienceSchema);
-
-/**
  * Shape the primary model must return for the transcript-based final
  * generation (`buildExperienceMessages`): venues are referenced by their
  * knowledge-base id (`recommendedVenues[].venueId`) instead of a free-text

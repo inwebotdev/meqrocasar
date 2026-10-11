@@ -8,9 +8,10 @@ import { extractJsonObject } from "./parse";
  * messages, calls OpenRouter and returns a value validated against the
  * schema, following a fixed fallback ladder (see `createStructuredClient`).
  *
- * `src/domain/ai/openrouter.ts` (the wedding-experience client) and
- * `scripts/kb/enrich-lib.ts` (the knowledge-base enrichment client) are
- * both thin, schema-specific wrappers over this module.
+ * `src/lib/experience-deps.ts`/`src/lib/quiz-engine-deps.ts` (the
+ * wedding-experience and quiz-step clients) and `scripts/kb/enrich-lib.ts`
+ * (the knowledge-base enrichment client) all build their
+ * `StructuredClient` straight from this module, schema-specific.
  */
 
 export interface OpenRouterConfig {

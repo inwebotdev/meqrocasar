@@ -42,7 +42,7 @@ export interface ExperiencePhoto {
   credit: string;
 }
 
-/** One call to one LLM model while generating an experience (see `createOpenRouterClient`). */
+/** One call to one LLM model while generating an experience (see `createStructuredClient`). */
 export interface ExperienceAttempt {
   model: string;
   outcome: "ok" | "http-error" | "timeout" | "network" | "no-json" | "invalid-json" | "schema";
@@ -59,7 +59,7 @@ export interface ExperienceMeta {
   fallbackUsed: boolean;
   durationMs: number;
   generatedAt: string;
-  /** `SYSTEM_PROMPT_VERSION` at the time this experience was generated. */
+  /** `EXPERIENCE_PROMPT_VERSION` at the time this experience was generated. */
   promptVersion?: string;
   /** Every LLM call attempted while generating this experience, in order. */
   attempts?: ExperienceAttempt[];

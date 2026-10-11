@@ -3,7 +3,7 @@ import path from "node:path";
 
 import { describe, expect, it } from "vitest";
 
-import { extractJsonObject, parseLlmExperience } from "./parse";
+import { extractJsonObject } from "./parse";
 
 function fixture(name: string): string {
   return readFileSync(path.resolve(__dirname, "../../../test/fixtures/llm", name), "utf-8");
@@ -39,53 +39,5 @@ describe("extractJsonObject", () => {
 
   it("returns undefined when there is no object at all", () => {
     expect(extractJsonObject("just some prose, no JSON here")).toBeUndefined();
-  });
-});
-
-describe("parseLlmExperience", () => {
-  it("parses valid.json into a valid LlmExperience", () => {
-    const result = parseLlmExperience(fixture("valid.json"));
-    expect(result.ok).toBe(true);
-    if (result.ok) {
-      expect(result.value.conceptTitle).toBe("Atardecer Dorado entre Viñedos de Ezequiel Montes");
-      expect(result.value.colorPalette).toHaveLength(4);
-      expect(result.value.recommendedVenues.length).toBeGreaterThanOrEqual(1);
-    }
-  });
-
-  it("parses fenced.txt (prose + ```json fence) into a valid LlmExperience", () => {
-    const result = parseLlmExperience(fixture("fenced.txt"));
-    expect(result.ok).toBe(true);
-    if (result.ok) {
-      expect(result.value.conceptTitle).toBe("Noche Virreinal en Casona de Cantera");
-    }
-  });
-
-  it("fails with reason 'no-json' for malformed.txt (no balanced object found)", () => {
-    const result = parseLlmExperience(fixture("malformed.txt"));
-    expect(result.ok).toBe(false);
-    if (!result.ok) {
-      expect(result.reason).toBe("no-json");
-      expect(result.detail.length).toBeGreaterThan(0);
-    }
-  });
-
-  it("fails with reason 'schema' for wrong-shape.json (5 colors, missing reelTagline)", () => {
-    const result = parseLlmExperience(fixture("wrong-shape.json"));
-    expect(result.ok).toBe(false);
-    if (!result.ok) {
-      expect(result.reason).toBe("schema");
-      expect(result.detail).toContain("colorPalette");
-      expect(result.detail).toContain("reelTagline");
-    }
-  });
-
-  it("fails with reason 'invalid-json' for syntactically broken JSON text", () => {
-    const result = parseLlmExperience('{ "conceptTitle": "x", }');
-    expect(result.ok).toBe(false);
-    if (!result.ok) {
-      expect(result.reason).toBe("invalid-json");
-      expect(result.detail.length).toBeGreaterThan(0);
-    }
   });
 });

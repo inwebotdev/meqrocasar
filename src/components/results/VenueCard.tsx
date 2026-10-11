@@ -4,11 +4,42 @@ import { useState } from "react";
 
 import { Button, Card, Chip, Icon, LinkButton, Pill } from "@/components/ui";
 import type { ExperienceVenue } from "@/domain/experience/types";
-import { getPhoto } from "@/domain/media/photos";
-import type { Venue } from "@/domain/venues/types";
+import { getPhoto, type PhotoId } from "@/domain/media/photos";
+
+/**
+ * Everything `VenueCard` needs, structurally broad enough that a legacy
+ * `Venue`, a quiz-result `ExperienceVenue` and a KB catalog projection
+ * (`KbCatalogVenue`, see `src/domain/kb/catalog.ts`) all satisfy it as-is
+ * — no adapter needed at the call site. Only `id`/`name`/`zone`/`subtitle`/
+ * `capacity*`/`features`/`priceCategory` are required; everything else
+ * (role/reason, rating, address, website/maps links, `photoUrl`) is
+ * optional, since a browsing-the-catalog card has no quiz "role"/"reason"
+ * and a legacy venue has no real Places data.
+ */
+export interface VenueCardVenue {
+  id: string;
+  name: string;
+  zone: string;
+  subtitle: string;
+  capacity: number;
+  capacityApprox: boolean;
+  features: readonly string[];
+  priceCategory: "Medio" | "Medio-Alto" | "Exclusivo";
+  website?: string;
+  role?: ExperienceVenue["role"];
+  reason?: string;
+  rating?: number;
+  userRatingCount?: number;
+  address?: string;
+  websiteUri?: string;
+  googleMapsUri?: string;
+  photoUrl?: string;
+  photoAttribution?: string;
+  photoId?: PhotoId;
+}
 
 export interface VenueCardProps {
-  venue: ExperienceVenue | Venue;
+  venue: VenueCardVenue;
   role?: ExperienceVenue["role"];
   reason?: string;
 }
@@ -18,23 +49,22 @@ const ROLE_BADGE: Record<ExperienceVenue["role"], { icon: string; label: string 
   destacada: { icon: "verified", label: "Sede Destacada" },
 };
 
-function isExperienceVenue(venue: ExperienceVenue | Venue): venue is ExperienceVenue {
-  return "role" in venue;
-}
-
 interface ResolvedPhoto {
   url: string;
   alt: string;
   caption?: string;
 }
 
+/** Falls back to when a card somehow has neither a real `photoUrl` nor a legacy `photoId` — shouldn't happen in practice, but keeps this a total function. */
+const FALLBACK_PHOTO_ID: PhotoId = "patio-cantera-rosa";
+
 /** Prefers a KB-sourced venue's real Places/registry `photoUrl`; falls back to the legacy photo registry by `photoId`. */
-function resolvePhoto(venue: ExperienceVenue | Venue): ResolvedPhoto {
-  if (isExperienceVenue(venue) && venue.photoUrl) {
+function resolvePhoto(venue: VenueCardVenue): ResolvedPhoto {
+  if (venue.photoUrl) {
     return { url: venue.photoUrl, alt: venue.name, caption: venue.photoAttribution };
   }
 
-  const photo = getPhoto(venue.photoId as Venue["photoId"]);
+  const photo = getPhoto(venue.photoId ?? FALLBACK_PHOTO_ID);
   return { url: photo.url, alt: photo.alt };
 }
 
@@ -44,16 +74,12 @@ function formatRatingCount(count: number): string {
 
 export function VenueCard({ venue, role, reason }: VenueCardProps) {
   const [showReason, setShowReason] = useState(false);
-  const effectiveRole = role ?? (isExperienceVenue(venue) ? venue.role : undefined);
-  const effectiveReason = reason ?? (isExperienceVenue(venue) ? venue.reason : undefined);
+  const effectiveRole = role ?? venue.role;
+  const effectiveReason = reason ?? venue.reason;
   const photo = resolvePhoto(venue);
   const badge = effectiveRole ? ROLE_BADGE[effectiveRole] : undefined;
 
-  const rating = isExperienceVenue(venue) ? venue.rating : undefined;
-  const userRatingCount = isExperienceVenue(venue) ? venue.userRatingCount : undefined;
-  const address = isExperienceVenue(venue) ? venue.address : undefined;
-  const websiteUri = isExperienceVenue(venue) ? venue.websiteUri : undefined;
-  const googleMapsUri = isExperienceVenue(venue) ? venue.googleMapsUri : undefined;
+  const { rating, userRatingCount, address, websiteUri, googleMapsUri } = venue;
 
   function handleDetailsClick() {
     if (effectiveReason) {
