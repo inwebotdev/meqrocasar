@@ -3,14 +3,13 @@
 import { AnimatePresence, motion } from "framer-motion";
 import type { KeyboardEvent } from "react";
 
-import { useToast } from "@/components/ui";
+import { Button, useToast } from "@/components/ui";
 import type { ResolvedOption } from "@/domain/quiz/generated-step";
 
-import { CardDeck } from "./CardDeck";
-import { DeckActions } from "./DeckActions";
 import { DeckDots } from "./DeckDots";
 import { KnownFacetsStrip } from "./KnownFacetsStrip";
-import { QuickStrip } from "./QuickStrip";
+import { OptionCarousel } from "./OptionCarousel";
+import { OptionList } from "./OptionList";
 import { QuizError } from "./QuizError";
 import { QuizLoading } from "./QuizLoading";
 import { QuizProgress } from "./QuizProgress";
@@ -28,20 +27,19 @@ export function QuizFlow() {
     quiz.choose(option);
   }
 
+  /**
+   * Only Backspace lives here: ArrowLeft/Right/Enter are the carousel's own
+   * concern (handled inside `OptionCarousel`'s keyboard region) and bubble
+   * up past this wrapper untouched.
+   */
   function handleStageKeyDown(event: KeyboardEvent<HTMLDivElement>) {
-    if (quiz.state.status !== "answering") {
+    if (quiz.state.status !== "answering" || !quiz.canGoBack) {
       return;
     }
 
-    if (event.key === "ArrowRight") {
+    if (event.key === "Backspace") {
       event.preventDefault();
-      quiz.nextOption();
-    } else if (event.key === "ArrowLeft") {
-      event.preventDefault();
-      quiz.prevOption();
-    } else if (event.key === "Enter" && quiz.activeOption) {
-      event.preventDefault();
-      handleChoose(quiz.activeOption);
+      quiz.back();
     }
   }
 
@@ -71,12 +69,22 @@ export function QuizFlow() {
     );
   }
 
-  const activeOption = quiz.activeOption;
-
   return (
     <div className="flex flex-col gap-y-space-lg">
       <QuizProgress entriesCount={quiz.state.entries.length} step={step} />
       <KnownFacetsStrip entries={quiz.state.entries} />
+
+      {quiz.canGoBack && (
+        <Button
+          variant="surface"
+          size="md"
+          icon="arrow_back"
+          onClick={quiz.back}
+          className="self-start"
+        >
+          Pregunta anterior
+        </Button>
+      )}
 
       {/*
         A single `motion.div` keyed by `step.id`, with the loading pill
@@ -87,7 +95,7 @@ export function QuizFlow() {
         per transition. Giving the loading state its own outer key instead
         fires two AnimatePresence key changes back-to-back (old step →
         loading → new step), which can leave the old step's exit animation
-        stuck mid-flight and the card deck frozen on stale content.
+        stuck mid-flight and the carousel frozen on stale content.
       */}
       <AnimatePresence mode="wait" initial={false}>
         <motion.div
@@ -96,43 +104,28 @@ export function QuizFlow() {
           animate={{ opacity: 1, x: 0 }}
           exit={{ opacity: 0, x: -24 }}
           className="flex flex-col gap-y-space-lg"
+          onKeyDown={handleStageKeyDown}
         >
           {quiz.state.status === "loading-step" ? (
             <StepLoading />
           ) : (
             <>
-              <section
-                className="flex flex-col items-center gap-y-3 overflow-hidden py-1 select-none"
-                onKeyDown={handleStageKeyDown}
-              >
-                {activeOption && (
-                  <span aria-live="polite" className="sr-only">
-                    {`Opción ${quiz.state.activeOptionIndex + 1} de ${step.options.length}: ${activeOption.title}`}
-                  </span>
-                )}
-                <CardDeck
-                  options={step.options}
-                  activeIndex={quiz.state.activeOptionIndex}
-                  selectedId={quiz.state.selectedOptionId}
-                  onNext={quiz.nextOption}
-                  onPrev={quiz.prevOption}
-                  onSelect={() => activeOption && handleChoose(activeOption)}
-                />
-                <DeckDots
-                  total={step.options.length}
-                  activeIndex={quiz.state.activeOptionIndex}
-                  onSelect={quiz.goToOption}
-                />
-              </section>
-
-              <DeckActions
+              <OptionCarousel
+                options={step.options}
+                activeIndex={quiz.state.activeOptionIndex}
+                onActiveIndexChange={quiz.goToOption}
+                onChoose={handleChoose}
                 selectLabel={step.selectLabel}
-                onPrev={quiz.prevOption}
-                onNext={quiz.nextOption}
-                onSelect={() => activeOption && handleChoose(activeOption)}
               />
-
-              <QuickStrip
+              <p className="text-center font-body-sm text-body-sm text-on-surface-variant">
+                {`Desliza para ver las ${step.options.length} opciones · toca Elegir para continuar`}
+              </p>
+              <DeckDots
+                total={step.options.length}
+                activeIndex={quiz.state.activeOptionIndex}
+                onSelect={quiz.goToOption}
+              />
+              <OptionList
                 options={step.options}
                 activeIndex={quiz.state.activeOptionIndex}
                 selectedId={quiz.state.selectedOptionId}
@@ -142,16 +135,6 @@ export function QuizFlow() {
           )}
         </motion.div>
       </AnimatePresence>
-
-      {quiz.canGoBack && (
-        <button
-          type="button"
-          onClick={quiz.back}
-          className="self-center font-label-sm text-label-sm text-on-surface-variant hover:text-primary"
-        >
-          ← Paso anterior
-        </button>
-      )}
     </div>
   );
 }
