@@ -1,4 +1,4 @@
-import { isUnsplashUrl } from "@/domain/images/allowlist";
+import { isPlacesPhotoPath, isUnsplashUrl } from "@/domain/images/allowlist";
 
 const ALLOWED_MIME_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
 const MAX_BYTES = 6 * 1024 * 1024; // 6 MB
@@ -17,15 +17,41 @@ function normalizeMime(contentType: string | null): string {
   return (contentType ?? "").split(";")[0]?.trim().toLowerCase() ?? "";
 }
 
-async function inlineOne(url: string, fetchImpl: typeof fetch, timeoutMs: number): Promise<string> {
-  if (!isUnsplashUrl(url)) return "";
-
-  let sizedUrl: string;
-  try {
-    sizedUrl = withSizingParams(url);
-  } catch {
-    return "";
+/**
+ * The absolute URL to actually fetch for `url`, or `undefined` when it's
+ * neither an allowlisted Unsplash URL nor a same-origin Places photo
+ * proxy path. A same-origin `/api/places/photo?...` path is resolved
+ * against `requestUrl` (the OG route's own `request.url`) since it's
+ * relative — `fetch` can't take a bare path. Never throws.
+ */
+function resolveFetchUrl(url: string, requestUrl: string): string | undefined {
+  if (isUnsplashUrl(url)) {
+    try {
+      return withSizingParams(url);
+    } catch {
+      return undefined;
+    }
   }
+
+  if (isPlacesPhotoPath(url)) {
+    try {
+      return new URL(url, requestUrl).toString();
+    } catch {
+      return undefined;
+    }
+  }
+
+  return undefined;
+}
+
+async function inlineOne(
+  url: string,
+  requestUrl: string,
+  fetchImpl: typeof fetch,
+  timeoutMs: number,
+): Promise<string> {
+  const sizedUrl = resolveFetchUrl(url, requestUrl);
+  if (!sizedUrl) return "";
 
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), timeoutMs);
@@ -54,15 +80,19 @@ async function inlineOne(url: string, fetchImpl: typeof fetch, timeoutMs: number
 
 /**
  * Fetches `urls` (in parallel) and inlines each as a base64 `data:` URL, so
- * Satori never needs to fetch images itself. Any failure for a given URL —
- * a non-Unsplash host, a timeout, a bad status, a disallowed/oversized
- * payload — resolves that slot to `""` rather than rejecting, so one bad
- * photo never fails the whole render.
+ * Satori never needs to fetch images itself. Each entry is either an
+ * absolute, allowlisted Unsplash URL, or a same-origin `/api/places/photo`
+ * path resolved against `requestUrl` before fetching (`new URL(url,
+ * requestUrl)`), since a relative path isn't fetchable on its own. Any
+ * failure for a given URL — a non-allowlisted host/path, a timeout, a bad
+ * status, a disallowed/oversized payload — resolves that slot to `""`
+ * rather than rejecting, so one bad photo never fails the whole render.
  */
 export function inlineImages(
   urls: string[],
+  requestUrl: string,
   fetchImpl: typeof fetch = fetch,
   timeoutMs = 4000,
 ): Promise<string[]> {
-  return Promise.all(urls.map((url) => inlineOne(url, fetchImpl, timeoutMs)));
+  return Promise.all(urls.map((url) => inlineOne(url, requestUrl, fetchImpl, timeoutMs)));
 }

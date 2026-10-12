@@ -8,3 +8,4 @@ export { Swatch, type SwatchProps, type SwatchTone } from "./Swatch";
 export { ToastProvider, useToast } from "./Toast";
 export { Skeleton, type SkeletonProps } from "./Skeleton";
 export { Icon, type IconProps } from "./Icon";
+export { SectionErrorBoundary, type SectionErrorBoundaryProps } from "./SectionErrorBoundary";

@@ -20,20 +20,26 @@ export function isUnsplashUrl(url: string): boolean {
 }
 
 /** The same-origin path prefix the Places photo proxy serves from (`src/domain/places/photo-url.ts`). */
-const PLACES_PHOTO_PATH_PREFIX = "/api/places/photo";
+export const PLACES_PHOTO_PATH_PREFIX = "/api/places/photo";
+
+/**
+ * True for a same-origin, relative Places photo proxy path
+ * (`/api/places/photo` or `/api/places/photo?...`, as built by
+ * `placesPhotoPath`). Never throws.
+ */
+export function isPlacesPhotoPath(url: string): boolean {
+  if (!url.startsWith(PLACES_PHOTO_PATH_PREFIX)) return false;
+  const rest = url.slice(PLACES_PHOTO_PATH_PREFIX.length);
+  return rest === "" || rest.startsWith("?");
+}
 
 /**
  * True for an Unsplash URL (see `isUnsplashUrl`) or a same-origin Places
- * photo proxy path (`/api/places/photo?...`, as built by
- * `placesPhotoPath`). Used wherever an externally- or proxy-sourced photo
- * reference is embedded into another resource (e.g. moodboard params),
- * so we never render an arbitrary, attacker-controlled URL. Never throws.
+ * photo proxy path (`isPlacesPhotoPath`). Used wherever an externally- or
+ * proxy-sourced photo reference is embedded into another resource (e.g.
+ * moodboard params), so we never render an arbitrary, attacker-controlled
+ * URL. Never throws.
  */
 export function isAllowedImageUrl(url: string): boolean {
-  if (url.startsWith(PLACES_PHOTO_PATH_PREFIX)) {
-    const rest = url.slice(PLACES_PHOTO_PATH_PREFIX.length);
-    return rest === "" || rest.startsWith("?");
-  }
-
-  return isUnsplashUrl(url);
+  return isPlacesPhotoPath(url) || isUnsplashUrl(url);
 }

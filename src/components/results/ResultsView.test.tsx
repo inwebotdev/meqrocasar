@@ -135,6 +135,27 @@ describe("ResultsView", () => {
     expect(screen.getByText("Modo demo sin conexión")).toBeInTheDocument();
   });
 
+  it("still renders the hero and venues when every photo url is invalid (moodboard degrades instead of crashing the page)", () => {
+    const base = buildResult({
+      model: "test-model",
+      fallbackUsed: false,
+      durationMs: 842,
+      generatedAt: "2026-01-01T00:00:00.000Z",
+    });
+    const result: ExperienceResult = {
+      ...base,
+      photos: base.photos.map((photo) => ({ ...photo, url: "https://evil.example.com/x.jpg" })),
+    };
+
+    renderResultsView(result);
+
+    expect(
+      screen.getByRole("heading", { name: result.conceptTitle, level: 1 }),
+    ).toBeInTheDocument();
+    expect(screen.getByText("Sede Principal")).toBeInTheDocument();
+    expect(screen.getByText("Vista previa no disponible")).toBeInTheDocument();
+  });
+
   it("renders a transcript-based result: itinerary hint pill and answer count in the footer", () => {
     const transcript = transcriptFromLegacyAnswers(ANSWERS);
     const facets = foldFacets(transcript.entries);

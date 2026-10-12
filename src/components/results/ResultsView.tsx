@@ -1,7 +1,7 @@
 import { ReelErrorBoundary } from "@/components/reel/ReelErrorBoundary";
 import { ReelPlayerLazy } from "@/components/reel/ReelPlayerLazy";
 import { ReelPoster } from "@/components/reel/ReelPoster";
-import { SectionHeader } from "@/components/ui";
+import { SectionErrorBoundary, SectionHeader } from "@/components/ui";
 import type { ExperienceResult } from "@/domain/experience/types";
 import { FPS, reelDurationInFrames } from "@/remotion/timing";
 
@@ -30,7 +30,13 @@ function reelDurationLabel(result: ExperienceResult): string {
 export function ResultsView({ result }: ResultsViewProps) {
   return (
     <div className="flex flex-col gap-y-space-lg">
-      <HeroCard title={result.conceptTitle} narrative={result.narrative} palette={result.palette} />
+      <SectionErrorBoundary title="Resumen de la Propuesta">
+        <HeroCard
+          title={result.conceptTitle}
+          narrative={result.narrative}
+          palette={result.palette}
+        />
+      </SectionErrorBoundary>
 
       <SectionHeader
         eyebrow="Diseño Exclusivo"
@@ -59,7 +65,9 @@ export function ResultsView({ result }: ResultsViewProps) {
         </ReelCard>
       </section>
 
-      <MoodboardCard result={result} />
+      <SectionErrorBoundary title="Moodboard Oficial de Inspiración">
+        <MoodboardCard result={result} />
+      </SectionErrorBoundary>
 
       <NarrativeCard
         title={result.conceptTitle}
@@ -67,7 +75,9 @@ export function ResultsView({ result }: ResultsViewProps) {
         itineraryHint={result.itineraryHint}
       />
 
-      <VenueList venues={result.venues} />
+      <SectionErrorBoundary title="Sedes para tu Celebración">
+        <VenueList venues={result.venues} />
+      </SectionErrorBoundary>
 
       <ResultActions result={result} />
 

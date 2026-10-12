@@ -138,4 +138,40 @@ describe("GET /api/og/moodboard", () => {
     const images = call?.element.props.images as string[];
     expect(images).toEqual(["", "", ""]);
   });
+
+  it("200: resolves a same-origin Places photo proxy path against the request origin", async () => {
+    mockUnsplashPngs();
+    const TINY_JPEG = new Uint8Array([0xff, 0xd8, 0xff, 1, 2, 3]);
+    let capturedUrl = "";
+
+    server.use(
+      http.get("http://localhost/api/places/photo", ({ request }) => {
+        capturedUrl = request.url;
+        return HttpResponse.arrayBuffer(TINY_JPEG.buffer as ArrayBuffer, {
+          headers: { "content-type": "image/jpeg" },
+        });
+      }),
+    );
+
+    const params: MoodboardParams = {
+      ...VALID_PARAMS,
+      photos: [
+        "/api/places/photo?name=places%2Fabc%2Fphotos%2Fp1&w=800",
+        VALID_PARAMS.photos[1]!,
+        VALID_PARAMS.photos[2]!,
+      ],
+    };
+    const encoded = encodeMoodboardParams(params);
+
+    const response = await GET(makeRequest(`d=${encoded}`));
+
+    expect(response.status).toBe(200);
+    expect(capturedUrl).toBe(
+      "http://localhost/api/places/photo?name=places%2Fabc%2Fphotos%2Fp1&w=800",
+    );
+
+    const call = calls.at(-1);
+    const images = call?.element.props.images as string[];
+    expect(images[0]).toMatch(/^data:image\/jpeg;base64,/);
+  });
 });

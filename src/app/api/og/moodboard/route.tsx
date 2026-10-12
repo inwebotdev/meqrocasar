@@ -49,7 +49,10 @@ export async function GET(request: Request): Promise<Response> {
   const download = url.searchParams.get("download") === "1";
 
   try {
-    const [fonts, images] = await Promise.all([loadMoodboardFonts(), inlineImages(params.photos)]);
+    const [fonts, images] = await Promise.all([
+      loadMoodboardFonts(),
+      inlineImages(params.photos, request.url),
+    ]);
 
     const [first, second, third] = images;
 

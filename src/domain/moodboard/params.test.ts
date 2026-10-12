@@ -98,6 +98,31 @@ describe("encodeMoodboardParams / decodeMoodboardParams", () => {
     if (!decoded.ok) expect(decoded.reason).toBe("schema");
   });
 
+  it("accepts a same-origin Places photo proxy path", () => {
+    const withPlacesPhoto: MoodboardParams = {
+      ...VALID_PARAMS,
+      photos: [
+        "/api/places/photo?name=places%2Fabc%2Fphotos%2Fp1&w=800",
+        VALID_PARAMS.photos[1],
+        VALID_PARAMS.photos[2],
+      ],
+    };
+    const encoded = encodeMoodboardParams(withPlacesPhoto);
+    const decoded = decodeMoodboardParams(encoded);
+    expect(decoded).toEqual({ ok: true, value: withPlacesPhoto });
+  });
+
+  it("rejects a relative path that isn't the places photo proxy", () => {
+    const invalid = {
+      ...VALID_PARAMS,
+      photos: ["/some/other/path", VALID_PARAMS.photos[1], VALID_PARAMS.photos[2]],
+    };
+    const encoded = encodeMoodboardParams(invalid as MoodboardParams);
+    const decoded = decodeMoodboardParams(encoded);
+    expect(decoded.ok).toBe(false);
+    if (!decoded.ok) expect(decoded.reason).toBe("schema");
+  });
+
   it("rejects extra keys (strict schema)", () => {
     const invalid = { ...VALID_PARAMS, extra: "nope" };
     const encoded = encodeMoodboardParams(invalid as MoodboardParams);
@@ -126,18 +151,48 @@ describe("moodboardParamsFromExperience", () => {
     const experience = buildFixtureExperience();
     const params = moodboardParamsFromExperience(experience);
 
+    expect(params).toBeDefined();
     expect(MoodboardParamsSchema.safeParse(params).success).toBe(true);
-    expect(params.title).toBe(experience.conceptTitle);
-    expect(params.tagline).toBe(experience.reelTagline);
-    expect(params.palette).toEqual(experience.palette);
-    expect(params.photos).toEqual(experience.photos.slice(0, 3).map((photo) => photo.url));
-    expect(params.zone).toContain("Querétaro");
+    expect(params?.title).toBe(experience.conceptTitle);
+    expect(params?.tagline).toBe(experience.reelTagline);
+    expect(params?.palette).toEqual(experience.palette);
+    expect(params?.photos).toEqual(experience.photos.slice(0, 3).map((photo) => photo.url));
+    expect(params?.zone).toContain("Querétaro");
   });
 
   it("falls back to a bare 'Querétaro' zone when there is no principal venue", () => {
     const experience = { ...buildFixtureExperience(), venues: [] };
     const params = moodboardParamsFromExperience(experience);
-    expect(params.zone).toBe("Querétaro");
+    expect(params?.zone).toBe("Querétaro");
+  });
+
+  it("drops an invalid photo and backfills from the remaining valid ones", () => {
+    const experience = buildFixtureExperience();
+    const [first, second, third] = experience.photos;
+    const withBadPhoto = {
+      ...experience,
+      photos: [{ ...first!, url: "https://evil.example.com/photo.jpg" }, second!, third!],
+    };
+
+    const params = moodboardParamsFromExperience(withBadPhoto);
+
+    expect(params).toBeDefined();
+    expect(params?.photos).toHaveLength(3);
+    expect(params?.photos).toEqual([second!.url, third!.url, third!.url]);
+  });
+
+  it("returns undefined when every photo is invalid", () => {
+    const experience = buildFixtureExperience();
+    const withAllBadPhotos = {
+      ...experience,
+      photos: experience.photos.map((photo) => ({
+        ...photo,
+        url: "https://evil.example.com/photo.jpg",
+      })),
+    };
+
+    const params = moodboardParamsFromExperience(withAllBadPhotos);
+    expect(params).toBeUndefined();
   });
 });
 

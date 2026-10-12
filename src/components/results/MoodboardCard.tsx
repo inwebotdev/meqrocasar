@@ -17,9 +17,26 @@ export interface MoodboardCardProps {
 export function MoodboardCard({ result }: MoodboardCardProps) {
   const [showPreview, setShowPreview] = useState(false);
   const params = moodboardParamsFromExperience(result);
+  const [photoLeft, photoTopRight, photoBottomRight] = result.photos;
+
+  if (!params) {
+    return (
+      <div className="space-y-space-sm rounded-xl bg-surface-container-lowest p-space-md shadow-md">
+        <div className="flex items-center gap-space-xs">
+          <Icon name="view_quilt" size={20} className="text-primary" />
+          <h3 className="font-label-lg text-label-lg font-bold text-primary">
+            Moodboard Oficial de Inspiración
+          </h3>
+        </div>
+        <p className="font-body-sm text-body-sm text-on-surface-variant">
+          Vista previa no disponible
+        </p>
+      </div>
+    );
+  }
+
   const previewPath = buildMoodboardPath(params);
   const downloadPath = buildMoodboardPath(params, { download: true });
-  const [photoLeft, photoTopRight, photoBottomRight] = result.photos;
 
   return (
     <div className="space-y-space-sm rounded-xl bg-surface-container-lowest p-space-md shadow-md">

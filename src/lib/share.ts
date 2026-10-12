@@ -7,8 +7,11 @@ import {
 
 export type ShareOutcome = "shared" | "copied" | "cancelled";
 
-function absoluteMoodboardUrl(result: ExperienceResult): string {
+/** `undefined` when the experience has no valid photo to build a moodboard from. */
+function absoluteMoodboardUrl(result: ExperienceResult): string | undefined {
   const params = moodboardParamsFromExperience(result);
+  if (!params) return undefined;
+
   const path = buildMoodboardPath(params);
   return new URL(path, window.location.origin).toString();
 }
@@ -43,7 +46,9 @@ export async function shareExperience(result: ExperienceResult): Promise<ShareOu
 
   if (typeof navigator !== "undefined" && typeof navigator.share === "function") {
     try {
-      const file = await fetchMoodboardFile(moodboardUrl, result.conceptTitle);
+      const file = moodboardUrl
+        ? await fetchMoodboardFile(moodboardUrl, result.conceptTitle)
+        : undefined;
       const canShareFiles =
         file !== undefined &&
         typeof navigator.canShare === "function" &&
@@ -63,6 +68,8 @@ export async function shareExperience(result: ExperienceResult): Promise<ShareOu
     }
   }
 
-  await navigator.clipboard.writeText(moodboardUrl);
+  // No valid moodboard (every photo was unavailable): fall back to the
+  // page's own URL rather than a link that would 400.
+  await navigator.clipboard.writeText(moodboardUrl ?? window.location.href);
   return "copied";
 }
