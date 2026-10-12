@@ -8,7 +8,7 @@ import { RAW_LLM_STEP_JSON_SCHEMA, RawGeneratedStepSchema } from "@/domain/quiz/
 
 import { getEnv } from "./env";
 
-const APP_TITLE = "Querétaro Romance AI";
+const APP_TITLE = "Querétaro Romance";
 const QUIZ_STEP_TEMPERATURE = 0.8;
 /** Slimmer per-step output (no `badge`/`matchLabel`/`selectLabel` — derived deterministically, see `normalise-step.ts`) needs less headroom than before. */
 const QUIZ_STEP_MAX_TOKENS = 700;

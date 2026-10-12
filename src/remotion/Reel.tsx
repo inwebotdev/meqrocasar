@@ -13,8 +13,8 @@ import { Rail } from "./Rail";
 import { Slide } from "./Slide";
 import { CROSSFADE_FRAMES, OUTRO_FRAMES, sceneWindow } from "./timing";
 
-const EYEBROW_TEXT = "QUERÉTARO ROMANCE AI · SECTUR";
-const SEAL_TEXT = "Diseñado con la IA de Turismo Querétaro";
+const EYEBROW_TEXT = "QUERÉTARO ROMANCE · SECTUR";
+const SEAL_TEXT = "SECRETARÍA DE TURISMO · QUERÉTARO";
 
 const BOTTOM_SCRIM_GRADIENT =
   "linear-gradient(to top, rgba(20, 10, 12, 0.85) 0%, rgba(20, 10, 12, 0) 50%)";

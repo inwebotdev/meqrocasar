@@ -19,7 +19,7 @@ const plusJakartaSans = Plus_Jakarta_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "Querétaro Romance AI",
+  title: "Querétaro Romance",
   description: "PoC para la Secretaría de Turismo del Estado de Querétaro.",
 };
 

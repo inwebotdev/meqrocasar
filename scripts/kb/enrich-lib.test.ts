@@ -399,7 +399,7 @@ describe("runEnrichment (real OpenRouter request/response shape, via MSW)", () =
         fallbackModel: "deepseek/deepseek-chat",
         timeoutMs: 8000,
         appUrl: "http://localhost:3000",
-        appTitle: "Querétaro Romance AI",
+        appTitle: "Querétaro Romance",
       },
       schema: EnrichmentResponseSchema,
       jsonSchema: ENRICHMENT_JSON_SCHEMA,

@@ -52,7 +52,7 @@ function buildMswBackedService() {
       fallbackModel: "fallback-model",
       timeoutMs: 8000,
       appUrl: "http://localhost:3000",
-      appTitle: "Querétaro Romance AI",
+      appTitle: "Querétaro Romance",
     },
     schema: LlmExperienceV2Schema,
     jsonSchema: LLM_EXPERIENCE_V2_JSON_SCHEMA as Record<string, unknown>,

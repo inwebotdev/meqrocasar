@@ -30,7 +30,7 @@ function baseConfig(overrides: Partial<OpenRouterConfig> = {}): OpenRouterConfig
     fallbackModel: FALLBACK_MODEL,
     timeoutMs: 6000,
     appUrl: "http://localhost:3000",
-    appTitle: "Querétaro Romance AI",
+    appTitle: "Querétaro Romance",
     ...overrides,
   };
 }

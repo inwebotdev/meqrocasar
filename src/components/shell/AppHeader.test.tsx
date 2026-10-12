@@ -19,7 +19,7 @@ describe("AppHeader", () => {
     expect(title.textContent).toBe("Resultados Moodboard");
     expect(title).toHaveClass("truncate");
 
-    const eyebrow = screen.getByText("Querétaro Romance AI");
+    const eyebrow = screen.getByText("Querétaro Romance");
     expect(eyebrow).toHaveClass("truncate");
   });
 

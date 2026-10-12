@@ -14,18 +14,18 @@ export function AppHeader({ title }: AppHeaderProps) {
           {/* eslint-disable-next-line @next/next/no-img-element -- the brand logo is a static SVG, not a candidate for next/image optimization */}
           <img
             src="/brand/logo-mark.svg"
-            alt="Querétaro Romance AI"
+            alt="Querétaro Romance"
             className="h-8 w-auto shrink-0 object-contain sm:hidden"
           />
           {/* eslint-disable-next-line @next/next/no-img-element -- the brand logo is a static SVG, not a candidate for next/image optimization */}
           <img
             src="/brand/logo.svg"
-            alt="Querétaro Romance AI"
+            alt="Querétaro Romance"
             className="hidden h-8 w-auto shrink-0 object-contain sm:block"
           />
           <div className="flex min-w-0 flex-col">
             <span className="truncate font-label-sm text-label-sm font-bold tracking-widest text-secondary uppercase">
-              Querétaro Romance AI
+              Querétaro Romance
             </span>
             <span className="truncate font-headline-sm text-headline-sm tracking-tight text-primary">
               {title}

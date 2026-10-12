@@ -42,7 +42,7 @@ const MODELS_ENDPOINT = "https://openrouter.ai/api/v1/models";
 const ENDPOINTS_ENDPOINT = (modelId: string) =>
   `https://openrouter.ai/api/v1/models/${modelId}/endpoints`;
 const APP_URL = process.env.APP_URL?.trim() || "http://localhost:3000";
-const APP_TITLE = "Querétaro Romance AI";
+const APP_TITLE = "Querétaro Romance";
 const MAX_STEPS = 7;
 const RUNS_PER_TRANSCRIPT = 3;
 /** Generous for benchmarking: production uses `QUIZ_STEP_TIMEOUT_MS` (6s); we want to see slow models fail honestly, not get cut off right at the edge. */

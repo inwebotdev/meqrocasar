@@ -8,7 +8,7 @@ import { createUnsplashImageProvider } from "@/domain/images/unsplash";
 
 import { getEnv } from "./env";
 
-const APP_TITLE = "Querétaro Romance AI";
+const APP_TITLE = "Querétaro Romance";
 const EXPERIENCE_TEMPERATURE = 0.7;
 const EXPERIENCE_MAX_TOKENS = 1500;
 

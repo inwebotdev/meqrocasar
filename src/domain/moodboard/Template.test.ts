@@ -100,7 +100,7 @@ describe("MoodboardTemplate", () => {
     for (const color of PARAMS.palette) {
       expect(markup).toContain(color.hex.toUpperCase());
     }
-    expect(markup).toContain("Diseñado con la IA de Turismo Querétaro");
+    expect(markup).toContain("SECRETARÍA DE TURISMO · QUERÉTARO");
   });
 
   it("prefixes a non-Querétaro zone with 'PUEBLO MÁGICO ·'", () => {

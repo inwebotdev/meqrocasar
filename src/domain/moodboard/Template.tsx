@@ -212,7 +212,7 @@ function SealPill() {
           color: "#FFDDB3",
         }}
       >
-        Diseñado con la IA de Turismo Querétaro
+        SECRETARÍA DE TURISMO · QUERÉTARO
       </div>
     </div>
   );
@@ -291,7 +291,7 @@ export function MoodboardTemplate({ params, images }: MoodboardTemplateProps) {
             height={HERO_HEIGHT}
           />
           <TagPill
-            text="QUERÉTARO ROMANCE AI · SECTUR"
+            text="QUERÉTARO ROMANCE · SECTUR"
             top={16}
             left={16}
             background="rgba(252,249,243,0.9)"

@@ -64,7 +64,7 @@ function buildConfig(): OpenRouterConfig | undefined {
     fallbackModel: process.env.OPENROUTER_MODEL_FALLBACK?.trim() || "deepseek/deepseek-chat",
     timeoutMs: ENRICH_TIMEOUT_MS,
     appUrl: process.env.APP_URL?.trim() || "http://localhost:3000",
-    appTitle: "Querétaro Romance AI",
+    appTitle: "Querétaro Romance",
   };
 }
 

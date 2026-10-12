@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 @theme {
-  /* Color roles — Querétaro Romance AI design system (DESIGN.md frontmatter) */
+  /* Color roles — Querétaro Romance design system (DESIGN.md frontmatter) */
   --color-surface: #fcf9f3;
   --color-surface-dim: #dcdad4;
   --color-surface-bright: #fcf9f3;
