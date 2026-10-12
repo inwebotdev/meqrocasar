@@ -79,6 +79,26 @@ navegador.
 7. `/recintos` (`CatalogScreen`) lista el catálogo completo de la base de conocimiento —
    independiente del quiz — filtrable por cualquiera de las 10 zonas.
 
+## Navegación del quiz
+
+Cada paso muestra sus 3-4 opciones en un **carrusel horizontal nativo** (`OptionCarousel`,
+`overflow-x-auto snap-x snap-mandatory`, sin `framer-motion drag`): scroll con el dedo, el
+trackpad o las flechas del teclado centra la siguiente tarjeta (`useActiveSlide`, un
+`IntersectionObserver`), y los puntos (`DeckDots`) y la lista de opciones debajo
+(`OptionList`, "Opciones de esta pregunta") hacen `scrollIntoView` a la misma tarjeta — nunca
+avanzan el quiz por sí solos. Deslizar solo **ve** las opciones; la única forma de avanzar es
+tocar el botón primario **"Elegir"** dentro de cada tarjeta (tocar la foto no hace nada, para
+que deslizar sin querer nunca elija nada). Un texto bajo el carrusel lo deja explícito:
+"Desliza para ver las {n} opciones · toca Elegir para continuar".
+
+**Volver:** un único botón con ícono y texto, "Pregunta anterior" (visible desde el paso 2), bajo
+la barra de progreso — también responde a Backspace. No hay botones circulares ni iconos sueltos
+para retroceder.
+
+**Sin barra inferior:** se eliminó el `BottomNav`; la navegación entre el quiz y el catálogo vive
+en el header (`AppHeader`/`HeaderNavLink`) como un link de texto — "Recintos" en el quiz, "Quiz"
+en `/recintos`.
+
 ## Desarrollo local
 
 **Requisitos:** [Docker](https://www.docker.com/) y [kool](https://kool.dev/).
@@ -139,6 +159,7 @@ Definidas en [`.env.dist`](.env.dist); copia ese archivo a `.env` y completa lo 
 | `ELEVENLABS_VOICE_ID`            | No        | Igual que sin `ELEVENLABS_API_KEY`: narración `"disabled"` hasta tener ambas.                                                                                                                                                                                                   |
 | `ELEVENLABS_MODEL_ID`            | No        | Default `eleven_multilingual_v2`.                                                                                                                                                                                                                                               |
 | `NARRATION_CACHE_DIR`            | No        | Default `.cache/narration` (ruta relativa a la raíz del repo, ignorada por git; cache permanente de mp3 + timings por hash).                                                                                                                                                    |
+| `NEXT_PUBLIC_NARRATION_FIXTURE`  | No        | **Solo desarrollo.** `1` fuerza el reel narrado "listo" con un fixture local (ver [Narración del reel](#narración-del-reel)), sin llamar nunca a ElevenLabs. Nunca se activa en producción.                                                                                     |
 | `APP_URL`                        | No        | Default `http://localhost:3000` (header `HTTP-Referer` de OpenRouter y URLs absolutas).                                                                                                                                                                                         |
 | `APP_PORT`                       | No        | Default `3000`, puerto publicado por `docker-compose`.                                                                                                                                                                                                                          |
 
@@ -201,8 +222,8 @@ reduce el lote (p. ej. `kool exec app yarn kb:enrich --batch-size=2`).
 El reel se narra con una voz femenina de acento mexicano (ElevenLabs, modelo multilingüe) que lee
 `reelScript` — un guion de 2-3 oraciones en es-MX, ya incluido en todo `ExperienceResult`
 (generado por el modelo o, sin `OPENROUTER_API_KEY`, compuesto de forma determinista a partir del
-concepto y el recinto principal). Esta capa produce y sirve el audio; la capa siguiente lo
-conecta a la composición de Remotion con subtítulos sincronizados.
+concepto y el recinto principal). El audio se produce y sirve como se describe abajo, y la
+composición de Remotion (`src/remotion/Reel.tsx`) lo reproduce con subtítulos sincronizados.
 
 **Configuración:**
 
@@ -239,6 +260,35 @@ cliente.
 **Costo:** cada guion son ~300 caracteres; con el plan Starter de ElevenLabs (~30,000
 caracteres/mes) eso cubre ~100 reels/mes — el mismo orden de magnitud que la estimación de
 `docs/ai-step-benchmark.md` para la generación de texto.
+
+**En el reproductor (`ReelCard`/`ReelPlayer`):** mientras `narration.status === "pending"`, la
+tarjeta muestra el póster estático con el pill "Preparando narración…" y el botón de play
+deshabilitado — no renderiza el player interactivo todavía. `useNarration` (invocado desde
+`ResultsScreen`) sondea `GET /api/narration/<hash>/meta` cada 2 s y, al quedar lista, actualiza el
+resultado guardado; la tarjeta re-renderiza entonces con el player real. Una vez `"ready"`:
+
+- La composición reproduce `<Audio src={narration.src} />` desde el frame 0 y agacha
+  (`"duck"`) el volumen de la música de fondo a `0.12` mientras la narración habla, para volver a
+  `0.8` (su volumen normal) un segundo después de que termina — `narrationMusicVolume` en
+  `Reel.tsx` es la función pura que calcula esto, cubierta por tests.
+- Los subtítulos (`Caption`) muestran una oración de `narration.sentences` a la vez, con fade
+  in/out de 8 frames en sus límites `startSec`/`endSec` (`activeSentence`, también pura/testeada);
+  sustituyen a las líneas narrativas estáticas del reel silencioso.
+- La duración total del reel deja de ser fija (11 s): `reelDurationInFrames({ narrationDurationSec, photoCount })`
+  la estira a `max(11s, narrationDurationSec + 1.5s)` y las escenas de fotos
+  (`sceneWindows`) se reparten de forma pareja a lo largo de esa duración, con el mismo
+  crossfade de siempre entre escenas consecutivas.
+- El chip de pista en la cromática del player (`ReelBottomScrim`) cambia de la pista de música a
+  "Narración · Querétaro Romance"; la tarjeta de resultados muestra la duración real en segundos
+  ("`{n} seg`"), no siempre "11 seg".
+
+**Browser-check sin `ELEVENLABS_API_KEY`:** con `NEXT_PUBLIC_NARRATION_FIXTURE=1` en `.env`
+(dev-only, nunca en producción — ver la tabla de variables de entorno),
+`useNarration` ignora el sondeo real y siempre devuelve un `NarrationRef` `"ready"` construido a
+partir de `test/fixtures/narration/sample.json` (oraciones + duración) con un WAV silencioso
+generado al vuelo (`src/lib/narration-fixture.ts`, sin binarios en el repo) como `src` — así se
+puede ver el estado narrado completo (subtítulos, pill, duración) sin red ni cuenta de
+ElevenLabs. Reinicia `next dev` tras cambiar la variable.
 
 ## Rendimiento y costo
 
@@ -324,7 +374,7 @@ scripts/
   kb/                # kb:ingest / kb:build / kb:enrich
   ai/                # ai:bench (benchmark de modelos y proveedores)
 data/kb/             # Base de conocimiento versionada (zones.json, venues.json, experiences.json)
-test/                # Setup de Vitest, stubs compartidos y fixtures (incluye test/fixtures/demo/)
+test/                # Setup de Vitest, stubs compartidos y fixtures (test/fixtures/demo/, test/fixtures/narration/)
 docs/                # Benchmark de modelos y guion de demo
 ```
 
@@ -336,10 +386,6 @@ si toca código, `kool run test`) deben pasar en verde.
 
 ## Próximas iteraciones
 
-- **Reel narrado con voz generada** (TTS, p. ej. ElevenLabs): una narración corta sobre el reel
-  existente, en la voz/tono del concepto generado. Planeado como un stack separado, fuera del
-  alcance de esta PoC — el reel actual ya tiene un `reelTagline` y una estructura de escenas que
-  encajarían directamente como guion de la narración.
 - **Persistencia de sesión en Postgres**: hoy el transcript y el resultado generado viven en
   `sessionStorage` del navegador (`src/lib/transcript-store.ts`/`results-store.ts`) y el caché del
   motor del quiz es un `Map` en memoria del proceso (`src/lib/quiz-engine-deps.ts`). Mover ambos a

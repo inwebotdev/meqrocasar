@@ -84,8 +84,18 @@ kool run dev   # arranca next dev en el contenedor, http://localhost:3000
    los que importan para que el resultado final sea equivalente al de la tabla).
 2. Al terminar el quiz, `/resultados` muestra el concepto, la paleta, los recintos con foto/rating
    reales, el moodboard descargable y el reel.
-3. Si no hay conexión a OpenRouter a la mano, los JSON en `test/fixtures/demo/` son el resultado
+3. **Reel narrado:** con `ELEVENLABS_API_KEY`/`ELEVENLABS_VOICE_ID` configuradas, el reel trae una
+   voz femenina de acento mexicano leyendo el guion, con subtítulos sincronizados y la música de
+   fondo agachada mientras habla — da play y señala el pill "Narración · Querétaro Romance" y los
+   subtítulos apareciendo en sincro con la voz. **Si la narración sigue `"Preparando
+narración…"`** (la síntesis de ElevenLabs no llegó a tiempo), sigue hablando de la paleta, los
+   recintos o el itinerario durante ~10 s más — la tarjeta sondea el estado cada 2 s y el player
+   aparece solo en cuanto la voz está lista, sin que tengas que recargar nada. Sin esas variables
+   (o sin conexión), el reel se reproduce en silencio con las líneas narrativas estáticas; para
+   mostrar igual el estado narrado completo sin red, arranca con
+   `NEXT_PUBLIC_NARRATION_FIXTURE=1` en `.env` (dev-only, ver el README) antes de `kool run dev`.
+4. Si no hay conexión a OpenRouter a la mano, los JSON en `test/fixtures/demo/` son el resultado
    real de estas mismas dos conversaciones — útiles para mostrar el resultado final sin depender
    de la red, o como fixture para una futura prueba de regresión end-to-end.
-4. Visita `/recintos` y filtra por "Bernal" o "Tequisquiapan" para mostrar el catálogo completo de
+5. Visita `/recintos` y filtra por "Bernal" o "Tequisquiapan" para mostrar el catálogo completo de
    la base de conocimiento (independiente del quiz).
