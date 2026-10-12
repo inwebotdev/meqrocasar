@@ -1,0 +1,24 @@
+{
+  "conceptTitle": "Fin de Semana Virreinal en Hacienda Boutique",
+  "colorPalette": [
+    { "hex": "#5B1A2B", "name": "Vino de Barrica" },
+    { "hex": "#4B5E3A", "name": "Verde Viñedo" },
+    { "hex": "#C9A227", "name": "Oro Vendimia" },
+    { "hex": "#D9C7A3", "name": "Beige Barrica" }
+  ],
+  "narrative": "La pareja imagina un fin de semana completo en el Hotel Boutique Las Jacarandás, con jardines virreinales y habitaciones para que sus invitados se queden a celebrar varios días.\n\nLa ceremonia se celebra al atardecer en el patio principal, y la fiesta continúa hasta la madrugada entre luces cálidas y mariachi.",
+  "searchQueries": [
+    "boutique hotel courtyard wedding mexico",
+    "colonial hacienda wedding reception",
+    "garden wedding ceremony sunset"
+  ],
+  "recommendedVenues": [
+    {
+      "venueId": "v_placesfixturehotellasjacarandas",
+      "reason": "Sus jardines virreinales y hospedaje boutique permiten una boda de fin de semana completo."
+    }
+  ],
+  "reelTagline": "Un Fin de Semana Virreinal Inolvidable",
+  "itineraryHint": "Viernes: bienvenida · Sábado: ceremonia al atardecer · Domingo: brunch de despedida",
+  "reelScript": "Imaginen un fin de semana completo en un hotel boutique virreinal, con jardines llenos de luz dorada y una fiesta que se extiende hasta la madrugada."
+}
