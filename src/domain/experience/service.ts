@@ -43,6 +43,8 @@ export interface ExperienceServiceDeps {
   now?: () => number;
   /** Wall clock for `meta.generatedAt`. Defaults to `() => new Date()`. */
   clock?: () => Date;
+  /** Forwarded to `assembleVenuesFromKb`'s `isUsable`. Defaults to the process-wide `isPlacesUsable`. */
+  isPlacesUsable?: () => boolean;
 }
 
 export interface ExperienceService {
@@ -207,7 +209,9 @@ export function createExperienceService(deps: ExperienceServiceDeps): Experience
         });
       }
 
-      const venues = assembleVenuesFromKb(llmResult.value.recommendedVenues, facets, kb);
+      const venues = assembleVenuesFromKb(llmResult.value.recommendedVenues, facets, kb, {
+        isUsable: deps.isPlacesUsable,
+      });
       const venuePhotos = photosFromVenues(venues, 2);
       const [searchedPhotos, narration] = await Promise.all([
         deps.images.resolve(llmResult.value.searchQueries, legacyAnswersForImages),

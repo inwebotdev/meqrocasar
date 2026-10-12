@@ -3,8 +3,16 @@ import { mkdir, readFile, stat, writeFile } from "node:fs/promises";
 import path from "node:path";
 
 import type { ApiResponse } from "@/domain/api/envelope";
+import type { KbVenue } from "@/domain/kb/types";
 import { loadKb } from "@/domain/kb/load";
-import { createPlacesClient, PLACES_PHOTO_WIDTHS, type PlacesPhotoWidth } from "@/domain/places";
+import {
+  createPlacesClient,
+  PlacesApiError,
+  PLACES_PHOTO_WIDTHS,
+  type PlacesPhotoWidth,
+} from "@/domain/places";
+import { markPlacesFailure } from "@/domain/places/availability";
+import { fallbackPhotoForVenue } from "@/domain/places/fallback-photo";
 import { getPlacesPhotoDeps } from "@/lib/places-photo-deps";
 
 /**
@@ -96,25 +104,57 @@ function imageResponse(bytes: Uint8Array, contentType: string, attribution?: str
   return new Response(bytes as BodyInit, { status: 200, headers });
 }
 
-function findKnownPhotoAttribution(name: string): string | undefined {
+function findVenueForPlacesPhoto(name: string): KbVenue | undefined {
   const { venues } = loadKb();
+  return venues.find((venue) =>
+    venue.photos.some((photo) => photo.kind === "places" && photo.ref === name),
+  );
+}
 
-  for (const venue of venues) {
-    for (const photo of venue.photos) {
-      if (photo.kind === "places" && photo.ref === name) {
-        return photo.attribution;
-      }
-    }
-  }
-
-  return undefined;
+function findKnownPhotoAttribution(name: string): string | undefined {
+  const venue = findVenueForPlacesPhoto(name);
+  return venue?.photos.find((photo) => photo.kind === "places" && photo.ref === name)?.attribution;
 }
 
 function isKnownPlacesPhotoName(name: string): boolean {
-  const { venues } = loadKb();
-  return venues.some((venue) =>
-    venue.photos.some((photo) => photo.kind === "places" && photo.ref === name),
-  );
+  return findVenueForPlacesPhoto(name) !== undefined;
+}
+
+/** Google's own `error.status` body field (e.g. `"SERVICE_DISABLED"`), when the error body is Google's usual JSON shape. */
+function parseGoogleErrorStatus(message: string): string | undefined {
+  try {
+    const parsed: unknown = JSON.parse(message);
+    if (parsed && typeof parsed === "object" && "error" in parsed) {
+      const error = (parsed as { error?: unknown }).error;
+      if (error && typeof error === "object" && "status" in error) {
+        const status = (error as { status?: unknown }).status;
+        return typeof status === "string" ? status : undefined;
+      }
+    }
+  } catch {
+    // Not JSON — leave undefined.
+  }
+  return undefined;
+}
+
+/**
+ * A 302 redirect to a fallback photo for `name`'s venue (chosen by the
+ * venue's facets, or its own non-Places photo — see
+ * `fallbackPhotoForVenue`), or a 404 when the venue can't be found at
+ * all (shouldn't happen: `name` is already known-good by the time this
+ * is called).
+ */
+function fallbackRedirect(name: string): Response {
+  const venue = findVenueForPlacesPhoto(name);
+  if (!venue) {
+    return jsonError(
+      { ok: false, error: { code: "not_found", message: "Unknown Places photo name." } },
+      404,
+    );
+  }
+
+  const photo = fallbackPhotoForVenue(venue);
+  return Response.redirect(photo.url, 302);
 }
 
 export async function GET(request: Request): Promise<Response> {
@@ -175,9 +215,15 @@ export async function GET(request: Request): Promise<Response> {
     return imageResponse(photo.bytes, photo.contentType, attribution);
   } catch (error) {
     console.error("[api/places/photo] fetch failed", error);
-    return jsonError(
-      { ok: false, error: { code: "internal", message: "Failed to fetch the photo." } },
-      500,
-    );
+
+    const httpStatus = error instanceof PlacesApiError ? error.status : undefined;
+    const code =
+      error instanceof PlacesApiError ? parseGoogleErrorStatus(error.message) : undefined;
+    markPlacesFailure(httpStatus !== undefined ? { httpStatus, code } : undefined);
+
+    // Degrade instead of 500ing: redirect to a fallback photo chosen by
+    // the venue's facets rather than leave a broken image everywhere
+    // this proxy path was already handed out.
+    return fallbackRedirect(name);
   }
 }

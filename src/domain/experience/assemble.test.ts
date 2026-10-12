@@ -75,6 +75,7 @@ describe("assembleVenuesFromKb", () => {
       [{ venueId: "v_vinedos-la-redonda", reason: "Conecta con el viñedo rústico elegido." }],
       facets,
       kb,
+      { isUsable: () => true },
     );
 
     expect(venues[0]?.id).toBe("v_vinedos-la-redonda");
@@ -171,5 +172,66 @@ describe("assembleVenuesFromKb", () => {
     );
 
     expect(venues[1]?.reason).toBe(REGISTRY_PHOTO_VENUE.whyWeddings);
+  });
+
+  it("defaults to no Places photo (isUsable defaults false with no API key in this test env)", () => {
+    const kb = makeKb([PLACES_PHOTO_VENUE, REGISTRY_PHOTO_VENUE, NO_RECOMMENDATION_VENUE]);
+
+    const venues = assembleVenuesFromKb(
+      [{ venueId: "v_vinedos-la-redonda", reason: "x".repeat(25) }],
+      facets,
+      kb,
+    );
+
+    expect(venues[0]?.photoUrl).toBeUndefined();
+  });
+
+  it("skips a Places photo and falls through to the venue's registry/url photo when isUsable is false", () => {
+    const venueWithBothKinds = makeVenue({
+      id: "v_has-both",
+      photos: [
+        { kind: "places", ref: "places/abc/photos/p1", attribution: "Fotógrafo X" },
+        { kind: "registry", ref: "patio-cantera-rosa", attribution: "Annie Wood" },
+      ],
+    });
+    const kb = makeKb([venueWithBothKinds]);
+
+    const venues = assembleVenuesFromKb(
+      [{ venueId: "v_has-both", reason: "x".repeat(25) }],
+      facets,
+      kb,
+      {
+        isUsable: () => false,
+      },
+    );
+
+    expect(venues[0]?.photoUrl).toContain("images.unsplash.com");
+    expect(venues[0]?.photoAttribution).toBe("Annie Wood");
+  });
+
+  it("leaves photoUrl undefined when isUsable is false and the venue has only a Places photo", () => {
+    const kb = makeKb([PLACES_PHOTO_VENUE]);
+
+    const venues = assembleVenuesFromKb(
+      [{ venueId: "v_vinedos-la-redonda", reason: "x".repeat(25) }],
+      facets,
+      kb,
+      { isUsable: () => false },
+    );
+
+    expect(venues[0]?.photoUrl).toBeUndefined();
+  });
+
+  it("uses the Places photo when isUsable is true", () => {
+    const kb = makeKb([PLACES_PHOTO_VENUE]);
+
+    const venues = assembleVenuesFromKb(
+      [{ venueId: "v_vinedos-la-redonda", reason: "x".repeat(25) }],
+      facets,
+      kb,
+      { isUsable: () => true },
+    );
+
+    expect(venues[0]?.photoUrl).toBe("/api/places/photo?name=places%2Fabc%2Fphotos%2Fp1&w=800");
   });
 });

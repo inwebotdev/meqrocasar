@@ -5,6 +5,7 @@ import { loadKb } from "@/domain/kb/load";
 import type { Facets } from "@/domain/kb/taxonomy";
 import type { Kb } from "@/domain/kb/types";
 import type { ImageProvider } from "@/domain/images/provider";
+import { isPlacesUsable } from "@/domain/places/availability";
 import { placesPhotoPath } from "@/domain/places/photo-url";
 
 import {
@@ -101,6 +102,8 @@ export interface CreateQuizEngineOptions {
   now?: () => number;
   /** In-memory TTL LRU (max `MAX_CACHE_ENTRIES`, `CACHE_TTL_MS` TTL), injected so tests/callers can inspect/seed/share it. Defaults to a fresh `Map`. */
   cache?: QuizStepCache;
+  /** Whether a venue ref's `"places"` photo may be used. Defaults to the process-wide `isPlacesUsable`. */
+  placesUsable?: () => boolean;
 }
 
 // --- meta helpers ------------------------------------------------------
@@ -287,7 +290,14 @@ function correctionMessage(invalidIds: readonly string[]): string {
 
 // --- photo resolution ------------------------------------------------------
 
-function findPlacesPhoto(option: GeneratedOption, kb: Kb): ResolvedOptionPhoto | undefined {
+/** `undefined` whenever `isUsable()` is false — the engine must never hand out a `/api/places/photo` URL it knows won't resolve. */
+function findPlacesPhoto(
+  option: GeneratedOption,
+  kb: Kb,
+  isUsable: () => boolean,
+): ResolvedOptionPhoto | undefined {
+  if (!isUsable()) return undefined;
+
   for (const venueId of option.refs.venueIds) {
     const venue = kb.venues.find((candidate) => candidate.id === venueId);
     if (!venue) continue;
@@ -310,8 +320,9 @@ async function resolveOptionPhoto(
   kb: Kb,
   images: ImageProvider,
   facets: Facets,
+  isUsable: () => boolean,
 ): Promise<ResolvedOption> {
-  const placesPhoto = findPlacesPhoto(option, kb);
+  const placesPhoto = findPlacesPhoto(option, kb, isUsable);
   const photo = placesPhoto ?? (await images.resolveOne(option.photoQuery, facets));
   const venue = option.refs.venueIds[0]
     ? resolveVenueSummary(option.refs.venueIds[0], kb)
@@ -333,10 +344,23 @@ interface GenerateContext {
   images: ImageProvider;
   start: number;
   now: () => number;
+  placesUsable: () => boolean;
 }
 
 async function generateStep(ctx: GenerateContext): Promise<QuizEngineResult> {
-  const { llm, transcript, entries, facets, stepIndex, maxSteps, kb, images, start, now } = ctx;
+  const {
+    llm,
+    transcript,
+    entries,
+    facets,
+    stepIndex,
+    maxSteps,
+    kb,
+    images,
+    start,
+    now,
+    placesUsable,
+  } = ctx;
 
   if (!llm) {
     return staticFallbackResult({ entries, stepIndex, start, now, attempts: 0 });
@@ -442,7 +466,7 @@ async function generateStep(ctx: GenerateContext): Promise<QuizEngineResult> {
   }
 
   const resolvedOptions = await Promise.all(
-    validOptions.map((option) => resolveOptionPhoto(option, kb, images, facets)),
+    validOptions.map((option) => resolveOptionPhoto(option, kb, images, facets, placesUsable)),
   );
 
   const step: ResolvedStep = {
@@ -491,6 +515,7 @@ export function createQuizEngine(options: CreateQuizEngineOptions): QuizEngine {
   const maxSteps = options.maxSteps;
   const now = options.now ?? (() => Date.now());
   const cache: QuizStepCache = options.cache ?? new Map();
+  const placesUsable = options.placesUsable ?? isPlacesUsable;
 
   return {
     async nextStep(transcript: Transcript): Promise<QuizEngineResult> {
@@ -551,6 +576,7 @@ export function createQuizEngine(options: CreateQuizEngineOptions): QuizEngine {
         images,
         start,
         now,
+        placesUsable,
       });
 
       cacheSet(cache, cacheKey, result, now);

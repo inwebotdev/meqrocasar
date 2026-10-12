@@ -104,3 +104,24 @@ export function photoForFacets(facets: Facets): ExperiencePhoto {
   const [photo] = findPhotos(photoTagsForFacets(facets), 1);
   return toExperiencePhoto(photo ?? getPhoto(DEFAULT_PHOTO_ID));
 }
+
+/**
+ * Picks the single best-matching registry photo for a KB venue's own
+ * (multi-valued) facets, falling back to the same fixed default as
+ * `photoForFacets`. Used to pick a fallback photo for a venue whose only
+ * photo is a Places one that can't currently be served (see
+ * `src/domain/places/fallback-photo.ts`).
+ */
+export function photoForVenueFacets(facets: {
+  styles: readonly StyleValue[];
+  settings: readonly SettingValue[];
+  experiences: readonly ExperienceValue[];
+}): ExperiencePhoto {
+  const tags = [
+    ...facets.styles.flatMap((style) => STYLE_PHOTO_TAGS[style] ?? []),
+    ...facets.settings.flatMap((setting) => SETTING_PHOTO_TAGS[setting] ?? []),
+    ...facets.experiences.flatMap((experience) => EXPERIENCE_PHOTO_TAGS[experience] ?? []),
+  ];
+  const [photo] = findPhotos(tags, 1);
+  return toExperiencePhoto(photo ?? getPhoto(DEFAULT_PHOTO_ID));
+}

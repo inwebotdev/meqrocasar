@@ -9,10 +9,20 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { mockPlacesPhotoMedia } from "../../../../../test/msw/handlers";
 import { server } from "../../../../../test/msw/server";
 
-const { getPlacesPhotoDepsMock } = vi.hoisted(() => ({ getPlacesPhotoDepsMock: vi.fn() }));
+const { getPlacesPhotoDepsMock, markPlacesFailureMock } = vi.hoisted(() => ({
+  getPlacesPhotoDepsMock: vi.fn(),
+  markPlacesFailureMock: vi.fn(),
+}));
 
 vi.mock("@/lib/places-photo-deps", () => ({
   getPlacesPhotoDeps: getPlacesPhotoDepsMock,
+}));
+
+// Mocked so these tests never touch the real process-wide singleton
+// (which would otherwise accumulate failure state across tests in this
+// file); its wiring is covered by `src/domain/places/availability.test.ts`.
+vi.mock("@/domain/places/availability", () => ({
+  markPlacesFailure: markPlacesFailureMock,
 }));
 
 const { GET } = await import("./route");
@@ -32,6 +42,7 @@ beforeEach(async () => {
   cacheDir = await mkdtemp(path.join(tmpdir(), "places-photo-test-"));
   getPlacesPhotoDepsMock.mockReset();
   getPlacesPhotoDepsMock.mockReturnValue({ apiKey: "test-places-key", cacheDir });
+  markPlacesFailureMock.mockReset();
 });
 
 afterEach(async () => {
@@ -110,12 +121,38 @@ describe("GET /api/places/photo", () => {
     expect(calls).toBe(2);
   });
 
-  it("returns 500 when the upstream photo fetch fails", async () => {
+  it("redirects (302) to a fallback photo instead of 500ing when the upstream fetch fails", async () => {
     server.use(mockPlacesPhotoMedia(() => HttpResponse.text("nope", { status: 500 })));
 
     const response = await GET(makeRequest(`name=${encodeURIComponent(KNOWN_NAME)}&w=800`));
-    expect(response.status).toBe(500);
-    const body = await response.json();
-    expect(body.error.code).toBe("internal");
+    expect(response.status).toBe(302);
+    expect(response.headers.get("location")).toContain("images.unsplash.com");
+    expect(markPlacesFailureMock).toHaveBeenCalledWith({ httpStatus: 500, code: undefined });
+  });
+
+  it("redirects (302) and marks the failure with the parsed SERVICE_DISABLED code on a 403", async () => {
+    server.use(
+      mockPlacesPhotoMedia(() =>
+        HttpResponse.json(
+          {
+            error: {
+              code: 403,
+              message: "Places API has not been used in project ... or it is disabled.",
+              status: "SERVICE_DISABLED",
+            },
+          },
+          { status: 403 },
+        ),
+      ),
+    );
+
+    const response = await GET(makeRequest(`name=${encodeURIComponent(KNOWN_NAME)}&w=800`));
+
+    expect(response.status).toBe(302);
+    expect(response.headers.get("location")).toContain("images.unsplash.com");
+    expect(markPlacesFailureMock).toHaveBeenCalledWith({
+      httpStatus: 403,
+      code: "SERVICE_DISABLED",
+    });
   });
 });

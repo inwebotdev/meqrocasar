@@ -557,7 +557,12 @@ describe("createQuizEngine", () => {
 
     server.use(mockOpenRouterChat(() => chatCompletion(JSON.stringify(step))));
 
-    const engine = createQuizEngine({ llm: buildLlmClient(), images: throwingImages, maxSteps: 7 });
+    const engine = createQuizEngine({
+      llm: buildLlmClient(),
+      images: throwingImages,
+      maxSteps: 7,
+      placesUsable: () => true,
+    });
 
     const result = await engine.nextStep(makeTranscript(3));
 
@@ -568,6 +573,61 @@ describe("createQuizEngine", () => {
       expect(option.photo.url).toContain("/api/places/photo?");
       expect(option.photo.url).toContain("fixture-hotel-las-jacarandas");
       expect(option.venue?.id).toBe(placesVenueId);
+    }
+  });
+
+  it("falls back to the image provider for a Places-photo ref when placesUsable is false", async () => {
+    const placesVenueId = "v_placesfixturehotellasjacarandas";
+    const step = makeGeneratedStep({
+      options: makeGeneratedStep().options.map((option) => ({
+        ...option,
+        refs: { venueIds: [placesVenueId], experienceIds: [] },
+      })),
+    });
+
+    server.use(mockOpenRouterChat(() => chatCompletion(JSON.stringify(step))));
+
+    const engine = createQuizEngine({
+      llm: buildLlmClient(),
+      images: createStaticImageProvider(),
+      maxSteps: 7,
+      placesUsable: () => false,
+    });
+
+    const result = await engine.nextStep(makeTranscript(3));
+
+    expect(result.done).toBe(false);
+    if (result.done) return;
+
+    for (const option of result.step.options) {
+      expect(option.photo.url).not.toContain("/api/places/photo?");
+    }
+  });
+
+  it("defaults placesUsable to false in this test env (no GOOGLE_PLACES_API_KEY), skipping the Places photo", async () => {
+    const placesVenueId = "v_placesfixturehotellasjacarandas";
+    const step = makeGeneratedStep({
+      options: makeGeneratedStep().options.map((option) => ({
+        ...option,
+        refs: { venueIds: [placesVenueId], experienceIds: [] },
+      })),
+    });
+
+    server.use(mockOpenRouterChat(() => chatCompletion(JSON.stringify(step))));
+
+    const engine = createQuizEngine({
+      llm: buildLlmClient(),
+      images: createStaticImageProvider(),
+      maxSteps: 7,
+    });
+
+    const result = await engine.nextStep(makeTranscript(3));
+
+    expect(result.done).toBe(false);
+    if (result.done) return;
+
+    for (const option of result.step.options) {
+      expect(option.photo.url).not.toContain("/api/places/photo?");
     }
   });
 

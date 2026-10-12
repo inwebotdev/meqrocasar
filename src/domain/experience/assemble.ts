@@ -2,6 +2,7 @@ import { getPhoto, type PhotoId } from "@/domain/media/photos";
 import { scoreVenue } from "@/domain/kb/search";
 import { facetLabel, type BudgetValue, type Facets } from "@/domain/kb/taxonomy";
 import type { Kb, KbPhoto, KbVenue } from "@/domain/kb/types";
+import { isPlacesUsable } from "@/domain/places/availability";
 import { placesPhotoPath } from "@/domain/places/photo-url";
 
 import type { ExperienceVenue } from "./types";
@@ -37,9 +38,15 @@ interface ResolvedPhoto {
   attribution?: string;
 }
 
-function resolveKbPhoto(venue: KbVenue): ResolvedPhoto | undefined {
+/**
+ * Resolves `venue`'s photo: a `"places"` photo is skipped entirely when
+ * `isUsable()` is false (Places is disabled/unconfigured), falling
+ * through to the venue's own registry/url photo instead — the app must
+ * never hand out a `/api/places/photo` URL it knows won't resolve.
+ */
+function resolveKbPhoto(venue: KbVenue, isUsable: () => boolean): ResolvedPhoto | undefined {
   const placesPhoto = venue.photos.find((photo): photo is KbPhoto => photo.kind === "places");
-  if (placesPhoto) {
+  if (placesPhoto && isUsable()) {
     return { url: placesPhotoPath(placesPhoto.ref, 800), attribution: placesPhoto.attribution };
   }
 
@@ -61,8 +68,9 @@ function toExperienceVenue(
   venue: KbVenue,
   role: ExperienceVenue["role"],
   reason: string,
+  isUsable: () => boolean,
 ): ExperienceVenue {
-  const photo = resolveKbPhoto(venue);
+  const photo = resolveKbPhoto(venue, isUsable);
 
   return {
     id: venue.id,
@@ -101,11 +109,18 @@ function toExperienceVenue(
  * their `whyWeddings` (falling back to `oneLiner`) since the model never
  * recommended them.
  */
+export interface AssembleVenuesDeps {
+  /** Whether a `"places"` photo may be used. Defaults to the process-wide `isPlacesUsable`. */
+  isUsable?: () => boolean;
+}
+
 export function assembleVenuesFromKb(
   recommended: readonly RecommendedVenueInput[],
   facets: Facets,
   kb: Kb,
+  deps: AssembleVenuesDeps = {},
 ): ExperienceVenue[] {
+  const isUsable = deps.isUsable ?? isPlacesUsable;
   const result: ExperienceVenue[] = [];
   const seenIds = new Set<string>();
 
@@ -117,7 +132,12 @@ export function assembleVenuesFromKb(
 
     seenIds.add(venue.id);
     result.push(
-      toExperienceVenue(venue, result.length === 0 ? "principal" : "destacada", candidate.reason),
+      toExperienceVenue(
+        venue,
+        result.length === 0 ? "principal" : "destacada",
+        candidate.reason,
+        isUsable,
+      ),
     );
   }
 
@@ -140,6 +160,7 @@ export function assembleVenuesFromKb(
           venue,
           result.length === 0 ? "principal" : "destacada",
           venue.whyWeddings || venue.oneLiner,
+          isUsable,
         ),
       );
     }
