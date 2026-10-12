@@ -1,6 +1,6 @@
 import sampleFixture from "../../test/fixtures/narration/sample.json";
 
-import type { NarrationRef } from "@/domain/audio/service";
+import type { NarrationRef } from "@/domain/audio/narration-ref";
 
 /**
  * Dev-only escape hatch for browser-checking the narrated reel without an

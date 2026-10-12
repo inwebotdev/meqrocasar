@@ -1,4 +1,4 @@
-import type { NarrationRef } from "@/domain/audio/service";
+import type { NarrationRef } from "@/domain/audio/narration-ref";
 import type { Facets } from "@/domain/kb/taxonomy";
 import type { Transcript } from "@/domain/quiz/transcript";
 import type { QuizAnswers } from "@/domain/quiz/schema";

@@ -1,36 +1,20 @@
-import { z } from "zod";
-
 import { estimateDurationSec, sentenceTimings, type NarrationProvider } from "./narration";
 import { narrationHash } from "./narration-hash";
+import { NarrationRefSchema, type NarrationRef } from "./narration-ref";
 import type { NarrationStore } from "./store";
 
-/** Mirrors `NarrationSentence` (`narration.ts`) — redeclared here so `schema.ts` (experience results) doesn't need to import the pure-TS audio module just for a type. */
-const NarrationSentenceRefSchema = z.object({
-  text: z.string(),
-  startSec: z.number(),
-  endSec: z.number(),
-});
-
-export const NarrationRefSchema = z.discriminatedUnion("status", [
-  z.object({
-    status: z.literal("ready"),
-    hash: z.string().regex(/^[0-9a-f]{64}$/),
-    src: z.string().min(1),
-    durationSec: z.number().nonnegative(),
-    sentences: z.array(NarrationSentenceRefSchema),
-  }),
-  z.object({
-    status: z.literal("pending"),
-    hash: z.string().regex(/^[0-9a-f]{64}$/),
-    src: z.string().min(1),
-  }),
-  z.object({
-    status: z.literal("disabled"),
-  }),
-]);
-
-/** What `NarrationService.ensure` resolves to — see the module doc comment for each state. */
-export type NarrationRef = z.infer<typeof NarrationRefSchema>;
+/**
+ * Re-exported from `./narration-ref` (not declared here) so that
+ * `@/domain/experience/schema.ts` — pulled into the browser bundle by
+ * `src/lib/quiz-client.ts` — can import the schema/type without dragging
+ * in this file's own server-only imports above (`node:crypto` via
+ * `./narration-hash`, `node:fs` via `./store`). Import `NarrationRefSchema`/
+ * `NarrationRef` from `./narration-ref` directly in any client-reachable
+ * module; this re-export exists only for already-server-only callers that
+ * found it here first (`createNarrationService` itself, `narration-deps.ts`).
+ */
+export { NarrationRefSchema };
+export type { NarrationRef };
 
 export interface NarrationEnsureOptions {
   /** How long `ensure` waits for a fresh synthesis before reporting `"pending"` instead (the synthesis itself keeps running in the background either way). */

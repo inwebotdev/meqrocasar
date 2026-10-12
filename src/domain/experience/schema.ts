@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-import { NarrationRefSchema } from "@/domain/audio/service";
+import { NarrationRefSchema } from "@/domain/audio/narration-ref";
 import { FacetsSchema } from "@/domain/kb/taxonomy";
 import { PHOTO_ID_VALUES } from "@/domain/media/photos";
 import { QuizAnswersSchema } from "@/domain/quiz/schema";

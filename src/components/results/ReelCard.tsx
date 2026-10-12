@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 
 import { Icon, Pill } from "@/components/ui";
 import { ReelPoster } from "@/components/reel/ReelPoster";
-import type { NarrationRef } from "@/domain/audio/service";
+import type { NarrationRef } from "@/domain/audio/narration-ref";
 import { cn } from "@/lib/cn";
 
 export interface ReelCardProps {
