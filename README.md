@@ -1,12 +1,12 @@
-# Querétaro Romance AI
+# Querétaro Romance
 
 Prueba de concepto para la Secretaría de Turismo del Estado de Querétaro: en vez de un quiz fijo
-de 4 preguntas, una **conversación adaptativa** de 5 a 7 pasos — generada paso a paso por un
-modelo de lenguaje y anclada en una **base de conocimiento real** de recintos, zonas y
-experiencias de Querétaro (ratings y fotos reales de Google Places, no texto inventado) — termina
-en un concepto de boda personalizado: paleta de color, narrativa, recintos recomendados con liga a
-su sitio/Google Maps, un itinerario de fin de semana, un moodboard descargable (PNG 1200×630) y un
-reel vertical (9:16) reproducible en el navegador.
+de 4 preguntas, una **conversación adaptativa** de 5 a 7 pasos — anclada en una **base de
+conocimiento real** de recintos, zonas y experiencias de Querétaro (ratings y fotos reales de
+Google Places, no texto inventado) — termina en un concepto de boda personalizado: paleta de
+color, narrativa, recintos recomendados con liga a su sitio/Google Maps, un itinerario de fin de
+semana, un moodboard descargable (PNG 1200×630) y un reel vertical (9:16) reproducible en el
+navegador.
 
 - Especificación de producto: [`specs/PRD.md`](specs/PRD.md)
 - Diseño técnico: [`specs/TDD.md`](specs/TDD.md)
@@ -222,19 +222,30 @@ Estos archivos no se versionan en git y deben agregarse manualmente antes de un 
   Queretano" / cuerdas clásicas — y la nota de licencia que debe acompañarla). Mientras no
   exista, el reel se reproduce sin sonido y el chip de pista muestra "Sin audio".
 - **`public/brand/logo.svg`** y **`public/brand/logo-mark.svg`** — son placeholders; deben
-  reemplazarse por el logotipo oficial de Querétaro Romance AI / SECTUR (el segundo es solo el
+  reemplazarse por el logotipo oficial de Querétaro Romance / SECTUR (el segundo es solo el
   isotipo, usado en el header a partir de 360px de ancho).
 - Las fuentes (`Playfair Display`, `Plus Jakarta Sans`) ya están incluidas en
   `public/fonts/` bajo la licencia SIL Open Font License 1.1 (ver `public/fonts/README.md`); no
   requieren acción.
 
-## Métricas de la PoC
+## Reglas de copy
 
-Cada resultado generado muestra, en el footer de `/resultados` (`MetaFooter`,
-`src/components/results/MetaFooter.tsx`): el modelo que respondió (o si se usó el fallback
-local), la duración de la generación en milisegundos y, cuando el proveedor la reporta, la suma
-de tokens de prompt + completion. Cada paso del quiz lleva la misma meta (`source`, `cached`,
-`fallbackUsed`, `attempts`) internamente, aunque no se muestra en la UI del quiz.
+Ningún texto visible para la pareja (quiz, resultados, moodboard, reel, errores, aria-labels,
+alt) debe mencionar IA/AI, nombres de modelos o proveedores (OpenRouter, Qwen, DeepSeek, GPT…),
+"tokens" o "tiempo real" — el loader dice que la propuesta se está analizando/preparando, nunca
+que "la IA" hace algo. `src/copy-audit.test.ts` escanea `src/**/*.tsx`, `src/components/**/*.ts`
+y `data/kb/*.json` y falla si alguna de esas palabras aparece en un string literal o texto JSX
+(con una lista blanca de rutas no visibles al usuario, como `src/domain/ai/`, y un escape por
+línea `// copy-audit-ignore` para casos legítimos).
+
+El footer de `/resultados` (`MetaFooter`, `src/components/results/MetaFooter.tsx`) sigue esta
+regla por diseño: por default solo muestra "Propuesta generada en {s} s · {n} respuestas" (y el
+pill "Modo demo sin conexión" si se usó el fallback local). El detalle técnico — modelo que
+respondió, duración en ms y, cuando el proveedor la reporta, tokens y costo estimado — solo se
+renderiza agregando `?debug=1` a la URL de resultados (vía `useSearchParams` en
+`MetaFooterDebugLine.tsx`, un subcomponente cliente envuelto en `Suspense`). Cada paso del quiz
+lleva la misma meta (`source`, `cached`, `fallbackUsed`, `attempts`) internamente, aunque no se
+muestra en la UI del quiz.
 
 ## Despliegue en Vercel (Hobby)
 
