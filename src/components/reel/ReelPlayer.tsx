@@ -21,7 +21,7 @@ export interface ReelPlayerProps {
   trackName?: string;
 }
 
-const MISSING_AUDIO_LABEL = "Sin audio (agrega public/audio/wedding-theme.mp3)";
+const MISSING_AUDIO_LABEL = "Sin audio";
 
 export function ReelPlayer({ result, audioSrc, trackName }: ReelPlayerProps) {
   const playerRef = useRef<PlayerRef>(null);

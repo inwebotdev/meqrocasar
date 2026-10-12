@@ -40,8 +40,11 @@ export function StepLoading() {
             size={20}
             className="animate-pulse motion-reduce:animate-none"
           />
-          <p className="font-headline-sm text-headline-sm">La IA prepara su siguiente pregunta…</p>
+          <p className="font-headline-sm text-headline-sm">Estamos analizando su respuesta…</p>
         </div>
+        <p className="font-body-sm text-body-sm text-surface-container-low">
+          Esto puede tardar unos segundos
+        </p>
         {QUIZ_TIPS[tipIndex] && (
           <p className="font-body-sm text-body-sm text-surface-container-low">
             {QUIZ_TIPS[tipIndex]}

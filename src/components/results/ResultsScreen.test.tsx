@@ -7,7 +7,10 @@ import type { ExperienceResult } from "@/domain/experience/types";
 import type { QuizAnswers } from "@/domain/quiz/schema";
 
 const { push, replace } = vi.hoisted(() => ({ push: vi.fn(), replace: vi.fn() }));
-vi.mock("next/navigation", () => ({ useRouter: () => ({ push, replace }) }));
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ push, replace }),
+  useSearchParams: () => null,
+}));
 
 const { loadResult, clearResult } = vi.hoisted(() => ({
   loadResult: vi.fn(),

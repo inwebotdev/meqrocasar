@@ -258,7 +258,7 @@ describe("QuizFlow", () => {
     expect(await screen.findByText(`Guardado: ${first.title}`)).toBeInTheDocument();
     expect(optionButton).toHaveAttribute("aria-pressed", "true");
 
-    expect(await screen.findByText("La IA prepara su siguiente pregunta…")).toBeInTheDocument();
+    expect(await screen.findByText("Estamos analizando su respuesta…")).toBeInTheDocument();
     expect(fetchNextStep).toHaveBeenNthCalledWith(2, {
       entries: [
         expect.objectContaining({
@@ -317,7 +317,7 @@ describe("QuizFlow", () => {
     const first = step1.options[0]!;
     await user.click(await screen.findByRole("button", { name: `Elegir ${first.title}` }));
 
-    expect(await screen.findByText("La IA está diseñando su boda…")).toBeInTheDocument();
+    expect(await screen.findByText("Estamos preparando su propuesta…")).toBeInTheDocument();
     await waitFor(() => expect(saveResult).toHaveBeenCalledWith(validResult));
     await waitFor(() => expect(push).toHaveBeenCalledWith("/resultados"));
   });

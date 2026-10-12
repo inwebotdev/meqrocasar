@@ -1,10 +1,15 @@
-import { describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 
 import type { ExperienceMeta } from "@/domain/experience/types";
 import type { Transcript } from "@/domain/quiz/transcript";
 
-import { MetaFooter } from "./MetaFooter";
+const { useSearchParams } = vi.hoisted(() => ({
+  useSearchParams: vi.fn(() => new URLSearchParams()),
+}));
+vi.mock("next/navigation", () => ({ useSearchParams }));
+
+const { MetaFooter } = await import("./MetaFooter");
 
 const BASE_META: ExperienceMeta = {
   model: "qwen/qwen-2.5-7b-instruct",
@@ -43,40 +48,51 @@ const TRANSCRIPT: Transcript = {
 };
 
 describe("MetaFooter", () => {
-  it("shows the token count when usage is present, with no cost line below $0.01", () => {
+  beforeEach(() => {
+    useSearchParams.mockReturnValue(new URLSearchParams());
+  });
+
+  it("shows the plain sentence with seconds and a 4-answer fallback when no transcript is given", () => {
+    render(<MetaFooter meta={BASE_META} />);
+
+    expect(screen.getByText("Propuesta generada en 0.8 s · 4 respuestas")).toBeInTheDocument();
+  });
+
+  it("uses the transcript's entry count instead of the fallback", () => {
+    render(<MetaFooter meta={BASE_META} transcript={TRANSCRIPT} />);
+
+    expect(screen.getByText("Propuesta generada en 0.8 s · 2 respuestas")).toBeInTheDocument();
+  });
+
+  it("shows the fallback pill, with the 'sin conexión' wording, when fallbackUsed is true", () => {
+    render(<MetaFooter meta={{ ...BASE_META, fallbackUsed: true }} />);
+
+    expect(screen.getByText("Modo demo sin conexión")).toBeInTheDocument();
+  });
+
+  it("omits the fallback pill when fallbackUsed is false", () => {
+    render(<MetaFooter meta={BASE_META} />);
+
+    expect(screen.queryByText("Modo demo sin conexión")).not.toBeInTheDocument();
+  });
+
+  it("hides the technical line (model, tokens, cost) by default", () => {
+    render(
+      <MetaFooter meta={{ ...BASE_META, usage: { promptTokens: 10, completionTokens: 20 } }} />,
+    );
+
+    expect(screen.queryByTestId("meta-footer-debug")).not.toBeInTheDocument();
+  });
+
+  it("shows the technical line only when the URL has ?debug=1", () => {
+    useSearchParams.mockReturnValue(new URLSearchParams("debug=1"));
+
     render(
       <MetaFooter meta={{ ...BASE_META, usage: { promptTokens: 10, completionTokens: 20 } }} />,
     );
 
     expect(
-      screen.getByText("Generado con qwen/qwen-2.5-7b-instruct en 842 ms · 30 tokens · ≈ < $0.01"),
+      screen.getByText("qwen/qwen-2.5-7b-instruct en 842 ms · 30 tokens · ≈ < $0.01"),
     ).toBeInTheDocument();
-  });
-
-  it("shows the estimated cost line once it crosses $0.01", () => {
-    render(
-      <MetaFooter
-        meta={{ ...BASE_META, usage: { promptTokens: 100000, completionTokens: 50000 } }}
-      />,
-    );
-
-    expect(screen.getByText((text) => text.includes("≈ $0.02"))).toBeInTheDocument();
-  });
-
-  it("prefixes the step count from the transcript when present", () => {
-    render(
-      <MetaFooter
-        meta={{ ...BASE_META, usage: { promptTokens: 10, completionTokens: 20 } }}
-        transcript={TRANSCRIPT}
-      />,
-    );
-
-    expect(screen.getByText((text) => text.startsWith("2 pasos ·"))).toBeInTheDocument();
-  });
-
-  it("omits the step count when no transcript is given", () => {
-    render(<MetaFooter meta={BASE_META} />);
-
-    expect(screen.queryByText((text) => text.includes("pasos"))).not.toBeInTheDocument();
   });
 });

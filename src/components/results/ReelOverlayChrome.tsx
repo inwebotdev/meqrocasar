@@ -1,4 +1,4 @@
-import { Icon, Pill } from "@/components/ui";
+import { Icon } from "@/components/ui";
 import { cn } from "@/lib/cn";
 
 export interface ReelTopBarProps {
@@ -7,7 +7,7 @@ export interface ReelTopBarProps {
   onToggleMute: () => void;
 }
 
-/** Top scrim: elapsed-time pill (left) + mute toggle & "Remotion AI" pill (right). */
+/** Top scrim: elapsed-time pill (left) + mute toggle (right). */
 export function ReelTopBar({ timeLabel, muted, onToggleMute }: ReelTopBarProps) {
   return (
     <div className="absolute inset-x-0 top-0 z-20 flex items-center justify-between bg-gradient-to-b from-black/80 via-black/40 to-transparent p-space-md">
@@ -15,22 +15,17 @@ export function ReelTopBar({ timeLabel, muted, onToggleMute }: ReelTopBarProps) 
         <span className="h-2 w-2 animate-ping rounded-full bg-error motion-reduce:animate-none" />
         <span className="font-bold">{timeLabel}</span>
       </div>
-      <div className="flex items-center gap-2">
-        <button
-          type="button"
-          aria-label="Audio mute/unmute"
-          onClick={(event) => {
-            event.stopPropagation();
-            onToggleMute();
-          }}
-          className="flex h-8 w-8 items-center justify-center rounded-full bg-black/40 text-on-primary backdrop-blur-md transition-colors hover:bg-black/60"
-        >
-          <Icon name={muted ? "volume_off" : "volume_up"} size={18} />
-        </button>
-        <Pill tone="primary" className="font-semibold">
-          Remotion AI
-        </Pill>
-      </div>
+      <button
+        type="button"
+        aria-label="Audio mute/unmute"
+        onClick={(event) => {
+          event.stopPropagation();
+          onToggleMute();
+        }}
+        className="flex h-8 w-8 items-center justify-center rounded-full bg-black/40 text-on-primary backdrop-blur-md transition-colors hover:bg-black/60"
+      >
+        <Icon name={muted ? "volume_off" : "volume_up"} size={18} />
+      </button>
     </div>
   );
 }

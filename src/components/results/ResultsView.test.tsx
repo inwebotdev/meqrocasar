@@ -110,7 +110,7 @@ describe("ResultsView", () => {
     expect(link).toHaveAttribute("download");
   });
 
-  it("shows the model and duration in the meta footer, with no fallback pill when fallbackUsed is false", () => {
+  it("shows the plain generated-in sentence in the meta footer, with no fallback pill when fallbackUsed is false", () => {
     const result = buildResult({
       model: "google/gemini-2.5-flash",
       fallbackUsed: false,
@@ -119,8 +119,8 @@ describe("ResultsView", () => {
     });
     renderResultsView(result);
 
-    expect(screen.getByText("Generado con google/gemini-2.5-flash en 842 ms")).toBeInTheDocument();
-    expect(screen.queryByText("Modo demo sin IA (fallback local)")).not.toBeInTheDocument();
+    expect(screen.getByText("Propuesta generada en 0.8 s · 4 respuestas")).toBeInTheDocument();
+    expect(screen.queryByText("Modo demo sin conexión")).not.toBeInTheDocument();
   });
 
   it("shows the fallback pill in the meta footer when fallbackUsed is true", () => {
@@ -132,10 +132,10 @@ describe("ResultsView", () => {
     });
     renderResultsView(result);
 
-    expect(screen.getByText("Modo demo sin IA (fallback local)")).toBeInTheDocument();
+    expect(screen.getByText("Modo demo sin conexión")).toBeInTheDocument();
   });
 
-  it("renders a transcript-based result: itinerary hint pill and step count in the footer", () => {
+  it("renders a transcript-based result: itinerary hint pill and answer count in the footer", () => {
     const transcript = transcriptFromLegacyAnswers(ANSWERS);
     const facets = foldFacets(transcript.entries);
     const result: ExperienceResult = {
@@ -156,7 +156,7 @@ describe("ResultsView", () => {
       screen.getByText("Viernes: cata · Sábado: ceremonia · Domingo: brunch"),
     ).toBeInTheDocument();
     expect(
-      screen.getByText((text) => text.startsWith(`${transcript.entries.length} pasos ·`)),
+      screen.getByText((text) => text.endsWith(`· ${transcript.entries.length} respuestas`)),
     ).toBeInTheDocument();
   });
 });

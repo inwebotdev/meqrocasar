@@ -1,35 +1,34 @@
+import { Suspense } from "react";
+
 import { Icon, Pill } from "@/components/ui";
-import { estimateCostUsd } from "@/domain/ai/pricing";
 import type { ExperienceMeta } from "@/domain/experience/types";
 import type { Transcript } from "@/domain/quiz/transcript";
 
+import { MetaFooterDebugLine } from "./MetaFooterDebugLine";
+
 export interface MetaFooterProps {
   meta: ExperienceMeta;
-  /** When present, its entry count is shown as the number of adaptive-quiz steps ("{n} pasos"). */
+  /** When present, its entry count is shown as the number of answers ("{n} respuestas"). */
   transcript?: Transcript;
 }
 
-function formatCostUsd(cost: number): string {
-  return cost < 0.01 ? "< $0.01" : `$${cost.toFixed(2)}`;
-}
+/** Shown when no transcript is available (legacy 4-answer flow). */
+const FALLBACK_ANSWER_COUNT = 4;
 
 export function MetaFooter({ meta, transcript }: MetaFooterProps) {
-  const stepsPrefix = transcript ? `${transcript.entries.length} pasos · ` : "";
-  const tokensSuffix = meta.usage
-    ? ` · ${meta.usage.promptTokens + meta.usage.completionTokens} tokens`
-    : "";
-  const costSuffix = meta.usage
-    ? ` · ≈ ${formatCostUsd(estimateCostUsd(meta.model, meta.usage))}`
-    : "";
+  const answerCount = transcript?.entries.length ?? FALLBACK_ANSWER_COUNT;
+  const seconds = (meta.durationMs / 1000).toFixed(1);
 
   return (
     <div className="flex flex-wrap items-center gap-space-xs pb-space-sm font-label-sm text-label-sm text-on-surface-variant">
       <Icon name="auto_awesome" size={14} />
       <span>
-        {stepsPrefix}Generado con {meta.model} en {meta.durationMs} ms{tokensSuffix}
-        {costSuffix}
+        Propuesta generada en {seconds} s · {answerCount} respuestas
       </span>
-      {meta.fallbackUsed && <Pill tone="secondary-soft">Modo demo sin IA (fallback local)</Pill>}
+      <Suspense fallback={null}>
+        <MetaFooterDebugLine meta={meta} />
+      </Suspense>
+      {meta.fallbackUsed && <Pill tone="secondary-soft">Modo demo sin conexión</Pill>}
     </div>
   );
 }

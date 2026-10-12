@@ -6,10 +6,8 @@ export function QuizLoading() {
       <Skeleton className="absolute inset-0 h-full w-full rounded-xl" />
       <div className="relative z-10 flex flex-col items-center gap-2 rounded-xl bg-primary/80 px-6 py-4 text-center text-on-primary shadow-lg backdrop-blur-md">
         <Icon name="auto_awesome" filled size={28} className="animate-pulse" />
-        <p className="font-headline-sm text-headline-sm">La IA está diseñando su boda…</p>
-        <p className="font-body-sm text-body-sm text-surface-container-low">
-          Esto toma menos de 5 segundos
-        </p>
+        <p className="font-headline-sm text-headline-sm">Estamos preparando su propuesta…</p>
+        <p className="font-body-sm text-body-sm text-surface-container-low">Unos segundos más…</p>
       </div>
     </div>
   );
