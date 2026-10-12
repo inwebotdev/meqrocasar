@@ -1,6 +1,6 @@
 import type { PropsWithChildren, ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
 import { ToastProvider } from "@/components/ui";
@@ -46,10 +46,6 @@ vi.mock("@/lib/transcript-store", () => ({ saveTranscript }));
 type MotionStubProps = PropsWithChildren<Record<string, unknown>>;
 
 function stripMotionProps({
-  drag,
-  dragConstraints,
-  dragElastic,
-  onDragEnd,
   whileTap,
   style,
   initial,
@@ -58,10 +54,6 @@ function stripMotionProps({
   mode,
   ...rest
 }: MotionStubProps): Record<string, unknown> {
-  void drag;
-  void dragConstraints;
-  void dragElastic;
-  void onDragEnd;
   void whileTap;
   void style;
   void initial;
@@ -83,13 +75,6 @@ vi.mock("framer-motion", async () => {
   return {
     motion: { div: makeStub("div"), article: makeStub("article") },
     AnimatePresence: ({ children }: { children: ReactNode }) => children,
-    useReducedMotion: () => true,
-    useMotionValue: (initialValue: number) => ({
-      get: () => initialValue,
-      set: () => {},
-      on: () => () => {},
-    }),
-    useTransform: () => 0,
   };
 });
 
@@ -104,15 +89,29 @@ function renderQuiz() {
 }
 
 /**
- * Chooses `option` regardless of whether it's already the active card: the
- * "Elegir …" button only exists for the active option, so a non-first
- * option is first made active via its quick-strip button (`goToOption`,
- * no side effect beyond moving the active index) before confirming it.
+ * The slide `<article>` for `title` — climbs from its heading, since every
+ * slide renders its own `h2`. Async: awaits the heading first, so it's
+ * safe to call right after `renderQuiz()` without a separate wait for the
+ * step to finish loading.
  */
-async function chooseOption(user: ReturnType<typeof userEvent.setup>, option: { title: string }) {
-  const quickStripButtons = screen.getAllByRole("button", { name: option.title });
-  await user.click(quickStripButtons[quickStripButtons.length - 1]!);
-  await user.click(await screen.findByRole("button", { name: `Elegir ${option.title}` }));
+async function cardFor(title: string) {
+  const heading = await screen.findByRole("heading", { name: title });
+  return heading.closest("article")!;
+}
+
+/**
+ * Chooses `option` regardless of whether it's already the active card: the
+ * option list's button for it is clicked first (makes it active — a no-op
+ * if it already is), then that card's "Elegir" button is confirmed.
+ */
+async function chooseOption(
+  user: ReturnType<typeof userEvent.setup>,
+  option: { title: string },
+  selectLabel: string,
+) {
+  await user.click(screen.getByRole("button", { name: option.title }));
+  const card = await cardFor(option.title);
+  await user.click(within(card).getByRole("button", { name: selectLabel }));
 }
 
 const curatedMeta = {
@@ -231,13 +230,34 @@ describe("QuizFlow", () => {
     push.mockReset();
   });
 
-  it("loads and renders the curated step 1 on mount", async () => {
+  it("loads and renders the curated step 1 on mount, with no back button", async () => {
     fetchNextStep.mockResolvedValueOnce({ done: false, step: step1, meta: curatedMeta });
     renderQuiz();
 
     expect(await screen.findByText("Paso 1: Estilo")).toBeInTheDocument();
     expect(screen.getAllByRole("button", { name: /Ir a opción/i })).toHaveLength(4);
     expect(fetchNextStep).toHaveBeenCalledWith({ entries: [] });
+    expect(screen.queryByRole("button", { name: "Pregunta anterior" })).not.toBeInTheDocument();
+  });
+
+  it("shows the carousel caption with the option count", async () => {
+    fetchNextStep.mockResolvedValueOnce({ done: false, step: step1, meta: curatedMeta });
+    renderQuiz();
+
+    expect(
+      await screen.findByText("Desliza para ver las 4 opciones · toca Elegir para continuar"),
+    ).toBeInTheDocument();
+  });
+
+  it("renders exactly one Elegir button per slide, scoped to that slide's card", async () => {
+    fetchNextStep.mockResolvedValueOnce({ done: false, step: step1, meta: curatedMeta });
+    renderQuiz();
+    await screen.findByText("Paso 1: Estilo");
+
+    for (const option of step1.options) {
+      const card = await cardFor(option.title);
+      expect(within(card).getAllByRole("button", { name: step1.selectLabel })).toHaveLength(1);
+    }
   });
 
   it("choosing a card shows a toast, then StepLoading, then step 2 from the mock", async () => {
@@ -252,11 +272,14 @@ describe("QuizFlow", () => {
     renderQuiz();
 
     const first = step1.options[0]!;
-    const optionButton = await screen.findByRole("button", { name: `Elegir ${first.title}` });
+    const card = await cardFor(first.title);
+    const optionButton = within(card).getByRole("button", {
+      name: step1.selectLabel,
+    });
     await user.click(optionButton);
 
     expect(await screen.findByText(`Guardado: ${first.title}`)).toBeInTheDocument();
-    expect(optionButton).toHaveAttribute("aria-pressed", "true");
+    expect(optionButton).toBeDisabled();
 
     expect(await screen.findByText("Estamos analizando su respuesta…")).toBeInTheDocument();
     expect(fetchNextStep).toHaveBeenNthCalledWith(2, {
@@ -282,13 +305,29 @@ describe("QuizFlow", () => {
 
     await screen.findByText("Paso 1: Estilo");
     const rustic = step1.options.find((option) => option.id === "rustic_vineyard")!;
-    await chooseOption(user, rustic);
+    await chooseOption(user, rustic, step1.selectLabel);
 
     expect(await screen.findByText(step2.question)).toBeInTheDocument();
     expect(screen.getByText("Rústico Viñedo")).toBeInTheDocument();
   });
 
-  it("Paso anterior pops the last entry, re-requests that step, and restores the active option", async () => {
+  it("Pregunta anterior is hidden on step 1 and appears from step 2 onward", async () => {
+    fetchNextStep.mockResolvedValueOnce({ done: false, step: step1, meta: curatedMeta });
+    fetchNextStep.mockResolvedValueOnce({ done: false, step: step2, meta: llmMeta });
+    const user = userEvent.setup();
+    renderQuiz();
+
+    await screen.findByText("Paso 1: Estilo");
+    expect(screen.queryByRole("button", { name: "Pregunta anterior" })).not.toBeInTheDocument();
+
+    const rustic = step1.options.find((option) => option.id === "rustic_vineyard")!;
+    await chooseOption(user, rustic, step1.selectLabel);
+
+    expect(await screen.findByText(step2.question)).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Pregunta anterior" })).toBeInTheDocument();
+  });
+
+  it("Pregunta anterior pops the last entry, re-requests that step, and restores the active option", async () => {
     fetchNextStep.mockResolvedValueOnce({ done: false, step: step1, meta: curatedMeta });
     fetchNextStep.mockResolvedValueOnce({ done: false, step: step2, meta: llmMeta });
     const user = userEvent.setup();
@@ -296,11 +335,11 @@ describe("QuizFlow", () => {
 
     await screen.findByText("Paso 1: Estilo");
     const rustic = step1.options.find((option) => option.id === "rustic_vineyard")!;
-    await chooseOption(user, rustic);
+    await chooseOption(user, rustic, step1.selectLabel);
     expect(await screen.findByText(step2.question)).toBeInTheDocument();
 
     fetchNextStep.mockResolvedValueOnce({ done: false, step: step1, meta: curatedMeta });
-    await user.click(screen.getByRole("button", { name: "← Paso anterior" }));
+    await user.click(screen.getByRole("button", { name: "Pregunta anterior" }));
 
     expect(await screen.findByText("Paso 1: Estilo")).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: rustic.title })).toBeInTheDocument();
@@ -315,7 +354,8 @@ describe("QuizFlow", () => {
     renderQuiz();
 
     const first = step1.options[0]!;
-    await user.click(await screen.findByRole("button", { name: `Elegir ${first.title}` }));
+    const card = await cardFor(first.title);
+    await user.click(within(card).getByRole("button", { name: step1.selectLabel }));
 
     expect(await screen.findByText("Estamos preparando su propuesta…")).toBeInTheDocument();
     await waitFor(() => expect(saveResult).toHaveBeenCalledWith(validResult));
@@ -339,22 +379,40 @@ describe("QuizFlow", () => {
     expect(fetchNextStep).toHaveBeenCalledTimes(2);
   });
 
-  it("ArrowRight then Enter on the stage chooses the next option via the keyboard", async () => {
+  it("ArrowRight then Enter on the carousel chooses the next option via the keyboard", async () => {
     fetchNextStep.mockResolvedValueOnce({ done: false, step: step1, meta: curatedMeta });
     fetchNextStep.mockResolvedValueOnce({ done: false, step: step2, meta: llmMeta });
+    const user = userEvent.setup();
     renderQuiz();
 
     const second = step1.options[1]!;
     await screen.findByText("Paso 1: Estilo");
 
-    const stage = screen
-      .getByRole("button", { name: `Elegir ${step1.options[0]!.title}` })
-      .closest("section")!;
-    fireEvent.keyDown(stage, { key: "ArrowRight" });
-    expect(screen.getByRole("heading", { name: second.title })).toBeInTheDocument();
+    const carousel = screen.getByRole("group", { name: "Opciones" });
+    carousel.focus();
+    fireEvent.keyDown(carousel, { key: "ArrowRight" });
+    fireEvent.keyDown(carousel, { key: "Enter" });
 
-    fireEvent.keyDown(stage, { key: "Enter" });
     expect(await screen.findByText(`Guardado: ${second.title}`)).toBeInTheDocument();
     expect(await screen.findByText(step2.question)).toBeInTheDocument();
+    void user;
+  });
+
+  it("Backspace on the stage goes back when a previous step exists", async () => {
+    fetchNextStep.mockResolvedValueOnce({ done: false, step: step1, meta: curatedMeta });
+    fetchNextStep.mockResolvedValueOnce({ done: false, step: step2, meta: llmMeta });
+    const user = userEvent.setup();
+    renderQuiz();
+
+    await screen.findByText("Paso 1: Estilo");
+    const rustic = step1.options.find((option) => option.id === "rustic_vineyard")!;
+    await chooseOption(user, rustic, step1.selectLabel);
+    expect(await screen.findByText(step2.question)).toBeInTheDocument();
+
+    fetchNextStep.mockResolvedValueOnce({ done: false, step: step1, meta: curatedMeta });
+    const carousel = screen.getByRole("group", { name: "Opciones" });
+    fireEvent.keyDown(carousel, { key: "Backspace" });
+
+    expect(await screen.findByText("Paso 1: Estilo")).toBeInTheDocument();
   });
 });
