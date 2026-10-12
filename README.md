@@ -105,6 +105,8 @@ en `/recintos`.
 
 ```bash
 kool run setup    # copia .env.dist -> .env, instala git hooks, levanta el contenedor e instala dependencias
+kool run setup:full   # lo mismo + kb:refresh (ingesta Places → build → enriquecimiento). Requiere GOOGLE_PLACES_API_KEY y OPENROUTER_API_KEY en .env
+kool run kb:refresh   # solo la base de conocimiento: kb:ingest → kb:build → kb:enrich (incremental: solo enriquece lugares nuevos)
 kool run dev       # arranca `next dev` dentro del contenedor, expuesto en http://localhost:3000
 kool run test      # vitest (proyectos "node" y "jsdom"), 100% offline
 kool run quality   # format:check + types:check + lint:check

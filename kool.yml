@@ -12,6 +12,13 @@ scripts:
     - kool exec app yarn build
   test:
     - docker compose run --rm --no-deps -T app yarn test
+  setup:full:
+    - kool run setup
+    - kool run kb:refresh
+  kb:refresh:
+    - kool run kb:ingest
+    - kool run kb:build
+    - kool run kb:enrich
   kb:ingest:
     - docker compose run --rm --no-deps -T --env-from-file .env app yarn tsx scripts/kb/ingest-places.ts
   kb:build:
