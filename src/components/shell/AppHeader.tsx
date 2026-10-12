@@ -2,6 +2,8 @@ import Link from "next/link";
 
 import { Icon, Pill } from "@/components/ui";
 
+import { HeaderNavLink } from "./HeaderNavLink";
+
 export interface AppHeaderProps {
   title: string;
 }
@@ -33,6 +35,7 @@ export function AppHeader({ title }: AppHeaderProps) {
           </div>
         </Link>
         <div className="flex shrink-0 items-center gap-space-sm">
+          <HeaderNavLink />
           <Pill tone="primary-soft" icon="verified" aria-label="SECTUR Querétaro">
             <span className="hidden sm:inline">SECTUR Querétaro</span>
           </Pill>
