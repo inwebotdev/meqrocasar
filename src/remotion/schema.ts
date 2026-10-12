@@ -2,6 +2,22 @@ import { z } from "zod";
 
 import type { ExperienceResult } from "@/domain/experience/types";
 
+const ReelNarrationSchema = z.object({
+  /** Relative (`/api/narration/<hash>`) or absolute URL — Remotion's `<Audio>` needs an absolute one in the browser, see `resolveNarrationSrc` below. */
+  src: z.string().min(1),
+  durationSec: z.number().nonnegative(),
+  sentences: z.array(
+    z.object({
+      text: z.string(),
+      startSec: z.number(),
+      endSec: z.number(),
+    }),
+  ),
+});
+
+export type ReelNarration = z.infer<typeof ReelNarrationSchema>;
+export type ReelNarrationSentence = ReelNarration["sentences"][number];
+
 export const ReelPropsSchema = z.object({
   title: z.string().min(1).max(80),
   tagline: z.string().max(60),
@@ -26,6 +42,8 @@ export const ReelPropsSchema = z.object({
   audioSrc: z.string().optional(),
   /** es-MX voice-over script for the narration track — wired into the composition in the next layer. */
   script: z.string().max(320),
+  /** Present only when the experience's narration is `"ready"` — see `reelPropsFromExperience`. */
+  narration: ReelNarrationSchema.optional(),
 });
 
 export type ReelProps = z.infer<typeof ReelPropsSchema>;
@@ -59,6 +77,25 @@ function narrativeToLines(narrative: string): string[] {
 export interface ReelPropsFromExperienceOptions {
   audioSrc?: string;
   trackName?: string;
+  /**
+   * Origin (e.g. `window.location.origin`) used to turn a relative
+   * `result.narration.src` (`/api/narration/<hash>`) into an absolute URL,
+   * which Remotion's `<Audio>` requires. Omit server-side; on the client,
+   * `reelPropsFromExperience` falls back to `window.location.origin`
+   * itself when it's available, so passing it explicitly is only needed
+   * when that global isn't (e.g. a Node test).
+   */
+  origin?: string;
+}
+
+/** Turns a relative narration `src` into an absolute URL; leaves an already-absolute one untouched. */
+function resolveNarrationSrc(src: string, origin?: string): string {
+  if (/^https?:\/\//i.test(src)) return src;
+
+  const base = origin ?? (typeof window !== "undefined" ? window.location.origin : undefined);
+  if (!base) return src;
+
+  return `${base.replace(/\/$/, "")}${src.startsWith("/") ? "" : "/"}${src}`;
 }
 
 /** Builds the `ReelProps` for a wedding reel from a generated `ExperienceResult`. */
@@ -66,6 +103,15 @@ export function reelPropsFromExperience(
   result: ExperienceResult,
   options?: ReelPropsFromExperienceOptions,
 ): ReelProps {
+  const narration =
+    result.narration?.status === "ready"
+      ? {
+          src: resolveNarrationSrc(result.narration.src, options?.origin),
+          durationSec: result.narration.durationSec,
+          sentences: result.narration.sentences,
+        }
+      : undefined;
+
   return {
     title: result.conceptTitle,
     tagline: result.reelTagline,
@@ -75,5 +121,6 @@ export function reelPropsFromExperience(
     trackName: options?.trackName ?? DEFAULT_TRACK_NAME,
     audioSrc: options?.audioSrc,
     script: result.reelScript,
+    narration,
   };
 }

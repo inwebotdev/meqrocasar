@@ -104,6 +104,22 @@ function buildResult(): ExperienceResult {
   };
 }
 
+const NARRATION_HASH = "b".repeat(64);
+
+/** Narration duration chosen so (18.5 + 1.5) * 30 = 600 frames exactly — a round total, distinct from the unnarrated 330. */
+function buildNarratedResult(): ExperienceResult {
+  return {
+    ...buildResult(),
+    narration: {
+      status: "ready",
+      hash: NARRATION_HASH,
+      src: `/api/narration/${NARRATION_HASH}`,
+      durationSec: 18.5,
+      sentences: [{ text: "Imaginen su boda.", startSec: 0, endSec: 3 }],
+    },
+  };
+}
+
 describe("ReelPlayer", () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -166,5 +182,34 @@ describe("ReelPlayer", () => {
     render(<ReelPlayer result={buildResult()} />);
 
     expect(screen.getByText(/Sin audio/)).toBeInTheDocument();
+  });
+
+  it('shows the "Narración · Querétaro Romance" track pill when narration is ready', () => {
+    render(<ReelPlayer result={buildNarratedResult()} />);
+
+    expect(screen.getByText(/Narración · Querétaro Romance/)).toBeInTheDocument();
+  });
+
+  it("computes the player duration from the narration (not the unnarrated 330-frame default)", () => {
+    render(<ReelPlayer result={buildNarratedResult()} />);
+
+    // Narrated total is 600 frames (see buildNarratedResult); halfway is 300 frames = 00:10.
+    act(() => {
+      playerMock.emitter.emit("frameupdate", { frame: 300 });
+    });
+
+    expect(screen.getByText("00:10")).toBeInTheDocument();
+
+    const progressBar = document.querySelector('[style*="width"]');
+    expect(progressBar).toHaveStyle({ width: "50%" });
+  });
+
+  it("prefers the narration track pill over the missing-audio label", () => {
+    useAudioAvailabilityMock.mockReturnValue({ status: "missing" });
+
+    render(<ReelPlayer result={buildNarratedResult()} />);
+
+    expect(screen.getByText(/Narración · Querétaro Romance/)).toBeInTheDocument();
+    expect(screen.queryByText(/Sin audio/)).not.toBeInTheDocument();
   });
 });

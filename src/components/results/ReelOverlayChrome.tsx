@@ -33,20 +33,28 @@ export function ReelTopBar({ timeLabel, muted, onToggleMute }: ReelTopBarProps) 
 export interface ReelPlayButtonProps {
   playing: boolean;
   onToggle: () => void;
+  /** Disables the button while the reel isn't playable yet (e.g. narration still `"pending"`). */
+  disabled?: boolean;
 }
 
 /** Centered circular play/pause trigger overlay. */
-export function ReelPlayButton({ playing, onToggle }: ReelPlayButtonProps) {
+export function ReelPlayButton({ playing, onToggle, disabled = false }: ReelPlayButtonProps) {
   return (
     <div className="pointer-events-none absolute inset-0 z-20 flex items-center justify-center">
       <button
         type="button"
         aria-label={playing ? "Pausar reel" : "Reproducir reel"}
+        aria-disabled={disabled}
+        disabled={disabled}
         onClick={(event) => {
           event.stopPropagation();
+          if (disabled) return;
           onToggle();
         }}
-        className="pointer-events-auto flex h-16 w-16 transform items-center justify-center rounded-full bg-on-primary/80 shadow-2xl backdrop-blur-md transition-transform group-hover:scale-110"
+        className={cn(
+          "pointer-events-auto flex h-16 w-16 transform items-center justify-center rounded-full bg-on-primary/80 shadow-2xl backdrop-blur-md transition-transform group-hover:scale-110",
+          disabled && "cursor-not-allowed opacity-50",
+        )}
       >
         <Icon
           name={playing ? "pause" : "play_arrow"}

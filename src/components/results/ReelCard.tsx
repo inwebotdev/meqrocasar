@@ -3,13 +3,19 @@ import type { ReactNode } from "react";
 import { Icon, Pill } from "@/components/ui";
 import { ReelPoster } from "@/components/reel/ReelPoster";
 import type { NarrationRef } from "@/domain/audio/service";
+import { cn } from "@/lib/cn";
 
 export interface ReelCardProps {
   title: string;
   trackName: string;
   durationLabel?: string;
   posterUrl?: string;
-  /** The reel's narration ref, when the experience has one — only its status drives the pill below; the player itself is wired in a later layer. */
+  /**
+   * The reel's narration ref, when the experience has one. Drives both the
+   * pill below and whether `children` (the interactive player) renders at
+   * all: while `"pending"`, the poster shows instead with its play button
+   * disabled, regardless of `children`.
+   */
   narration?: NarrationRef;
   children?: ReactNode;
 }
@@ -38,11 +44,13 @@ function NarrationPill({ narration }: { narration?: NarrationRef }) {
 export function ReelCard({
   title,
   trackName,
-  durationLabel = "11 seg • HD",
+  durationLabel = "11 seg",
   posterUrl,
   narration,
   children,
 }: ReelCardProps) {
+  const isPending = narration?.status === "pending";
+
   return (
     <div className="space-y-space-sm rounded-xl bg-surface-container-lowest p-space-md shadow-md">
       <div className="flex items-center justify-between">
@@ -56,8 +64,17 @@ export function ReelCard({
           {durationLabel}
         </span>
       </div>
-      <div className="group relative aspect-[9/16] w-full cursor-pointer overflow-hidden rounded-xl bg-inverse-surface shadow-xl">
-        {children ?? <ReelPoster title={title} trackName={trackName} posterUrl={posterUrl} />}
+      <div
+        className={cn(
+          "group relative aspect-[9/16] w-full overflow-hidden rounded-xl bg-inverse-surface shadow-xl",
+          isPending ? "cursor-default" : "cursor-pointer",
+        )}
+      >
+        {isPending ? (
+          <ReelPoster title={title} trackName={trackName} posterUrl={posterUrl} disablePlay />
+        ) : (
+          (children ?? <ReelPoster title={title} trackName={trackName} posterUrl={posterUrl} />)
+        )}
       </div>
       <NarrationPill narration={narration} />
     </div>

@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import type { ExperienceResult } from "@/domain/experience/types";
 import { fetchNarrationMeta } from "@/lib/narration-client";
+import { buildFixtureNarration, isNarrationFixtureEnabled } from "@/lib/narration-fixture";
 import { saveResult } from "@/lib/results-store";
 
 const POLL_INTERVAL_MS = 2000;
@@ -16,6 +17,12 @@ const POLL_TIMEOUT_MS = 60000;
  * (`saveResult`) and returns it so `ResultsScreen` re-renders with the
  * ready narration ref — a no-op (just echoes `result` back) whenever
  * there's no result, or its narration isn't `"pending"`.
+ *
+ * When `NEXT_PUBLIC_NARRATION_FIXTURE=1` (dev-only, see
+ * `src/lib/narration-fixture.ts`), skips polling entirely and always
+ * overrides `narration` with the fixture's "ready" ref, so the narrated
+ * reel's chrome (captions, track pill) can be browser-checked without an
+ * `ELEVENLABS_API_KEY`.
  */
 export function useNarration(
   result: ExperienceResult | undefined,
@@ -30,7 +37,14 @@ export function useNarration(
     setCurrent(result);
   }, [result]);
 
-  const pendingHash = result?.narration?.status === "pending" ? result.narration.hash : undefined;
+  const fixtureActive = isNarrationFixtureEnabled();
+  const fixtureNarration = useMemo(
+    () => (fixtureActive ? buildFixtureNarration() : undefined),
+    [fixtureActive],
+  );
+
+  const pendingHash =
+    !fixtureActive && result?.narration?.status === "pending" ? result.narration.hash : undefined;
 
   useEffect(() => {
     if (!pendingHash) {
@@ -81,6 +95,10 @@ export function useNarration(
       clearTimeout(timer);
     };
   }, [pendingHash, pollIntervalMs, pollTimeoutMs]);
+
+  if (fixtureNarration && current) {
+    return { ...current, narration: fixtureNarration };
+  }
 
   return current;
 }

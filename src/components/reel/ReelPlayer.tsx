@@ -22,6 +22,7 @@ export interface ReelPlayerProps {
 }
 
 const MISSING_AUDIO_LABEL = "Sin audio";
+const NARRATION_TRACK_LABEL = "Narración · Querétaro Romance";
 
 export function ReelPlayer({ result, audioSrc, trackName }: ReelPlayerProps) {
   const playerRef = useRef<PlayerRef>(null);
@@ -33,18 +34,32 @@ export function ReelPlayer({ result, audioSrc, trackName }: ReelPlayerProps) {
   const effectiveAudioSrc =
     audioAvailability.status === "available" ? audioAvailability.src : undefined;
 
+  const narration = result.narration?.status === "ready" ? result.narration : undefined;
+
   const durationInFrames = useMemo(
-    () => reelDurationInFrames(result.photos.length),
-    [result.photos.length],
+    () =>
+      reelDurationInFrames({
+        narrationDurationSec: narration?.durationSec,
+        photoCount: result.photos.length,
+      }),
+    [narration?.durationSec, result.photos.length],
   );
 
   const reelProps = useMemo(
-    () => reelPropsFromExperience(result, { audioSrc: effectiveAudioSrc, trackName }),
+    () =>
+      reelPropsFromExperience(result, {
+        audioSrc: effectiveAudioSrc,
+        trackName,
+        origin: typeof window !== "undefined" ? window.location.origin : undefined,
+      }),
     [result, effectiveAudioSrc, trackName],
   );
 
-  const resolvedTrackName =
-    audioAvailability.status === "missing" ? MISSING_AUDIO_LABEL : reelProps.trackName;
+  const resolvedTrackName = narration
+    ? NARRATION_TRACK_LABEL
+    : audioAvailability.status === "missing"
+      ? MISSING_AUDIO_LABEL
+      : reelProps.trackName;
 
   useEffect(() => {
     const player = playerRef.current;

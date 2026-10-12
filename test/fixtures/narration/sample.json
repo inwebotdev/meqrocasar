@@ -1,0 +1,20 @@
+{
+  "durationSec": 9.5,
+  "sentences": [
+    {
+      "text": "Imaginen su Atardecer Virreinal entre patios de cantera rosa.",
+      "startSec": 0,
+      "endSec": 3.2
+    },
+    {
+      "text": "La Casona de los Cinco Patios es el escenario principal.",
+      "startSec": 3.4,
+      "endSec": 6.3
+    },
+    {
+      "text": "Ahí, entre luz y color, su historia de amor cobra vida.",
+      "startSec": 6.5,
+      "endSec": 9.5
+    }
+  ]
+}

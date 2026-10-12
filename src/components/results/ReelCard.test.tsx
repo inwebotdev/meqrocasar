@@ -41,4 +41,51 @@ describe("ReelCard", () => {
     render(<ReelCard title="Título" trackName="Vals" narration={narration} />);
     expect(screen.getByText("Narración · Querétaro Romance")).toBeInTheDocument();
   });
+
+  it("while pending, shows the poster with a disabled play button instead of children", () => {
+    const narration: NarrationRef = {
+      status: "pending",
+      hash: HASH,
+      src: `/api/narration/${HASH}`,
+    };
+    render(
+      <ReelCard title="Título" trackName="Vals" narration={narration}>
+        <div data-testid="mock-player">Player</div>
+      </ReelCard>,
+    );
+
+    expect(screen.queryByTestId("mock-player")).not.toBeInTheDocument();
+    expect(screen.getByText("Preparando narración…")).toBeInTheDocument();
+
+    const playButton = screen.getByRole("button", { name: "Reproducir reel" });
+    expect(playButton).toBeDisabled();
+  });
+
+  it("once ready, renders children (the interactive player) instead of the poster", () => {
+    const narration: NarrationRef = {
+      status: "ready",
+      hash: HASH,
+      src: `/api/narration/${HASH}`,
+      durationSec: 10,
+      sentences: [],
+    };
+    render(
+      <ReelCard title="Título" trackName="Vals" narration={narration}>
+        <div data-testid="mock-player">Player</div>
+      </ReelCard>,
+    );
+
+    expect(screen.getByTestId("mock-player")).toBeInTheDocument();
+    expect(screen.queryByText("Preparando narración…")).not.toBeInTheDocument();
+  });
+
+  it("when narration is absent, renders children (the silent reel) with an enabled play button", () => {
+    render(
+      <ReelCard title="Título" trackName="Vals">
+        <div data-testid="mock-player">Player</div>
+      </ReelCard>,
+    );
+
+    expect(screen.getByTestId("mock-player")).toBeInTheDocument();
+  });
 });

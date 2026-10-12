@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 
+import type { NarrationRef } from "@/domain/audio/service";
 import { buildFallbackExperience } from "@/domain/experience/fallback";
 import type { QuizAnswers } from "@/domain/quiz/schema";
 
@@ -10,6 +11,22 @@ const ANSWERS: QuizAnswers = {
   setting: "night_casona",
   experience: "grand_traditional",
   mustHave: "fireworks",
+};
+
+const HASH = "a".repeat(64);
+
+const READY_NARRATION: NarrationRef = {
+  status: "ready",
+  hash: HASH,
+  src: `/api/narration/${HASH}`,
+  durationSec: 9.5,
+  sentences: [{ text: "Imaginen su boda.", startSec: 0, endSec: 2.5 }],
+};
+
+const PENDING_NARRATION: NarrationRef = {
+  status: "pending",
+  hash: HASH,
+  src: `/api/narration/${HASH}`,
 };
 
 function validReelProps() {
@@ -96,5 +113,84 @@ describe("reelPropsFromExperience", () => {
 
     expect(props.tagline).toBe(fallback.reelTagline);
     expect(props.trackName).toBe("Vals Huapango Queretano");
+  });
+
+  it("maps a ready narration, resolving a relative src against the given origin", () => {
+    const fallback = buildFallbackExperience(ANSWERS);
+    const result = {
+      ...fallback,
+      narration: READY_NARRATION,
+      meta: {
+        model: "fallback",
+        fallbackUsed: true,
+        durationMs: 0,
+        generatedAt: new Date(0).toISOString(),
+      },
+    };
+
+    const props = reelPropsFromExperience(result, { origin: "https://example.com" });
+
+    expect(props.narration).toEqual({
+      src: `https://example.com${READY_NARRATION.src}`,
+      durationSec: READY_NARRATION.durationSec,
+      sentences: READY_NARRATION.sentences,
+    });
+  });
+
+  it("leaves an already-absolute narration src untouched", () => {
+    const fallback = buildFallbackExperience(ANSWERS);
+    const absoluteNarration: NarrationRef = {
+      ...READY_NARRATION,
+      src: "https://cdn.example.com/narration.mp3",
+    };
+    const result = {
+      ...fallback,
+      narration: absoluteNarration,
+      meta: {
+        model: "fallback",
+        fallbackUsed: true,
+        durationMs: 0,
+        generatedAt: new Date(0).toISOString(),
+      },
+    };
+
+    const props = reelPropsFromExperience(result, { origin: "https://example.com" });
+
+    expect(props.narration?.src).toBe("https://cdn.example.com/narration.mp3");
+  });
+
+  it("omits narration when it's 'pending'", () => {
+    const fallback = buildFallbackExperience(ANSWERS);
+    const result = {
+      ...fallback,
+      narration: PENDING_NARRATION,
+      meta: {
+        model: "fallback",
+        fallbackUsed: true,
+        durationMs: 0,
+        generatedAt: new Date(0).toISOString(),
+      },
+    };
+
+    const props = reelPropsFromExperience(result, { origin: "https://example.com" });
+
+    expect(props.narration).toBeUndefined();
+  });
+
+  it("omits narration when the experience has none", () => {
+    const fallback = buildFallbackExperience(ANSWERS);
+    const result = {
+      ...fallback,
+      meta: {
+        model: "fallback",
+        fallbackUsed: true,
+        durationMs: 0,
+        generatedAt: new Date(0).toISOString(),
+      },
+    };
+
+    const props = reelPropsFromExperience(result);
+
+    expect(props.narration).toBeUndefined();
   });
 });
