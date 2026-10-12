@@ -126,11 +126,8 @@ export function ReelPlayer({ result, audioSrc, trackName }: ReelPlayerProps) {
         onToggleMute={handleToggleMute}
       />
       <ReelPlayButton playing={playing} onToggle={handleTogglePlay} />
-      <ReelBottomScrim
-        title={result.conceptTitle}
-        trackName={resolvedTrackName}
-        progress={currentFrame / durationInFrames}
-      />
+      {/* No `title`: the `WeddingReel` composition already renders it in its own bottom text block. */}
+      <ReelBottomScrim trackName={resolvedTrackName} progress={currentFrame / durationInFrames} />
     </div>
   );
 }

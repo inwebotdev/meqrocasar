@@ -89,7 +89,82 @@ function backgroundMusicVolume(
 const BOTTOM_SCRIM_GRADIENT =
   "linear-gradient(to top, rgba(20, 10, 12, 0.85) 0%, rgba(20, 10, 12, 0) 50%)";
 
-function TitleLayer({ title }: { title: string }) {
+// --- bottom text-block layout -----------------------------------------------
+//
+// `TitleLayer`, the narrative line and the narration caption used to be
+// three independent `AbsoluteFill`s, each anchoring itself to the bottom
+// with its own hand-picked padding. Because none of them accounted for the
+// others' height, a long 3-line title and a 3-line caption could (and did,
+// see the screenshot that prompted this file) overlap. They're now a single
+// bottom-anchored flex column — eyebrow, then a fixed-height title slot,
+// then a fixed-height caption/narrative slot — stacked with a fixed gap, so
+// no combination of title length and caption length can make them collide.
+
+/** Horizontal inset from both edges of the frame for the text column. */
+const TEXT_BLOCK_SIDE_PADDING = 56;
+
+/**
+ * Bottom inset for the text column — the same `96px` the `Rail` already
+ * sits above the frame's bottom edge with, so the column's floor lines up
+ * with the rail's instead of creeping into the 72px thumb-safe zone below
+ * both of them.
+ */
+const TEXT_BLOCK_BOTTOM_PADDING = 96;
+
+/** Keeps the text column clear of the `Rail`'s glass pill on the right. */
+const TEXT_BLOCK_MAX_WIDTH = 680;
+
+/** Fixed gap between the eyebrow, title and caption/narrative slots. */
+const TEXT_BLOCK_GAP = 20;
+
+const TITLE_LINE_HEIGHT = 1.1;
+const TITLE_MAX_LINES = 2;
+
+const CAPTION_FONT_SIZE = 40;
+const CAPTION_LINE_HEIGHT = 1.25;
+const CAPTION_MAX_LINES = 3;
+
+/** Fixed height (3 lines @ `CAPTION_FONT_SIZE`/`CAPTION_LINE_HEIGHT`) reserved for the caption/narrative slot, so neither resizing it (fewer lines) nor it disappearing between narration sentences ever shifts the title above it. */
+const CAPTION_BOX_HEIGHT = CAPTION_FONT_SIZE * CAPTION_LINE_HEIGHT * CAPTION_MAX_LINES;
+
+/**
+ * Title font size for a given title, scaled down so long titles still fit
+ * their 2-line box instead of overflowing into the caption below:
+ * `≤28` chars → 92px, `≤40` chars → 76px, longer → 64px (clamped to 2 lines
+ * by `TitleBlock`'s fixed-height box regardless).
+ */
+export function titleFontSize(title: string): number {
+  const length = title.trim().length;
+
+  if (length <= 28) return 92;
+  if (length <= 40) return 76;
+  return 64;
+}
+
+function Eyebrow() {
+  return (
+    <div
+      style={{
+        fontFamily: "'Plus Jakarta Sans', sans-serif",
+        fontSize: 24,
+        fontWeight: 700,
+        letterSpacing: 4,
+        color: "#E9A844",
+        textTransform: "uppercase",
+      }}
+    >
+      {EYEBROW_TEXT}
+    </div>
+  );
+}
+
+/**
+ * The reel's title: the original entrance animation (fade + rise over the
+ * first second) unchanged, now in a fixed-height box — sized from
+ * `titleFontSize` — that clamps at `TITLE_MAX_LINES` lines via `overflow:
+ * hidden`, so it never grows into the caption/narrative slot below it.
+ */
+function TitleBlock({ title }: { title: string }) {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
 
@@ -99,90 +174,88 @@ function TitleLayer({ title }: { title: string }) {
     config: { damping: 200 },
   });
 
+  const fontSize = titleFontSize(title);
+
   return (
-    <AbsoluteFill
+    <div
       style={{
-        pointerEvents: "none",
-        justifyContent: "flex-end",
-        padding: "0 56px 220px",
+        opacity: entrance,
+        transform: `translateY(${(1 - entrance) * 24}px)`,
+        height: fontSize * TITLE_LINE_HEIGHT * TITLE_MAX_LINES,
+        overflow: "hidden",
       }}
     >
       <div
         style={{
-          opacity: entrance,
-          transform: `translateY(${(1 - entrance) * 24}px)`,
+          fontFamily: "'Playfair Display', serif",
+          fontSize,
+          fontWeight: 700,
+          lineHeight: TITLE_LINE_HEIGHT,
+          color: "#FAF8F5",
+          display: "-webkit-box",
+          WebkitLineClamp: TITLE_MAX_LINES,
+          WebkitBoxOrient: "vertical",
+          overflow: "hidden",
         }}
       >
-        <div
-          style={{
-            fontFamily: "'Plus Jakarta Sans', sans-serif",
-            fontSize: 24,
-            fontWeight: 700,
-            letterSpacing: 4,
-            color: "#E9A844",
-            textTransform: "uppercase",
-            marginBottom: 12,
-          }}
-        >
-          {EYEBROW_TEXT}
-        </div>
-        <div
-          style={{
-            fontFamily: "'Playfair Display', serif",
-            fontSize: 96,
-            fontWeight: 700,
-            lineHeight: 1.05,
-            color: "#FAF8F5",
-          }}
-        >
-          {title}
-        </div>
+        {title}
       </div>
-    </AbsoluteFill>
+    </div>
   );
 }
 
-function NarrativeLine({ line }: { line: string }) {
-  const frame = useCurrentFrame();
-
-  const progress = interpolate(frame, [0, CROSSFADE_FRAMES], [0, 1], {
-    extrapolateLeft: "clamp",
-    extrapolateRight: "clamp",
-  });
-
+/** Shared fixed-height, fixed-font caption/narrative slot styling — see `CAPTION_BOX_HEIGHT`. */
+function TextSlotBox({ opacity, text }: { opacity: number; text: string }) {
   return (
-    <AbsoluteFill
-      style={{
-        pointerEvents: "none",
-        justifyContent: "flex-end",
-        padding: "0 56px 120px",
-      }}
-    >
+    <div style={{ height: CAPTION_BOX_HEIGHT, overflow: "hidden" }}>
       <div
         style={{
-          opacity: progress,
-          transform: `translateY(${(1 - progress) * 16}px)`,
+          opacity,
           fontFamily: "'Plus Jakarta Sans', sans-serif",
-          fontSize: 44,
-          lineHeight: 1.3,
+          fontSize: CAPTION_FONT_SIZE,
+          lineHeight: CAPTION_LINE_HEIGHT,
           color: "#F3F0EA",
-          maxWidth: "90%",
+          display: "-webkit-box",
+          WebkitLineClamp: CAPTION_MAX_LINES,
+          WebkitBoxOrient: "vertical",
+          overflow: "hidden",
         }}
       >
-        {line}
+        {text}
       </div>
-    </AbsoluteFill>
+    </div>
   );
 }
 
 /**
- * One narration sentence's caption, in the same bottom-scrim safe zone as
- * `NarrativeLine` (which it replaces when the reel has a narration): fades
- * in/out over `CAPTION_FADE_FRAMES` at the sentence's own `startSec`/
- * `endSec`, clamped to at most 3 lines.
+ * The static (non-narrated) per-scene narrative line, in the same fixed
+ * slot a narration caption uses: fades/rises in over `CROSSFADE_FRAMES`
+ * from `localFrame` (the current scene's own elapsed frames, i.e. what a
+ * `<Sequence>`-local `useCurrentFrame()` would have returned).
  */
-function Caption({ sentence }: { sentence: ReelNarrationSentence }) {
+function NarrativeSlot({ line, localFrame }: { line: string; localFrame: number }) {
+  const progress = interpolate(localFrame, [0, CROSSFADE_FRAMES], [0, 1], {
+    extrapolateLeft: "clamp",
+    extrapolateRight: "clamp",
+  });
+
+  return <TextSlotBox opacity={progress} text={line} />;
+}
+
+/**
+ * One narration sentence's caption, in the same fixed slot
+ * `NarrativeSlot` uses (which it replaces when the reel has a narration):
+ * fades in/out over `CAPTION_FADE_FRAMES` at the sentence's own
+ * `startSec`/`endSec`. Rendered (at opacity 0) even between sentences, so
+ * the slot's reserved height never collapses and the title above it never
+ * shifts.
+ */
+function CaptionSlot({ sentence }: { sentence: ReelNarrationSentence | undefined }) {
   const frame = useCurrentFrame();
+
+  if (!sentence) {
+    return <TextSlotBox opacity={0} text="" />;
+  }
 
   const startFrame = sentence.startSec * FPS;
   const endFrame = sentence.endSec * FPS;
@@ -195,31 +268,57 @@ function Caption({ sentence }: { sentence: ReelNarrationSentence }) {
     extrapolateLeft: "clamp",
     extrapolateRight: "clamp",
   });
-  const opacity = Math.min(fadeIn, fadeOut);
 
+  return <TextSlotBox opacity={Math.min(fadeIn, fadeOut)} text={sentence.text} />;
+}
+
+interface BottomTextBlockProps {
+  title: string;
+  narrated: boolean;
+  caption: ReelNarrationSentence | undefined;
+  narrativeLine: string;
+  narrativeLocalFrame: number;
+}
+
+/**
+ * The single bottom-safe-zone flex column: eyebrow → title → caption (when
+ * narrating) or the static narrative line (otherwise), each a fixed-height
+ * slot stacked with a fixed `TEXT_BLOCK_GAP`, anchored above the thumb-safe
+ * zone and the `Rail`. See the module-level comment above for why this
+ * replaced three independently-positioned layers.
+ */
+function BottomTextBlock({
+  title,
+  narrated,
+  caption,
+  narrativeLine,
+  narrativeLocalFrame,
+}: BottomTextBlockProps) {
   return (
     <AbsoluteFill
       style={{
         pointerEvents: "none",
+        display: "flex",
+        flexDirection: "column",
         justifyContent: "flex-end",
-        padding: "0 56px 140px",
+        padding: `0 ${TEXT_BLOCK_SIDE_PADDING}px ${TEXT_BLOCK_BOTTOM_PADDING}px`,
       }}
     >
       <div
         style={{
-          opacity,
-          fontFamily: "'Plus Jakarta Sans', sans-serif",
-          fontSize: 40,
-          lineHeight: 1.3,
-          color: "#F3F0EA",
-          maxWidth: "90%",
-          display: "-webkit-box",
-          WebkitLineClamp: 3,
-          WebkitBoxOrient: "vertical",
-          overflow: "hidden",
+          display: "flex",
+          flexDirection: "column",
+          gap: TEXT_BLOCK_GAP,
+          maxWidth: TEXT_BLOCK_MAX_WIDTH,
         }}
       >
-        {sentence.text}
+        <Eyebrow />
+        <TitleBlock title={title} />
+        {narrated ? (
+          <CaptionSlot sentence={caption} />
+        ) : (
+          <NarrativeSlot line={narrativeLine} localFrame={narrativeLocalFrame} />
+        )}
       </div>
     </AbsoluteFill>
   );
@@ -286,7 +385,16 @@ export function WeddingReel(props: ReelProps) {
   const { durationInFrames } = useVideoConfig();
   const outroFrom = durationInFrames - OUTRO_FRAMES;
   const windows = sceneWindows(durationInFrames, photos.length);
+  const narrated = narration !== undefined;
   const caption = narration ? activeSentence(narration.sentences, frame / FPS) : undefined;
+
+  const activeSceneIndex = windows.findIndex(
+    (window) => frame >= window.from && frame < window.from + window.durationInFrames,
+  );
+  const activeWindow = windows[activeSceneIndex] ?? windows[windows.length - 1];
+  const narrativeLocalFrame = activeWindow ? frame - activeWindow.from : 0;
+  const narrativeLine =
+    narrativeLines[activeSceneIndex] ?? narrativeLines[narrativeLines.length - 1] ?? "";
 
   return (
     <AbsoluteFill
@@ -297,21 +405,23 @@ export function WeddingReel(props: ReelProps) {
     >
       {photos.map((photo, index) => {
         const { from, durationInFrames: sceneDuration } = windows[index];
-        const line = narrativeLines[index] ?? narrativeLines[narrativeLines.length - 1];
 
         return (
           <Sequence key={photo.url} from={from} durationInFrames={sceneDuration}>
             <Slide photo={photo} index={index} />
-            {!narration && line && <NarrativeLine line={line} />}
           </Sequence>
         );
       })}
 
       <AbsoluteFill style={{ pointerEvents: "none", background: BOTTOM_SCRIM_GRADIENT }} />
 
-      <TitleLayer title={title} />
-
-      {caption && <Caption sentence={caption} />}
+      <BottomTextBlock
+        title={title}
+        narrated={narrated}
+        caption={caption}
+        narrativeLine={narrativeLine}
+        narrativeLocalFrame={narrativeLocalFrame}
+      />
 
       <Rail trackName={trackName} palette={palette} />
 

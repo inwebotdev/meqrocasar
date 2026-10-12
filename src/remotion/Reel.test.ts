@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { activeSentence, narrationMusicVolume } from "./Reel";
+import { activeSentence, narrationMusicVolume, titleFontSize } from "./Reel";
 import type { ReelNarrationSentence } from "./schema";
 import { FPS } from "./timing";
 
@@ -54,5 +54,26 @@ describe("narrationMusicVolume", () => {
 
     expect(volume).toBeGreaterThan(0.12);
     expect(volume).toBeLessThan(0.8);
+  });
+});
+
+describe("titleFontSize", () => {
+  it("uses 92px for titles up to 28 characters", () => {
+    expect(titleFontSize("Boda en la Casona")).toBe(92); // 17 chars
+    expect(titleFontSize("A".repeat(28))).toBe(92);
+  });
+
+  it("uses 76px for titles from 29 to 40 characters", () => {
+    expect(titleFontSize("A".repeat(29))).toBe(76);
+    expect(titleFontSize("A".repeat(40))).toBe(76);
+  });
+
+  it("uses 64px for titles longer than 40 characters", () => {
+    expect(titleFontSize("A".repeat(41))).toBe(64);
+    expect(titleFontSize("Casona de los Cinco Patios bajo el atardecer")).toBe(64); // 45 chars
+  });
+
+  it("trims surrounding whitespace before measuring length", () => {
+    expect(titleFontSize(`  ${"A".repeat(28)}  `)).toBe(92);
   });
 });

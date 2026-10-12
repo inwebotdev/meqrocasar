@@ -68,21 +68,29 @@ export function ReelPlayButton({ playing, onToggle, disabled = false }: ReelPlay
 }
 
 export interface ReelBottomScrimProps {
-  title: string;
+  /**
+   * Omit (or pass `""`) when the title is already rendered elsewhere —
+   * e.g. the `WeddingReel` composition's own bottom text block — so it
+   * doesn't render twice. `ReelPoster`'s static preview (no composition
+   * underneath) still passes it.
+   */
+  title?: string;
   trackName: string;
   /** 0..1 */
   progress: number;
 }
 
-/** Bottom scrim: title, audio track pill and progress bar. */
+/** Bottom scrim: title (when given), audio track pill and progress bar. */
 export function ReelBottomScrim({ title, trackName, progress }: ReelBottomScrimProps) {
   const clampedProgress = Math.min(1, Math.max(0, progress));
 
   return (
     <div className="absolute inset-x-0 bottom-0 z-20 flex flex-col justify-end space-y-space-xs bg-gradient-to-t from-black via-black/70 to-transparent p-space-md pt-space-xl text-on-primary">
-      <h4 className="font-headline-sm text-headline-sm leading-tight font-bold text-on-primary">
-        {title}
-      </h4>
+      {title && (
+        <h4 className="font-headline-sm text-headline-sm leading-tight font-bold text-on-primary">
+          {title}
+        </h4>
+      )}
       <div className="flex w-fit items-center gap-space-xs rounded-full bg-white/15 px-space-sm py-1 backdrop-blur-md">
         <Icon name="music_note" size={14} className="text-tertiary-fixed-dim" />
         <span className="max-w-[210px] truncate font-label-sm text-label-sm text-on-primary">
