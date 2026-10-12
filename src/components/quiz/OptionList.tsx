@@ -4,22 +4,28 @@ import { cn } from "@/lib/cn";
 
 import { iconForOption } from "./facet-icon";
 
-export interface QuickStripProps {
+export interface OptionListProps {
   options: readonly ResolvedOption[];
   activeIndex: number;
   selectedId: string | undefined;
+  /** Only navigates the carousel to this option's index — never chooses it. */
   onSelect: (index: number) => void;
 }
 
-export function QuickStrip({ options, activeIndex, selectedId, onSelect }: QuickStripProps) {
+/**
+ * Grid of every option in the current step, titled with the exact count so
+ * it reads as "browse", not "advance" — the only way to advance is the
+ * carousel's "Elegir" button.
+ */
+export function OptionList({ options, activeIndex, selectedId, onSelect }: OptionListProps) {
   return (
     <section className="flex flex-col gap-2 rounded-xl bg-surface-container-low p-3 shadow-sm">
       <div className="flex items-center justify-between">
         <span className="font-label-md text-label-md font-bold tracking-wider text-on-surface-variant uppercase">
-          Alternativas Rápidas
+          Opciones de esta pregunta
         </span>
         <span className="font-label-sm text-label-sm font-bold text-secondary">
-          {options.length} Colecciones SECTUR
+          {options.length} opciones
         </span>
       </div>
       <div className={cn("grid gap-2", options.length === 3 ? "grid-cols-3" : "grid-cols-4")}>
