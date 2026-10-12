@@ -102,6 +102,18 @@ const envSchema = z.object({
   UNSPLASH_ACCESS_KEY: optionalSecret,
   GOOGLE_PLACES_API_KEY: optionalSecret,
   PLACES_PHOTO_CACHE_DIR: z.string().trim().min(1).default(".cache/places"),
+  /**
+   * ElevenLabs (https://elevenlabs.io/app/voice-library — pick a
+   * Mexican-Spanish female voice and copy its Voice ID into
+   * `ELEVENLABS_VOICE_ID`). Both optional: without a key or a voice id,
+   * `src/lib/narration-deps.ts` never builds a provider and every reel's
+   * narration resolves `"disabled"` (see `createNarrationService`).
+   */
+  ELEVENLABS_API_KEY: optionalSecret,
+  ELEVENLABS_VOICE_ID: optionalSecret,
+  ELEVENLABS_MODEL_ID: z.string().trim().min(1).default("eleven_multilingual_v2"),
+  /** Disk cache for narration mp3s + their sentence-timing sidecar JSON (see `src/domain/audio/store.ts`), relative to the repo root. */
+  NARRATION_CACHE_DIR: z.string().trim().min(1).default(".cache/narration"),
   APP_URL: z.string().url().default("http://localhost:3000"),
 });
 

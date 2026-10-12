@@ -109,3 +109,36 @@ export function mockUnsplashSearch(
     return respond({ request, query, callIndex });
   });
 }
+
+export const ELEVENLABS_TTS_URL_PATTERN =
+  "https://api.elevenlabs.io/v1/text-to-speech/:voiceId/with-timestamps";
+
+export interface ElevenLabsTtsRequestInfo {
+  request: Request;
+  /** Parsed JSON request body (`text`, `model_id`, `voice_settings`, …). */
+  body: Record<string, unknown>;
+  /** The `:voiceId` path param. */
+  voiceId: string;
+  /** 1-based index of this call, scoped to this handler instance. */
+  callIndex: number;
+}
+
+/**
+ * Builds a request-body-aware MSW handler for ElevenLabs'
+ * `POST /v1/text-to-speech/{voiceId}/with-timestamps` endpoint. `respond`
+ * receives the parsed body and the `voiceId` path param, so a test can
+ * assert on either and return a fixture `{ audio_base64, alignment }`
+ * response (or an error status).
+ */
+export function mockElevenLabsTts(
+  respond: (info: ElevenLabsTtsRequestInfo) => Promise<Response> | Response,
+): RequestHandler {
+  let callIndex = 0;
+
+  return http.post(ELEVENLABS_TTS_URL_PATTERN, async ({ request, params }) => {
+    callIndex += 1;
+    const body = (await request.clone().json()) as Record<string, unknown>;
+    const voiceId = Array.isArray(params.voiceId) ? params.voiceId[0]! : params.voiceId;
+    return respond({ request, body, voiceId, callIndex });
+  });
+}

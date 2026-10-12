@@ -9,11 +9,13 @@ import { clearResult, loadResult } from "@/lib/results-store";
 import { clearTranscript } from "@/lib/transcript-store";
 
 import { ResultsView } from "./ResultsView";
+import { useNarration } from "./useNarration";
 
 export function ResultsScreen() {
   const router = useRouter();
   const toast = useToast();
   const [result, setResult] = useState<ExperienceResult | undefined | null>(null);
+  const narratedResult = useNarration(result ?? undefined);
 
   useEffect(() => {
     const stored = loadResult();
@@ -46,6 +48,8 @@ export function ResultsScreen() {
     return null;
   }
 
+  const effectiveResult = narratedResult ?? result;
+
   return (
     <div className="flex flex-col gap-y-space-lg">
       <div className="flex items-center justify-between pt-space-xs">
@@ -60,7 +64,7 @@ export function ResultsScreen() {
           Volver a empezar
         </button>
       </div>
-      <ResultsView result={result} />
+      <ResultsView result={effectiveResult} />
     </div>
   );
 }

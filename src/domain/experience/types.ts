@@ -1,3 +1,4 @@
+import type { NarrationRef } from "@/domain/audio/service";
 import type { Facets } from "@/domain/kb/taxonomy";
 import type { Transcript } from "@/domain/quiz/transcript";
 import type { QuizAnswers } from "@/domain/quiz/schema";
@@ -87,5 +88,7 @@ export interface ExperienceResult {
   facets?: Facets;
   /** A short weekend-itinerary hint, e.g. "Viernes: ... · Sábado: ... · Domingo: ...". */
   itineraryHint?: string;
+  /** Omitted when narration is disabled (no ElevenLabs key/voice id configured) — see `createNarrationService`. */
+  narration?: NarrationRef;
   meta: ExperienceMeta;
 }

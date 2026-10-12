@@ -30,7 +30,11 @@ export function ResultsView({ result }: ResultsViewProps) {
       />
 
       <section id="reel">
-        <ReelCard title={result.conceptTitle} trackName={REEL_TRACK_NAME}>
+        <ReelCard
+          title={result.conceptTitle}
+          trackName={REEL_TRACK_NAME}
+          narration={result.narration}
+        >
           <ReelErrorBoundary
             fallback={
               <ReelPoster

@@ -1,5 +1,6 @@
 import { z } from "zod";
 
+import { NarrationRefSchema } from "@/domain/audio/service";
 import { FacetsSchema } from "@/domain/kb/taxonomy";
 import { PHOTO_ID_VALUES } from "@/domain/media/photos";
 import { QuizAnswersSchema } from "@/domain/quiz/schema";
@@ -119,6 +120,8 @@ export const ExperienceResultSchema = z.object({
   facets: FacetsSchema.optional(),
   /** A short weekend-itinerary hint, e.g. "Viernes: ... · Sábado: ... · Domingo: ...". */
   itineraryHint: z.string().max(200).optional(),
+  /** Omitted when narration is disabled (no ElevenLabs key/voice id configured) — see `createNarrationService`. */
+  narration: NarrationRefSchema.optional(),
   meta: z.object({
     model: z.string(),
     fallbackUsed: z.boolean(),

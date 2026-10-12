@@ -7,6 +7,7 @@ import { createStaticImageProvider } from "@/domain/images/static-fallback";
 import { createUnsplashImageProvider } from "@/domain/images/unsplash";
 
 import { getEnv } from "./env";
+import { getNarrationDeps } from "./narration-deps";
 
 const APP_TITLE = "Querétaro Romance";
 const EXPERIENCE_TEMPERATURE = 0.7;
@@ -39,7 +40,9 @@ function buildService(): ExperienceService {
     ? createUnsplashImageProvider({ accessKey: env.UNSPLASH_ACCESS_KEY, fallback: staticImages })
     : staticImages;
 
-  return createExperienceService({ llm, images });
+  const narration = getNarrationDeps().service;
+
+  return createExperienceService({ llm, images, narration });
 }
 
 let cachedService: ExperienceService | undefined;

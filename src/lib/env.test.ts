@@ -142,4 +142,35 @@ describe("parseEnv", () => {
 
     expect(env.OPENROUTER_PROVIDER_ORDER).toEqual(["Cerebras", "Groq", "SambaNova"]);
   });
+
+  it("defaults the ElevenLabs/narration vars when absent", () => {
+    const env = parseEnv({ NODE_ENV: "test" });
+
+    expect(env.ELEVENLABS_API_KEY).toBeUndefined();
+    expect(env.ELEVENLABS_VOICE_ID).toBeUndefined();
+    expect(env.ELEVENLABS_MODEL_ID).toBe("eleven_multilingual_v2");
+    expect(env.NARRATION_CACHE_DIR).toBe(".cache/narration");
+  });
+
+  it("treats empty ELEVENLABS_API_KEY/ELEVENLABS_VOICE_ID as absent", () => {
+    const env = parseEnv({ NODE_ENV: "test", ELEVENLABS_API_KEY: "", ELEVENLABS_VOICE_ID: "  " });
+
+    expect(env.ELEVENLABS_API_KEY).toBeUndefined();
+    expect(env.ELEVENLABS_VOICE_ID).toBeUndefined();
+  });
+
+  it("keeps non-empty ElevenLabs vars and a custom NARRATION_CACHE_DIR/ELEVENLABS_MODEL_ID", () => {
+    const env = parseEnv({
+      NODE_ENV: "test",
+      ELEVENLABS_API_KEY: " sk-el-test ",
+      ELEVENLABS_VOICE_ID: " voice-123 ",
+      ELEVENLABS_MODEL_ID: "eleven_turbo_v2_5",
+      NARRATION_CACHE_DIR: "/tmp/narration-cache",
+    });
+
+    expect(env.ELEVENLABS_API_KEY).toBe("sk-el-test");
+    expect(env.ELEVENLABS_VOICE_ID).toBe("voice-123");
+    expect(env.ELEVENLABS_MODEL_ID).toBe("eleven_turbo_v2_5");
+    expect(env.NARRATION_CACHE_DIR).toBe("/tmp/narration-cache");
+  });
 });

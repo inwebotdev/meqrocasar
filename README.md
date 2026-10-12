@@ -135,6 +135,10 @@ Definidas en [`.env.dist`](.env.dist); copia ese archivo a `.env` y completa lo 
 | `UNSPLASH_ACCESS_KEY`            | No        | Se usan las fotos estáticas curadas en `src/domain/images/static-fallback.ts`.                                                                                                                                                                                                  |
 | `GOOGLE_PLACES_API_KEY`          | No        | `kool run kb:ingest` no corre y `GET /api/places/photo` responde 404 `places_disabled`; la app sigue funcionando sobre la base de conocimiento ya committeada.                                                                                                                  |
 | `PLACES_PHOTO_CACHE_DIR`         | No        | Default `.cache/places` (ruta relativa a la raíz del repo, ignorada por git; cache de 30 días para fotos de Places).                                                                                                                                                            |
+| `ELEVENLABS_API_KEY`             | No        | La narración del reel queda `"disabled"` — el reel se reproduce en silencio (ver [Narración del reel](#narración-del-reel)).                                                                                                                                                    |
+| `ELEVENLABS_VOICE_ID`            | No        | Igual que sin `ELEVENLABS_API_KEY`: narración `"disabled"` hasta tener ambas.                                                                                                                                                                                                   |
+| `ELEVENLABS_MODEL_ID`            | No        | Default `eleven_multilingual_v2`.                                                                                                                                                                                                                                               |
+| `NARRATION_CACHE_DIR`            | No        | Default `.cache/narration` (ruta relativa a la raíz del repo, ignorada por git; cache permanente de mp3 + timings por hash).                                                                                                                                                    |
 | `APP_URL`                        | No        | Default `http://localhost:3000` (header `HTTP-Referer` de OpenRouter y URLs absolutas).                                                                                                                                                                                         |
 | `APP_PORT`                       | No        | Default `3000`, puerto publicado por `docker-compose`.                                                                                                                                                                                                                          |
 
@@ -191,6 +195,50 @@ tuvieran vacíos. Es idempotente — una segunda corrida solo reprocesa lo que s
 umbral — y reporta tokens y costo estimado (`src/domain/ai/pricing.ts`) por modelo usado. Si el
 modelo primario configurado es lento/inestable para el tamaño de lote completo, `--batch-size=<n>`
 reduce el lote (p. ej. `kool exec app yarn kb:enrich --batch-size=2`).
+
+## Narración del reel
+
+El reel se narra con una voz femenina de acento mexicano (ElevenLabs, modelo multilingüe) que lee
+`reelScript` — un guion de 2-3 oraciones en es-MX, ya incluido en todo `ExperienceResult`
+(generado por el modelo o, sin `OPENROUTER_API_KEY`, compuesto de forma determinista a partir del
+concepto y el recinto principal). Esta capa produce y sirve el audio; la capa siguiente lo
+conecta a la composición de Remotion con subtítulos sincronizados.
+
+**Configuración:**
+
+1. Abre la [Voice Library de ElevenLabs](https://elevenlabs.io/app/voice-library), filtra por
+   idioma español (México) y voz femenina, y elige una. Copia su **Voice ID** (botón "Use" o los
+   tres puntos → "Copy Voice ID").
+2. En `.env`: `ELEVENLABS_API_KEY=<tu api key>` y `ELEVENLABS_VOICE_ID=<el id copiado>`.
+   `ELEVENLABS_MODEL_ID` ya tiene el default correcto (`eleven_multilingual_v2`).
+3. Sin ambas variables, `src/lib/narration-deps.ts` nunca construye el proveedor y
+   `narration.ensure(...)` siempre resuelve `"disabled"` — el reel se reproduce en silencio, sin
+   llamar nunca a ElevenLabs.
+
+**Flujo:** `ExperienceService.generate` llama a `narration.ensure(reelScript, { budgetMs: 8000 })`
+en paralelo con la resolución de fotos. Un hit de cache (`sha256(voiceId + modelId + reelScript)`,
+ver `narrationHash`) resuelve `"ready"` sin red; si no, la síntesis arranca y se espera hasta 8 s —
+lista a tiempo, resuelve `"ready"`; si no, sigue en segundo plano (mismo patrón fire-and-forget que
+`src/domain/quiz/prefetch.ts`) y el resultado queda `"pending"`. El cliente (`useNarration`, usado
+por `ResultsScreen`) sondea `GET /api/narration/<hash>/meta` cada 2 s hasta 60 s mientras esté
+pendiente, y al quedar lista actualiza el resultado guardado (`saveResult`) con el ref final.
+
+**Cache en disco** (`NARRATION_CACHE_DIR`, default `.cache/narration`, ignorado por git):
+
+```
+<hash>.mp3       # audio/mpeg
+<hash>.json      # { script, voiceId, modelId, durationSec, sentences, createdAt }
+<hash>.pending   # marcador mientras la síntesis está en curso (borrado al terminar o fallar)
+```
+
+`GET /api/narration/<hash>` sirve el mp3 con `Cache-Control: public, max-age=31536000, immutable`
+y soporta `Range` (para que `<audio>`/el player de Remotion puedan buscar); `GET
+/api/narration/<hash>/meta` expone `{ status, durationSec?, sentences? }` para el sondeo del
+cliente.
+
+**Costo:** cada guion son ~300 caracteres; con el plan Starter de ElevenLabs (~30,000
+caracteres/mes) eso cubre ~100 reels/mes — el mismo orden de magnitud que la estimación de
+`docs/ai-step-benchmark.md` para la generación de texto.
 
 ## Rendimiento y costo
 

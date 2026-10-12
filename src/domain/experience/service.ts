@@ -4,6 +4,7 @@ import {
   buildExperienceMessages,
 } from "@/domain/ai/experience-prompt";
 import type { LlmAttempt, StructuredClient } from "@/domain/ai/structured";
+import type { NarrationRef, NarrationService } from "@/domain/audio/service";
 import { buildDigest } from "@/domain/kb/digest";
 import { loadKb } from "@/domain/kb/load";
 import type { Facets } from "@/domain/kb/taxonomy";
@@ -34,6 +35,8 @@ export interface ExperienceServiceDeps {
   /** Omitted (e.g. no OPENROUTER_API_KEY) to always use the local fallback. */
   llm?: StructuredClient<LlmExperienceV2>;
   images: ImageProvider;
+  /** Omitted to never attach `narration` to the result (same effect as it resolving "disabled"). */
+  narration?: NarrationService;
   /** Defaults to `loadKb()`. */
   kb?: Kb;
   /** Monotonic-ish millis clock, injected so tests never depend on real time. Defaults to `Date.now`. */
@@ -99,6 +102,22 @@ function mergePhotos(
   return result.slice(0, 3);
 }
 
+/** Budget `narration.ensure` gets before `generate` leaves it running in the background and reports "pending" instead. */
+const NARRATION_BUDGET_MS = 8000;
+
+/** `undefined` when there's no narration service, or it resolved "disabled" — never attached to the result either way. */
+async function resolveNarration(
+  narration: NarrationService | undefined,
+  script: string,
+): Promise<NarrationRef | undefined> {
+  if (!narration) {
+    return undefined;
+  }
+
+  const ref = await narration.ensure(script, { budgetMs: NARRATION_BUDGET_MS });
+  return ref.status === "disabled" ? undefined : ref;
+}
+
 interface FallbackContext {
   input: ExperienceServiceInput;
   facets: Facets;
@@ -111,6 +130,7 @@ interface FallbackContext {
 
 async function buildLocalFallback(
   images: ImageProvider,
+  narration: NarrationService | undefined,
   legacyAnswersForImages: QuizAnswers,
   ctx: FallbackContext,
 ): Promise<ExperienceResult> {
@@ -121,11 +141,15 @@ async function buildLocalFallback(
     ? buildFallbackExperienceFromFacets(ctx.facets, ctx.transcript)
     : buildFallbackExperience(ctx.input);
 
-  const photos = await images.resolve(fallback.searchQueries, legacyAnswersForImages);
+  const [photos, narrationRef] = await Promise.all([
+    images.resolve(fallback.searchQueries, legacyAnswersForImages),
+    resolveNarration(narration, fallback.reelScript),
+  ]);
 
   return {
     ...fallback,
     photos,
+    narration: narrationRef,
     meta: {
       model: "local-fallback",
       fallbackUsed: true,
@@ -169,7 +193,7 @@ export function createExperienceService(deps: ExperienceServiceDeps): Experience
       const fallbackCtx: FallbackContext = { input, facets, transcript, start, now, clock };
 
       if (!deps.llm) {
-        return buildLocalFallback(deps.images, legacyAnswersForImages, fallbackCtx);
+        return buildLocalFallback(deps.images, deps.narration, legacyAnswersForImages, fallbackCtx);
       }
 
       const digest = buildDigest(facets, EXPERIENCE_DIGEST_OPTIONS);
@@ -177,7 +201,7 @@ export function createExperienceService(deps: ExperienceServiceDeps): Experience
       const llmResult = await deps.llm.generate(messages);
 
       if (!llmResult.ok) {
-        return buildLocalFallback(deps.images, legacyAnswersForImages, {
+        return buildLocalFallback(deps.images, deps.narration, legacyAnswersForImages, {
           ...fallbackCtx,
           attempts: llmResult.attempts,
         });
@@ -185,10 +209,10 @@ export function createExperienceService(deps: ExperienceServiceDeps): Experience
 
       const venues = assembleVenuesFromKb(llmResult.value.recommendedVenues, facets, kb);
       const venuePhotos = photosFromVenues(venues, 2);
-      const searchedPhotos = await deps.images.resolve(
-        llmResult.value.searchQueries,
-        legacyAnswersForImages,
-      );
+      const [searchedPhotos, narration] = await Promise.all([
+        deps.images.resolve(llmResult.value.searchQueries, legacyAnswersForImages),
+        resolveNarration(deps.narration, llmResult.value.reelScript),
+      ]);
       const photos = mergePhotos(venuePhotos, searchedPhotos);
 
       const candidate: ExperienceResult = {
@@ -207,6 +231,7 @@ export function createExperienceService(deps: ExperienceServiceDeps): Experience
         transcript,
         facets,
         itineraryHint: llmResult.value.itineraryHint,
+        narration,
         meta: {
           model: llmResult.model,
           fallbackUsed: false,
@@ -226,7 +251,7 @@ export function createExperienceService(deps: ExperienceServiceDeps): Experience
       // Defensive: the assembled result somehow failed validation (e.g. an
       // unexpected empty venues array). Fall back to the local experience
       // rather than ever returning something that doesn't match the contract.
-      return buildLocalFallback(deps.images, legacyAnswersForImages, {
+      return buildLocalFallback(deps.images, deps.narration, legacyAnswersForImages, {
         ...fallbackCtx,
         attempts: llmResult.attempts,
       });

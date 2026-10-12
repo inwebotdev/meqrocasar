@@ -1,14 +1,38 @@
 import type { ReactNode } from "react";
 
-import { Icon } from "@/components/ui";
+import { Icon, Pill } from "@/components/ui";
 import { ReelPoster } from "@/components/reel/ReelPoster";
+import type { NarrationRef } from "@/domain/audio/service";
 
 export interface ReelCardProps {
   title: string;
   trackName: string;
   durationLabel?: string;
   posterUrl?: string;
+  /** The reel's narration ref, when the experience has one — only its status drives the pill below; the player itself is wired in a later layer. */
+  narration?: NarrationRef;
   children?: ReactNode;
+}
+
+/** A small status pill for the narration track — `undefined`/`"disabled"` renders nothing. */
+function NarrationPill({ narration }: { narration?: NarrationRef }) {
+  if (!narration || narration.status === "disabled") {
+    return null;
+  }
+
+  if (narration.status === "pending") {
+    return (
+      <Pill tone="secondary-soft" icon="hourglass_top">
+        Preparando narración…
+      </Pill>
+    );
+  }
+
+  return (
+    <Pill tone="secondary-soft" icon="record_voice_over">
+      Narración · Querétaro Romance
+    </Pill>
+  );
 }
 
 export function ReelCard({
@@ -16,6 +40,7 @@ export function ReelCard({
   trackName,
   durationLabel = "11 seg • HD",
   posterUrl,
+  narration,
   children,
 }: ReelCardProps) {
   return (
@@ -34,6 +59,7 @@ export function ReelCard({
       <div className="group relative aspect-[9/16] w-full cursor-pointer overflow-hidden rounded-xl bg-inverse-surface shadow-xl">
         {children ?? <ReelPoster title={title} trackName={trackName} posterUrl={posterUrl} />}
       </div>
+      <NarrationPill narration={narration} />
     </div>
   );
 }

@@ -9,6 +9,7 @@ import type {
   StructuredFailure,
   StructuredSuccess,
 } from "@/domain/ai/structured";
+import type { NarrationRef, NarrationService } from "@/domain/audio/service";
 import type { ImageProvider } from "@/domain/images/provider";
 import type { Kb, KbVenue } from "@/domain/kb/types";
 import type { QuizAnswers } from "@/domain/quiz/schema";
@@ -315,5 +316,100 @@ describe("createExperienceService — legacy QuizAnswers input", () => {
     expect(result.answers).toEqual(answers);
     // Deterministic: the legacy fallback tables are keyed by exactly this answer combo.
     expect(result.conceptTitle).toBe("Día de Vendimia en los Viñedos de Ezequiel Montes");
+  });
+});
+
+function makeNarrationStub(ref: NarrationRef): { service: NarrationService; scripts: string[] } {
+  const scripts: string[] = [];
+  const service: NarrationService = {
+    ensure: async (script) => {
+      scripts.push(script);
+      return ref;
+    },
+  };
+  return { service, scripts };
+}
+
+describe("createExperienceService — narration wiring", () => {
+  it("attaches a 'ready' narration ref from the LLM path, ensuring it with the LLM's reelScript", async () => {
+    const llmValue = loadValidV2();
+    const llm = makeLlmStub({
+      ok: true,
+      value: llmValue,
+      model: "primary-model",
+      attempts: [{ model: "primary-model", outcome: "ok", durationMs: 90 }],
+    });
+    const { provider: images } = makeImagesStub([THREE_PHOTOS]);
+    const ref: NarrationRef = {
+      status: "ready",
+      hash: "a".repeat(64),
+      src: "/api/narration/" + "a".repeat(64),
+      durationSec: 4.2,
+      sentences: [{ text: llmValue.reelScript, startSec: 0, endSec: 4.2 }],
+    };
+    const { service: narration, scripts } = makeNarrationStub(ref);
+
+    const service = createExperienceService({
+      llm,
+      images,
+      kb,
+      narration,
+      now: () => 1000,
+      clock: fixedClock,
+    });
+    const result = await service.generate({ transcript });
+
+    expect(ExperienceResultSchema.safeParse(result).success).toBe(true);
+    expect(result.narration).toEqual(ref);
+    expect(scripts).toEqual([llmValue.reelScript]);
+  });
+
+  it("attaches a 'pending' narration ref from the local-fallback path, ensuring it with the deterministic reelScript", async () => {
+    const { provider: images } = makeImagesStub([THREE_PHOTOS]);
+    const ref: NarrationRef = {
+      status: "pending",
+      hash: "b".repeat(64),
+      src: "/api/narration/" + "b".repeat(64),
+    };
+    const { service: narration, scripts } = makeNarrationStub(ref);
+
+    const service = createExperienceService({
+      images,
+      kb,
+      narration,
+      now: () => 1000,
+      clock: fixedClock,
+    });
+    const result = await service.generate({ transcript });
+
+    expect(ExperienceResultSchema.safeParse(result).success).toBe(true);
+    expect(result.narration).toEqual(ref);
+    expect(scripts).toEqual([result.reelScript]);
+  });
+
+  it("omits narration entirely when the service resolves 'disabled'", async () => {
+    const { provider: images } = makeImagesStub([THREE_PHOTOS]);
+    const { service: narration } = makeNarrationStub({ status: "disabled" });
+
+    const service = createExperienceService({
+      images,
+      kb,
+      narration,
+      now: () => 1000,
+      clock: fixedClock,
+    });
+    const result = await service.generate({ transcript });
+
+    expect(result.narration).toBeUndefined();
+    expect(ExperienceResultSchema.safeParse(result).success).toBe(true);
+  });
+
+  it("omits narration entirely when no narration service is configured", async () => {
+    const { provider: images } = makeImagesStub([THREE_PHOTOS]);
+
+    const service = createExperienceService({ images, kb, now: () => 1000, clock: fixedClock });
+    const result = await service.generate({ transcript });
+
+    expect(result.narration).toBeUndefined();
   });
 });
