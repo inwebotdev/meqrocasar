@@ -10,7 +10,7 @@ import {
 } from "./schema";
 
 describe("LLM_EXPERIENCE_V2_JSON_SCHEMA", () => {
-  it("is an object schema requiring all seven V2 response keys", () => {
+  it("is an object schema requiring all eight V2 response keys", () => {
     expect(LLM_EXPERIENCE_V2_JSON_SCHEMA.type).toBe("object");
     expect(LLM_EXPERIENCE_V2_JSON_SCHEMA.required).toEqual(
       expect.arrayContaining([
@@ -21,9 +21,10 @@ describe("LLM_EXPERIENCE_V2_JSON_SCHEMA", () => {
         "recommendedVenues",
         "reelTagline",
         "itineraryHint",
+        "reelScript",
       ]),
     );
-    expect(LLM_EXPERIENCE_V2_JSON_SCHEMA.required).toHaveLength(7);
+    expect(LLM_EXPERIENCE_V2_JSON_SCHEMA.required).toHaveLength(8);
   });
 });
 
@@ -52,6 +53,8 @@ describe("LlmExperienceV2Schema", () => {
     ],
     reelTagline: "Romance Virreinal con Cata de Vinos",
     itineraryHint: "Viernes: cata en La Redonda · Sábado: ceremonia en Lagunillas",
+    reelScript:
+      "Imaginen su Noche Virreinal entre los muros de cantera de la Casona de los Cinco Patios. Ahí, entre candiles y aromas de temporada, su historia de amor cobra vida.",
   };
 
   it("accepts a well-formed response referencing a venue by id", () => {
@@ -62,6 +65,18 @@ describe("LlmExperienceV2Schema", () => {
     const { itineraryHint, ...withoutHint } = validPayload;
     expect(itineraryHint).toBeDefined();
     expect(() => LlmExperienceV2Schema.parse(withoutHint)).toThrow();
+  });
+
+  it("rejects a response missing reelScript", () => {
+    const { reelScript, ...withoutScript } = validPayload;
+    expect(reelScript).toBeDefined();
+    expect(() => LlmExperienceV2Schema.parse(withoutScript)).toThrow();
+  });
+
+  it("rejects a reelScript longer than 320 chars", () => {
+    expect(() =>
+      LlmExperienceV2Schema.parse({ ...validPayload, reelScript: "x".repeat(321) }),
+    ).toThrow();
   });
 
   it("rejects a recommendedVenues entry using the legacy name/zone shape", () => {
@@ -94,6 +109,8 @@ describe("ExperienceResultSchema", () => {
       ],
       narrative: "Primer párrafo.\n\nSegundo párrafo.",
       reelTagline: "Vendimia Dorada",
+      reelScript:
+        "Imaginen su Vendimia Dorada entre las hileras de Viñedos La Redonda. Ahí, entre copas de vino y luz de atardecer, su historia de amor cobra vida.",
       searchQueries: ["vineyard wedding", "golden hour wedding", "wine cellar reception"],
       venues: [
         {

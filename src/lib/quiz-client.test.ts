@@ -57,6 +57,8 @@ const validResult: ExperienceResult = {
   narrative:
     "Una celebración íntima entre viñedos centenarios, con atardeceres dorados y copas de vino bajo las estrellas de Ezequiel Montes.",
   reelTagline: "Su historia, entre viñedos y atardeceres.",
+  reelScript:
+    "Imaginen su boda entre las hileras doradas de los viñedos. Ahí, entre copas de vino y atardeceres, su historia de amor cobra vida.",
   searchQueries: ["boda viñedo querétaro", "atardecer ezequiel montes", "cata de vinos boda"],
   venues: [],
   photos: [

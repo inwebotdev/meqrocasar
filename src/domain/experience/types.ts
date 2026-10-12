@@ -73,6 +73,8 @@ export interface ExperienceResult {
   palette: PaletteColor[];
   narrative: string;
   reelTagline: string;
+  /** es-MX voice-over script for the reel, 2-3 sentences, ≤ 320 chars. */
+  reelScript: string;
   searchQueries: string[];
   venues: ExperienceVenue[];
   /** Always exactly 3 photos. */

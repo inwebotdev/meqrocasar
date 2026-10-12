@@ -173,6 +173,21 @@ function buildReelTagline(answers: QuizAnswers): string {
   return `${STYLE_TAGLINE[answers.style]} ${MUST_HAVE_TAGLINE[answers.mustHave]}`;
 }
 
+/**
+ * Deterministic es-MX voice-over script, composed from the concept
+ * title, the principal venue and its zone — no LLM involved, so the
+ * fallback path still ships a narratable `reelScript`. Kept within the
+ * same 2-3 sentence / ≤ 320 char shape the LLM is asked for, second
+ * person plural ("ustedes").
+ */
+function buildReelScript(conceptTitle: string, principalVenue?: Venue): string {
+  if (!principalVenue) {
+    return `Imaginen ${conceptTitle}, una historia de amor escrita en cada rincón de Querétaro. Ahí, entre luz y color, su celebración cobra vida.`;
+  }
+
+  return `Imaginen ${conceptTitle}, con ${principalVenue.name} como escenario principal en ${principalVenue.zone}. Ahí, entre luz y color, su historia de amor cobra vida.`;
+}
+
 function reasonFor(answers: QuizAnswers, venueTags: readonly string[]): string {
   const overlap = venueTags.slice(0, 2).join(" y ");
   const styleTitle = getOption("style", answers.style).title;
@@ -208,6 +223,7 @@ export function buildFallbackExperience(answers: QuizAnswers): Omit<ExperienceRe
     palette: [...PALETTES[answers.style]],
     narrative: buildNarrative(answers, rankedVenues),
     reelTagline: buildReelTagline(answers),
+    reelScript: buildReelScript(CONCEPT_TITLES[answers.style][answers.setting], rankedVenues[0]),
     searchQueries: buildSearchQueries(answers),
     venues,
     photos: photosForAnswers(answers, 3),

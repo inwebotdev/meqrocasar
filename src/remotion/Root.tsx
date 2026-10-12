@@ -33,6 +33,8 @@ const SAMPLE_PROPS: ReelProps = {
     { hex: "#2F4839", name: "Verde Musgo" },
   ],
   trackName: "Vals Huapango Queretano",
+  script:
+    "Imaginen su Atardecer Virreinal entre patios de cantera rosa, con la Casona de los Cinco Patios como escenario principal. Ahí, entre luz y color, su historia de amor cobra vida.",
 };
 
 /**

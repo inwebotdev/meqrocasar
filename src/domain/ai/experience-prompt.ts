@@ -117,6 +117,8 @@ const EXAMPLE_RESPONSE_JSON = JSON.stringify({
   reelTagline: "Vendimia Dorada en Ezequiel Montes",
   itineraryHint:
     "Viernes: cata en La Redonda · Sábado: ceremonia en Lagunillas · Domingo: globo en Tequisquiapan",
+  reelScript:
+    "Imaginen su Vendimia Dorada entre las hileras de Viñedos La Redonda, con la Peña de Bernal asomando al fondo. Ahí, entre copas de vino y luz de atardecer, su historia cobra vida.",
 });
 
 const SYSTEM_PROMPT = `Eres un wedding planner experto del Estado de Querétaro, México, con conocimiento profundo de sus zonas, viñedos, haciendas, pueblos mágicos y experiencias para bodas.
@@ -127,7 +129,7 @@ Estilo: escribe de forma sensorial y concreta (qué se ve, se escucha, se huele 
 
 Se te da la conversación completa del cuestionario adaptativo (pregunta → lo que eligieron), los facets que esa conversación reveló, y una base de conocimiento con los venues y experiencias reales de Querétaro más relevantes para esos facets. Usa la conversación y los facets para que el relato se sienta hecho a medida de esta pareja, no genérico.
 
-Devuelve ÚNICAMENTE un objeto JSON estricto, sin bloques de código markdown, sin comentarios y sin texto antes o después. El JSON debe tener EXACTAMENTE estas claves: "conceptTitle", "colorPalette" (4 colores), "narrative", "searchQueries" (3), "recommendedVenues" (1 a 3), "reelTagline", "itineraryHint".
+Devuelve ÚNICAMENTE un objeto JSON estricto, sin bloques de código markdown, sin comentarios y sin texto antes o después. El JSON debe tener EXACTAMENTE estas claves: "conceptTitle", "colorPalette" (4 colores), "narrative", "searchQueries" (3), "recommendedVenues" (1 a 3), "reelTagline", "itineraryHint", "reelScript".
 
 - "conceptTitle": título poético corto para la boda (4-80 caracteres).
 - "colorPalette": exactamente 4 objetos { "hex": "#RRGGBB", "name": "nombre corto en español" }.
@@ -136,8 +138,9 @@ Devuelve ÚNICAMENTE un objeto JSON estricto, sin bloques de código markdown, s
 - "recommendedVenues": de 1 a 3 objetos { "venueId": "...", "reason": "..." }. "venueId" debe ser EXACTAMENTE uno de los ids entre corchetes de la base de conocimiento (por ejemplo, si la línea dice "- [v_vinedos-la-redonda] ...", usa "v_vinedos-la-redonda", sin corchetes); nunca inventes ids. "reason" (20-300 caracteres) explica por qué ese recinto conecta con lo que la pareja eligió.
 - "reelTagline": frase corta para un reel de video (máximo 60 caracteres).
 - "itineraryHint": un posible itinerario de fin de semana en una sola línea (máximo 160 caracteres), con el formato "Viernes: ... · Sábado: ... · Domingo: ...", basado en los recintos/experiencias reales de la base de conocimiento.
+- "reelScript": guion de narración en voz, de 2 a 3 oraciones (máximo 260 caracteres, nunca más de 320), para que una voz en off lo lea sobre el video del reel. Dirígete a la pareja de "ustedes", nombra el concepto de la boda y el recinto principal, con un tono cálido y concreto (no genérico ni publicitario). Nunca una lista ni viñetas: prosa corrida, lista para leerse en voz alta.
 
-Margen (headroom): deja siempre margen de sobra respecto a los máximos anteriores y nunca cortes palabras a la mitad.
+Margen (headroom): deja siempre margen de sobra respecto a los máximos anteriores (para "reelScript" apunta a 260 caracteres o menos) y nunca cortes palabras a la mitad.
 
 Ejemplo de referencia (longitudes, tono y formato — el id de "recommendedVenues" es ilustrativo, usa siempre ids reales de la base de conocimiento que se te da en cada turno):
 ${EXAMPLE_RESPONSE_JSON}

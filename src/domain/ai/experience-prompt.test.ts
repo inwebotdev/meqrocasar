@@ -68,6 +68,7 @@ describe("buildExperienceMessages", () => {
       "recommendedVenues",
       "reelTagline",
       "itineraryHint",
+      "reelScript",
     ]) {
       expect(systemContent).toContain(key);
     }

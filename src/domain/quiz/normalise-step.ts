@@ -319,15 +319,15 @@ function collectRawStrings(raw: ReturnType<typeof RawGeneratedStepSchema.parse>)
   ];
 }
 
-/** Derives the step's `selectLabel` from its (already cleaned/truncated) topic — the model no longer sends one. */
-function selectLabelForTopic(topic: string): string {
-  return truncateField(
-    `Elegir esta ${topic.toLowerCase()}`,
-    STEP_FIELD_MAX.selectLabel,
-    [],
-    "select-label",
-  );
-}
+/**
+ * The step's `selectLabel` — the model no longer sends one (see the module
+ * doc comment). A fixed, grammatically invariant phrase rather than one
+ * composed from the step's topic: "Elegir esta {topic}" broke gender
+ * agreement for masculine topics (e.g. "Elegir esta entorno" instead of
+ * "Elegir este entorno"), so this sidesteps the problem entirely instead
+ * of trying to classify every topic's gender.
+ */
+const SELECT_LABEL = "Elegir esta opción";
 
 /**
  * Normalises a raw LLM step (any `unknown` — typically `RawGeneratedStep`-
@@ -364,7 +364,7 @@ export function normaliseGeneratedStep(raw: unknown): NormaliseStepResult {
     "helper",
   );
 
-  const selectLabel = selectLabelForTopic(topic);
+  const selectLabel = SELECT_LABEL;
 
   const doneReasonRaw =
     step.doneReason !== undefined ? stripped(step.doneReason, fixes) : undefined;

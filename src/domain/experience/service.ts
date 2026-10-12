@@ -199,6 +199,7 @@ export function createExperienceService(deps: ExperienceServiceDeps): Experience
         })),
         narrative: llmResult.value.narrative,
         reelTagline: llmResult.value.reelTagline,
+        reelScript: llmResult.value.reelScript,
         searchQueries: llmResult.value.searchQueries,
         venues,
         photos,

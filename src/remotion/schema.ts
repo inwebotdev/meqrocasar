@@ -24,6 +24,8 @@ export const ReelPropsSchema = z.object({
     .length(4),
   trackName: z.string().max(60),
   audioSrc: z.string().optional(),
+  /** es-MX voice-over script for the narration track — wired into the composition in the next layer. */
+  script: z.string().max(320),
 });
 
 export type ReelProps = z.infer<typeof ReelPropsSchema>;
@@ -72,5 +74,6 @@ export function reelPropsFromExperience(
     palette: result.palette,
     trackName: options?.trackName ?? DEFAULT_TRACK_NAME,
     audioSrc: options?.audioSrc,
+    script: result.reelScript,
   };
 }

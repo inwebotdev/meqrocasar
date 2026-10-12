@@ -15,6 +15,8 @@ const validResult: ExperienceResult = {
   ],
   narrative: "Una celebración íntima entre viñedos centenarios y atardeceres dorados.",
   reelTagline: "Su historia, entre viñedos y atardeceres.",
+  reelScript:
+    "Imaginen su boda entre las hileras doradas de los viñedos. Ahí, entre copas de vino y atardeceres, su historia de amor cobra vida.",
   searchQueries: ["boda viñedo querétaro"],
   venues: [],
   photos: [

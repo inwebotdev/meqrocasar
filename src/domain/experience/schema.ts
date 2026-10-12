@@ -36,6 +36,13 @@ export const LlmExperienceV2Schema = z.object({
     .max(3),
   reelTagline: z.string().min(4).max(60),
   itineraryHint: z.string().min(4).max(160),
+  /**
+   * 2-3 sentence es-MX narration script for the reel's voice-over: names
+   * the concept and the principal venue, warm and concrete, second
+   * person plural, no lists. Headroom below the hard `max(320)` so a
+   * model response that runs slightly long still validates comfortably.
+   */
+  reelScript: z.string().min(20).max(320),
 });
 
 export type LlmExperienceV2 = z.infer<typeof LlmExperienceV2Schema>;
@@ -99,6 +106,8 @@ export const ExperienceResultSchema = z.object({
   palette: z.array(PaletteColorSchema).length(4),
   narrative: z.string().min(1),
   reelTagline: z.string().min(1),
+  /** es-MX voice-over script for the reel, 2-3 sentences, ≤ 320 chars. */
+  reelScript: z.string().min(1).max(320),
   searchQueries: z.array(z.string().min(1)),
   venues: z.array(ExperienceVenueSchema),
   photos: z.array(ExperiencePhotoSchema).length(3),

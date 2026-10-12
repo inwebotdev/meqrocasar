@@ -69,4 +69,14 @@ describe("buildFallbackExperience", () => {
       expect(fallback.venues[1]?.role).toBe("destacada");
     }
   });
+
+  it("composes a reelScript naming the concept title and the principal venue, within 320 chars", () => {
+    for (const answers of combos) {
+      const fallback = buildFallbackExperience(answers);
+      expect(fallback.reelScript.length).toBeGreaterThan(0);
+      expect(fallback.reelScript.length).toBeLessThanOrEqual(320);
+      expect(fallback.reelScript).toContain(fallback.conceptTitle);
+      expect(fallback.reelScript).toContain(fallback.venues[0]?.name);
+    }
+  });
 });

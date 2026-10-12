@@ -211,11 +211,14 @@ describe("normaliseGeneratedStep", () => {
     expect(destinoResult.step.options[0]?.badge).toBe("Destino");
   });
 
-  it("derives selectLabel from the step's topic", () => {
-    const result = normaliseGeneratedStep(validStep({ topic: "Experiencia" }));
-    expect(result.ok).toBe(true);
-    if (!result.ok) return;
-    expect(result.step.selectLabel).toBe("Elegir esta experiencia");
+  it("always derives the invariant selectLabel, regardless of the step's topic", () => {
+    const feminine = normaliseGeneratedStep(validStep({ topic: "Experiencia" }));
+    const masculine = normaliseGeneratedStep(validStep({ topic: "Entorno" }));
+    expect(feminine.ok).toBe(true);
+    expect(masculine.ok).toBe(true);
+    if (!feminine.ok || !masculine.ok) return;
+    expect(feminine.step.selectLabel).toBe("Elegir esta opción");
+    expect(masculine.step.selectLabel).toBe("Elegir esta opción");
   });
 
   it("rejects with reason 'language' when any field contains CJK text", () => {
