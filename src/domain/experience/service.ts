@@ -12,6 +12,7 @@ import type { Kb } from "@/domain/kb/types";
 import type { ImageProvider } from "@/domain/images/provider";
 import type { QuizAnswers } from "@/domain/quiz/schema";
 import {
+  chosenRefs,
   foldFacets,
   legacyAnswersFromFacets,
   transcriptFromLegacyAnswers,
@@ -198,7 +199,13 @@ export function createExperienceService(deps: ExperienceServiceDeps): Experience
         return buildLocalFallback(deps.images, deps.narration, legacyAnswersForImages, fallbackCtx);
       }
 
-      const digest = buildDigest(facets, EXPERIENCE_DIGEST_OPTIONS);
+      const { venueIds: chosenVenueIds } = chosenRefs(transcript.entries);
+      const digest = buildDigest(facets, {
+        ...EXPERIENCE_DIGEST_OPTIONS,
+        zone: facets.zone,
+        style: facets.style,
+        chosenVenueIds,
+      });
       const messages = buildExperienceMessages({ transcript, facets, digest });
       const llmResult = await deps.llm.generate(messages);
 
@@ -211,6 +218,8 @@ export function createExperienceService(deps: ExperienceServiceDeps): Experience
 
       const venues = assembleVenuesFromKb(llmResult.value.recommendedVenues, facets, kb, {
         isUsable: deps.isPlacesUsable,
+        chosenVenueIds,
+        zone: facets.zone,
       });
       const venuePhotos = photosFromVenues(venues, 2);
       const [searchedPhotos, narration] = await Promise.all([

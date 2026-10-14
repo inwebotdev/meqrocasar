@@ -234,4 +234,81 @@ describe("assembleVenuesFromKb", () => {
 
     expect(venues[0]?.photoUrl).toBe("/api/places/photo?name=places%2Fabc%2Fphotos%2Fp1&w=800");
   });
+
+  it("sorts a chosen venue first even when the model recommended another venue first", () => {
+    const kb = makeKb([PLACES_PHOTO_VENUE, REGISTRY_PHOTO_VENUE, NO_RECOMMENDATION_VENUE]);
+
+    const venues = assembleVenuesFromKb(
+      [
+        { venueId: "v_hacienda-lagunillas", reason: "x".repeat(25) },
+        { venueId: "v_vinedos-la-redonda", reason: "y".repeat(25) },
+      ],
+      facets,
+      kb,
+      { chosenVenueIds: ["v_vinedos-la-redonda"] },
+    );
+
+    expect(venues[0]?.id).toBe("v_vinedos-la-redonda");
+    expect(venues[0]?.role).toBe("principal");
+  });
+
+  it("never invents a recommendation for a chosen venue the model didn't recommend at all (avoids crowding out what the model actually grounded the story in)", () => {
+    const kb = makeKb([PLACES_PHOTO_VENUE, REGISTRY_PHOTO_VENUE]);
+
+    const venues = assembleVenuesFromKb(
+      [{ venueId: "v_hacienda-lagunillas", reason: "x".repeat(25) }],
+      facets,
+      kb,
+      { chosenVenueIds: ["v_vinedos-la-redonda"] },
+    );
+
+    // The model's one real recommendation stays principal — "chosen" only
+    // reorders what the model already recommended, never adds to it.
+    expect(venues[0]?.id).toBe("v_hacienda-lagunillas");
+  });
+
+  it("prefers fill-in venues in the known zone over a higher-scoring venue in another zone", () => {
+    const sameZoneVenueA = makeVenue({
+      id: "v_same-zone-a",
+      name: "Hacienda Misma Zona A",
+      zone: "ezequiel_montes",
+      facets: {
+        styles: ["modern_elegant"], // no overlap with `facets` → lower scoreVenue
+        settings: ["night_casona"],
+        scale: ["medium"],
+        experiences: [],
+        budget: "medio",
+      },
+    });
+    const sameZoneVenueB = makeVenue({
+      id: "v_same-zone-b",
+      name: "Hacienda Misma Zona B",
+      zone: "ezequiel_montes",
+      facets: {
+        styles: ["modern_elegant"],
+        settings: ["night_casona"],
+        scale: ["medium"],
+        experiences: [],
+        budget: "medio",
+      },
+    });
+    const otherZoneVenue = makeVenue({
+      id: "v_other-zone",
+      name: "Casona Otra Zona",
+      zone: "bernal",
+      facets: {
+        styles: ["rustic_vineyard"], // matches `facets.style` → higher scoreVenue
+        settings: ["day_vineyard"],
+        scale: ["medium"],
+        experiences: [],
+        budget: "medio",
+      },
+    });
+    const kbWithAll = makeKb([sameZoneVenueA, sameZoneVenueB, otherZoneVenue]);
+
+    const venues = assembleVenuesFromKb([], facets, kbWithAll, { zone: "ezequiel_montes" });
+
+    expect(venues.map((venue) => venue.id).sort()).toEqual(["v_same-zone-a", "v_same-zone-b"]);
+    expect(venues.some((venue) => venue.id === "v_other-zone")).toBe(false);
+  });
 });

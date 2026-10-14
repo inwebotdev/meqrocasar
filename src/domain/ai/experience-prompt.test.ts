@@ -113,6 +113,47 @@ describe("buildExperienceMessages", () => {
   it("exports a stable prompt version string", () => {
     expect(EXPERIENCE_PROMPT_VERSION.length).toBeGreaterThan(0);
   });
+
+  it("states the known-zone/day-trip rule and lists the chosen venue first, for a Tequisquiapan transcript", () => {
+    const tequisTranscript: Transcript = {
+      entries: [
+        ...makeTranscript().entries,
+        {
+          stepId: "zona",
+          question: "¿En qué zona imaginan celebrar?",
+          topic: "Zona",
+          chosen: {
+            id: "tequisquiapan",
+            title: "Tequisquiapan",
+            summary: "Celebran en el Pueblo Mágico de Tequisquiapan.",
+            facets: { zone: "tequisquiapan" },
+            refs: { venueIds: ["v_hacienda-atongo"], experienceIds: [] },
+          },
+        },
+      ],
+    };
+    const tequisFacets: Facets = { ...facets, zone: "tequisquiapan" };
+    const digest = buildDigest(tequisFacets, {
+      maxVenues: 20,
+      maxExperiences: 10,
+      maxChars: 5000,
+      zone: "tequisquiapan",
+      chosenVenueIds: ["v_hacienda-atongo"],
+    });
+    const messages = buildExperienceMessages({
+      transcript: tequisTranscript,
+      facets: tequisFacets,
+      digest,
+    });
+
+    const systemContent = messages[0]?.content ?? "";
+    expect(systemContent).toContain("day trip");
+    expect(systemContent).toContain("debe aparecer en");
+
+    const userContent = messages[1]?.content ?? "";
+    expect(userContent).toContain("Lugares que la pareja YA eligió");
+    expect(userContent).toContain("Hacienda Atongo");
+  });
 });
 
 describe("buildMessages (legacy answers)", () => {

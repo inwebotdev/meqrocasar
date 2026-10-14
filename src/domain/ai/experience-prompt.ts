@@ -1,7 +1,14 @@
 import type { Digest } from "@/domain/kb/digest";
 import { buildDigest } from "@/domain/kb/digest";
+import { loadKb } from "@/domain/kb/load";
 import { FACET_KEYS, facetLabel, type FacetKey, type Facets } from "@/domain/kb/taxonomy";
-import { foldFacets, transcriptFromLegacyAnswers, type Transcript } from "@/domain/quiz/transcript";
+import type { Kb } from "@/domain/kb/types";
+import {
+  chosenRefs,
+  foldFacets,
+  transcriptFromLegacyAnswers,
+  type Transcript,
+} from "@/domain/quiz/transcript";
 import type { QuizAnswers } from "@/domain/quiz/schema";
 
 import type { ChatMessage } from "./structured";
@@ -129,6 +136,10 @@ Estilo: escribe de forma sensorial y concreta (qué se ve, se escucha, se huele 
 
 Se te da la conversación completa del cuestionario adaptativo (pregunta → lo que eligieron), los facets que esa conversación reveló, y una base de conocimiento con los venues y experiencias reales de Querétaro más relevantes para esos facets. Usa la conversación y los facets para que el relato se sienta hecho a medida de esta pareja, no genérico.
 
+Los "Facets conocidos de la pareja" son hechos fijos: nunca los contradigas. Cuando la pareja ya conoce una zona (ver el facet "Zona"), el concepto, "narrative", "itineraryHint" y "reelScript" deben permanecer dentro de esa zona — solo puedes mencionar un lugar de otra zona si el itinerario lo propone explícitamente como una escapada de un día ("day trip") y lo dices así con esas palabras.
+
+Si se te da una lista de "Lugares que la pareja YA eligió durante el cuestionario", esos lugares son obligatorios: cada uno debe aparecer en "recommendedVenues", en ese mismo orden, antes de cualquier otro lugar que tú añadas (nunca inventes un motivo para omitirlos).
+
 Devuelve ÚNICAMENTE un objeto JSON estricto, sin bloques de código markdown, sin comentarios y sin texto antes o después. El JSON debe tener EXACTAMENTE estas claves: "conceptTitle", "colorPalette" (4 colores), "narrative", "searchQueries" (3), "recommendedVenues" (1 a 3), "reelTagline", "itineraryHint", "reelScript".
 
 - "conceptTitle": título poético corto para la boda (4-80 caracteres).
@@ -151,13 +162,32 @@ export interface BuildExperienceMessagesInput {
   transcript: Transcript;
   facets: Facets;
   digest: Digest;
+  /** Defaults to `loadKb()` — only used to resolve the chosen venues' names for the prompt. */
+  kb?: Kb;
+}
+
+/** Renders the venues the couple already chose during the quiz (from `chosenRefs`) as a "must appear first" list for the model. */
+function describeChosenVenues(chosenVenueIds: readonly string[], kb: Kb): string {
+  if (chosenVenueIds.length === 0) {
+    return "(ninguno — recomienda los más relevantes de la base de conocimiento)";
+  }
+
+  const names = chosenVenueIds
+    .map((id) => kb.venues.find((venue) => venue.id === id)?.name)
+    .filter((name): name is string => name !== undefined);
+
+  return names.length > 0 ? names.map((name) => `- ${name}`).join("\n") : "(ninguno)";
 }
 
 function buildUserMessage(input: BuildExperienceMessagesInput): string {
-  const { transcript, facets, digest } = input;
+  const { transcript, facets, digest, kb = loadKb() } = input;
+  const { venueIds: chosenVenueIds } = chosenRefs(transcript.entries);
 
-  return `Facets conocidos de la pareja:
+  return `Facets conocidos de la pareja (hechos fijos, no los contradigas):
 ${describeKnownFacets(facets)}
+
+Lugares que la pareja YA eligió durante el cuestionario (deben aparecer primero en "recommendedVenues", en este mismo orden):
+${describeChosenVenues(chosenVenueIds, kb)}
 
 Conversación completa del cuestionario (pregunta → lo que eligieron):
 ${describeTranscript(transcript)}
@@ -190,7 +220,13 @@ export function buildExperienceMessages(input: BuildExperienceMessagesInput): Ch
 export function buildMessages(answers: QuizAnswers): ChatMessage[] {
   const transcript = transcriptFromLegacyAnswers(answers);
   const facets = foldFacets(transcript.entries);
-  const digest = buildDigest(facets, EXPERIENCE_DIGEST_OPTIONS);
+  const { venueIds: chosenVenueIds } = chosenRefs(transcript.entries);
+  const digest = buildDigest(facets, {
+    ...EXPERIENCE_DIGEST_OPTIONS,
+    zone: facets.zone,
+    style: facets.style,
+    chosenVenueIds,
+  });
 
   return buildExperienceMessages({ transcript, facets, digest });
 }
