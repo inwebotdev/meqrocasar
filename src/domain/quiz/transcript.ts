@@ -13,6 +13,7 @@ import {
   type SettingValue,
   type StyleValue,
 } from "@/domain/kb/taxonomy";
+import type { Kb } from "@/domain/kb/types";
 import { matchVenue } from "@/domain/venues/match";
 
 import {
@@ -80,6 +81,76 @@ export type Transcript = z.infer<typeof TranscriptSchema>;
  */
 export function foldFacets(entries: readonly TranscriptEntry[]): Facets {
   return entries.reduce<Facets>((facets, entry) => ({ ...facets, ...entry.chosen.facets }), {});
+}
+
+/**
+ * Facts one entry's choice implies beyond the facets the model explicitly
+ * attached to it: choosing a venue implies that venue's `zone` (and its
+ * `style`, when the venue has exactly one — an ambiguous multi-style venue
+ * implies nothing about style), and choosing exactly one experience implies
+ * that experience's taxonomy `experience` value. A chosen venue and a
+ * chosen experience are independent — an entry can carry refs to both (or
+ * neither), and each is checked on its own.
+ */
+export function impliedFacets(entry: TranscriptEntry, kb: Kb): Facets {
+  const facets: Facets = {};
+  const { refs } = entry.chosen;
+
+  const venueId = refs.venueIds[0];
+  if (venueId !== undefined) {
+    const venue = kb.venues.find((candidate) => candidate.id === venueId);
+    if (venue) {
+      facets.zone = venue.zone;
+      if (venue.facets.styles.length === 1) {
+        facets.style = venue.facets.styles[0];
+      }
+    }
+  }
+
+  if (refs.experienceIds.length === 1) {
+    const experience = kb.experiences.find((candidate) => candidate.id === refs.experienceIds[0]);
+    const experienceValue = experience?.facets.experiences[0];
+    if (experienceValue !== undefined) {
+      facets.experience = experienceValue;
+    }
+  }
+
+  return facets;
+}
+
+/**
+ * The couple's known facets after folding both what the model explicitly
+ * set (`foldFacets`, later entries win) and what their choices imply
+ * (`impliedFacets`, also later-wins among themselves) — explicit always
+ * wins over implied for a given key, so an explicit later contradiction
+ * (rare, but possible from an older/legacy entry) overrides what an
+ * earlier choice merely implied.
+ */
+export function knownFacets(entries: readonly TranscriptEntry[], kb: Kb): Facets {
+  const implied = entries.reduce<Facets>(
+    (facets, entry) => ({ ...facets, ...impliedFacets(entry, kb) }),
+    {},
+  );
+  const explicit = foldFacets(entries);
+
+  return { ...implied, ...explicit };
+}
+
+/** Every venue/experience id chosen anywhere in the transcript, deduplicated, in first-seen order. */
+export function chosenRefs(entries: readonly TranscriptEntry[]): TranscriptRefs {
+  const venueIds: string[] = [];
+  const experienceIds: string[] = [];
+
+  for (const entry of entries) {
+    for (const id of entry.chosen.refs.venueIds) {
+      if (!venueIds.includes(id)) venueIds.push(id);
+    }
+    for (const id of entry.chosen.refs.experienceIds) {
+      if (!experienceIds.includes(id)) experienceIds.push(id);
+    }
+  }
+
+  return { venueIds, experienceIds };
 }
 
 /**

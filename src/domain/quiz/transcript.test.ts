@@ -1,15 +1,22 @@
 import { describe, expect, it } from "vitest";
 
+import { loadKb } from "@/domain/kb/load";
+
 import { getStep } from "./questions";
 import type { QuizAnswers } from "./schema";
 import {
+  chosenRefs,
   entryFromCuratedOption,
   foldFacets,
+  impliedFacets,
+  knownFacets,
   transcriptFromLegacyAnswers,
   transcriptToLegacyAnswers,
   type Transcript,
   type TranscriptEntry,
 } from "./transcript";
+
+const kb = loadKb();
 
 function makeEntry(facets: TranscriptEntry["chosen"]["facets"]): TranscriptEntry {
   return {
@@ -43,6 +50,93 @@ describe("foldFacets", () => {
 
   it("returns an empty object for no entries", () => {
     expect(foldFacets([])).toEqual({});
+  });
+});
+
+describe("impliedFacets", () => {
+  it("implies zone and style from a chosen venue with exactly one style", () => {
+    const entry = makeEntry({});
+    entry.chosen.refs.venueIds = ["v_vinedos-la-redonda"];
+
+    expect(impliedFacets(entry, kb)).toEqual({ zone: "ezequiel_montes", style: "rustic_vineyard" });
+  });
+
+  it("implies only zone when the chosen venue has more than one style", () => {
+    const entry = makeEntry({});
+    entry.chosen.refs.venueIds = ["v_bodegas-de-cote"];
+
+    expect(impliedFacets(entry, kb)).toEqual({ zone: "ezequiel_montes" });
+  });
+
+  it("implies an experience facet from a single chosen experience ref", () => {
+    const entry = makeEntry({});
+    entry.chosen.refs.experienceIds = ["cata-vinos-de-cote"];
+
+    expect(impliedFacets(entry, kb)).toEqual({ experience: "wine_tasting" });
+  });
+
+  it("implies nothing when there are no refs", () => {
+    expect(impliedFacets(makeEntry({}), kb)).toEqual({});
+  });
+
+  it("implies nothing from an unknown venue or experience id", () => {
+    const entry = makeEntry({});
+    entry.chosen.refs.venueIds = ["v_does-not-exist"];
+    entry.chosen.refs.experienceIds = ["does-not-exist"];
+
+    expect(impliedFacets(entry, kb)).toEqual({});
+  });
+});
+
+describe("knownFacets", () => {
+  it("folds implied facets from a chosen venue alongside explicit ones", () => {
+    const entries = [makeEntry({ scale: "intimate" })];
+    entries[0]!.chosen.refs.venueIds = ["v_vinedos-la-redonda"];
+
+    expect(knownFacets(entries, kb)).toEqual({
+      scale: "intimate",
+      zone: "ezequiel_montes",
+      style: "rustic_vineyard",
+    });
+  });
+
+  it("lets an explicit facet win over what an entry's venue would otherwise imply", () => {
+    const entry = makeEntry({ zone: "bernal" });
+    entry.chosen.refs.venueIds = ["v_vinedos-la-redonda"];
+
+    expect(knownFacets([entry], kb).zone).toBe("bernal");
+  });
+
+  it("lets a later implied value win over an earlier one for the same key", () => {
+    const first = makeEntry({});
+    first.chosen.refs.venueIds = ["v_vinedos-la-redonda"];
+    const second = makeEntry({});
+    second.chosen.refs.venueIds = ["v_bernal-pueblo-magico"];
+
+    expect(knownFacets([first, second], kb).zone).toBe("bernal");
+  });
+
+  it("returns an empty object for no entries", () => {
+    expect(knownFacets([], kb)).toEqual({});
+  });
+});
+
+describe("chosenRefs", () => {
+  it("collects every venue/experience id chosen across entries, deduplicated", () => {
+    const first = makeEntry({});
+    first.chosen.refs.venueIds = ["v_vinedos-la-redonda"];
+    const second = makeEntry({});
+    second.chosen.refs.venueIds = ["v_vinedos-la-redonda", "v_bernal-pueblo-magico"];
+    second.chosen.refs.experienceIds = ["cata-vinos-de-cote"];
+
+    expect(chosenRefs([first, second])).toEqual({
+      venueIds: ["v_vinedos-la-redonda", "v_bernal-pueblo-magico"],
+      experienceIds: ["cata-vinos-de-cote"],
+    });
+  });
+
+  it("returns empty arrays for no entries", () => {
+    expect(chosenRefs([])).toEqual({ venueIds: [], experienceIds: [] });
   });
 });
 
