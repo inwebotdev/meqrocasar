@@ -26,6 +26,10 @@ const NARRATION_TRACK_LABEL = "Narración · Querétaro Romance";
 
 export function ReelPlayer({ result, audioSrc, trackName }: ReelPlayerProps) {
   const playerRef = useRef<PlayerRef>(null);
+  // The narration is played by a plain <audio> element kept in sync with the
+  // player (play/pause/seek/mute) instead of a Remotion <Audio> inside the
+  // composition: the Player's pooled audio tags never picked the track up.
+  const narrationRef = useRef<HTMLAudioElement>(null);
   const [currentFrame, setCurrentFrame] = useState(0);
   const [playing, setPlaying] = useState(false);
   const [muted, setMuted] = useState(false);
@@ -65,12 +69,39 @@ export function ReelPlayer({ result, audioSrc, trackName }: ReelPlayerProps) {
     const player = playerRef.current;
     if (!player) return;
 
+    const syncNarration = (frame: number, forceSeek = false) => {
+      const audio = narrationRef.current;
+      if (!audio) return;
+      const expected = frame / FPS;
+      if (forceSeek || Math.abs(audio.currentTime - expected) > 0.35) {
+        audio.currentTime = expected;
+      }
+    };
     const handleFrameUpdate = ({ detail }: { detail: { frame: number } }) => {
       setCurrentFrame(detail.frame);
+      const audio = narrationRef.current;
+      if (audio && !audio.paused) syncNarration(detail.frame);
     };
-    const handlePlay = () => setPlaying(true);
-    const handlePause = () => setPlaying(false);
-    const handleEnded = () => setPlaying(false);
+    const handlePlay = () => {
+      setPlaying(true);
+      const audio = narrationRef.current;
+      if (audio) {
+        syncNarration(player.getCurrentFrame(), true);
+        void audio.play().catch(() => undefined);
+      }
+    };
+    const handlePause = () => {
+      setPlaying(false);
+      narrationRef.current?.pause();
+    };
+    const handleEnded = () => {
+      setPlaying(false);
+      const audio = narrationRef.current;
+      if (audio) {
+        audio.pause();
+        audio.currentTime = 0;
+      }
+    };
 
     player.addEventListener("frameupdate", handleFrameUpdate);
     player.addEventListener("play", handlePlay);
@@ -96,9 +127,11 @@ export function ReelPlayer({ result, audioSrc, trackName }: ReelPlayerProps) {
     if (player.isMuted()) {
       player.unmute();
       setMuted(false);
+      if (narrationRef.current) narrationRef.current.muted = false;
     } else {
       player.mute();
       setMuted(true);
+      if (narrationRef.current) narrationRef.current.muted = true;
     }
   }
 
@@ -118,7 +151,18 @@ export function ReelPlayer({ result, audioSrc, trackName }: ReelPlayerProps) {
         loop
         autoPlay={false}
         initiallyMuted={false}
+        acknowledgeRemotionLicense
       />
+      {narration && (
+        <audio
+          ref={narrationRef}
+          src={narration.src}
+          preload="auto"
+          playsInline
+          aria-hidden="true"
+          className="hidden"
+        />
+      )}
 
       <ReelTopBar
         timeLabel={formatTime(currentFrame)}

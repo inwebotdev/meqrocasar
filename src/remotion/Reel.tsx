@@ -436,7 +436,7 @@ export function WeddingReel(props: ReelProps) {
         />
       )}
 
-      {narration && <Audio src={narration.src} />}
+      {/* The narration track is played by ReelPlayer with a plain <audio> element kept in sync with the player. */}
     </AbsoluteFill>
   );
 }
