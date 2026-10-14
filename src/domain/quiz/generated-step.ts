@@ -5,7 +5,7 @@ import { FacetsSchema, ZONE_VALUES, type ZoneValue } from "@/domain/kb/taxonomy"
 import type { Kb } from "@/domain/kb/types";
 import { getPhoto } from "@/domain/media/photos";
 
-import { facetsForLegacyStepOption, kbVenueRefs } from "./transcript";
+import { facetsForLegacyStepOption, kbExperienceRefForValue, kbVenueRefs } from "./transcript";
 import type { TranscriptEntry } from "./transcript";
 import type { QuizOption, QuizStep } from "./types";
 
@@ -264,7 +264,9 @@ export function resolveVenueSummary(venueId: string, kb: Kb): ResolvedOptionVenu
 
 function toResolvedOption(step: QuizStep, option: QuizOption, kb: Kb): ResolvedOption {
   const photo = getPhoto(option.photoId);
-  const refs = { venueIds: kbVenueRefs(option.venueHint), experienceIds: [] as string[] };
+  const facets = facetsForLegacyStepOption(step.id, option.id);
+  const experienceIds = facets.experience ? kbExperienceRefForValue(facets.experience, kb) : [];
+  const refs = { venueIds: kbVenueRefs(option.venueHint), experienceIds };
   const venue = refs.venueIds[0] ? resolveVenueSummary(refs.venueIds[0], kb) : undefined;
 
   return {
@@ -272,7 +274,7 @@ function toResolvedOption(step: QuizStep, option: QuizOption, kb: Kb): ResolvedO
     title: option.title,
     description: option.description,
     hashtags: option.hashtags,
-    facets: facetsForLegacyStepOption(step.id, option.id),
+    facets,
     refs,
     photoQuery: `${option.label} wedding venue Queretaro`.slice(0, 60),
     badge: option.badge,

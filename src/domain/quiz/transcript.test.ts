@@ -165,6 +165,20 @@ describe("entryFromCuratedOption", () => {
     expect(entry.chosen.facets.scale).toBe("medium");
     expect(entry.chosen.facets.lodging).toBe("needed");
   });
+
+  it("grounds a mustHave option in a real KB experience ref, not just a venue (the owner-reported defect)", () => {
+    const step = getStep("mustHave");
+
+    for (const option of step.options) {
+      const entry = entryFromCuratedOption(step, option);
+      expect(entry.chosen.refs.experienceIds.length).toBeGreaterThan(0);
+
+      const experience = kb.experiences.find((candidate) =>
+        entry.chosen.refs.experienceIds.includes(candidate.id),
+      );
+      expect(experience?.facets.experiences).toContain(entry.chosen.facets.experience);
+    }
+  });
 });
 
 describe("transcriptFromLegacyAnswers", () => {

@@ -1,0 +1,72 @@
+{
+  "entries": [
+    {
+      "stepId": "style",
+      "question": "¿Qué vibra define su historia?",
+      "topic": "Estilo",
+      "chosen": {
+        "id": "colonial",
+        "title": "Colonial Imperial & Casonas",
+        "summary": "Patios claustrales de cantera virreinal rosa, fuentes coloniales, candiles de cristal y callejones de leyenda en el Centro Histórico.",
+        "facets": {
+          "style": "colonial"
+        },
+        "refs": {
+          "venueIds": ["v_casona-cinco-patios"],
+          "experienceIds": []
+        }
+      }
+    },
+    {
+      "stepId": "setting",
+      "question": "¿En qué momento del día cobra vida su celebración?",
+      "topic": "Horario y Entorno",
+      "chosen": {
+        "id": "night_casona",
+        "title": "Noche de Casona",
+        "summary": "Candiles de cera y cantera iluminan los patios de la Casona de los Cinco Patios mientras la noche envuelve el Centro Histórico en misterio y romance.",
+        "facets": {
+          "setting": "night_casona"
+        },
+        "refs": {
+          "venueIds": ["v_casona-cinco-patios"],
+          "experienceIds": []
+        }
+      }
+    },
+    {
+      "stepId": "escalada-noche-cinco-patios",
+      "question": "¿Cómo imagina la escalada de emociones en la noche de Casona?",
+      "topic": "Escala",
+      "chosen": {
+        "id": "escalada-noche-cinco-patios",
+        "title": "Escalada en los Cinco Patios",
+        "summary": "Suben por las escaleras de mármol de la Casona de los Cinco Patios, bajo un cielo estrellado que ilumina la cantera rosa.",
+        "facets": {
+          "scale": "intimate"
+        },
+        "refs": {
+          "venueIds": ["v_casona-cinco-patios"],
+          "experienceIds": []
+        }
+      }
+    },
+    {
+      "stepId": "experiencia-noche-centro-historico",
+      "question": "¿Quieren que la noche en Casona esté llena de tradición?",
+      "topic": "Experiencia",
+      "chosen": {
+        "id": "callejoneada-centro-historico",
+        "title": "Callejoneada por el Centro Histórico",
+        "summary": "Recorren las calles empedradas del Centro Histórico, rodeados de estudiantes vestidos de capa y birrete interpretando canciones tradicionales como 'Cielito…",
+        "facets": {
+          "experience": "callejoneada"
+        },
+        "refs": {
+          "venueIds": [],
+          "experienceIds": ["callejoneada-centro-historico"]
+        }
+      }
+    }
+  ]
+}

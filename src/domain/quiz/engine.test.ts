@@ -1009,6 +1009,93 @@ describe("filterOptions coherence rules (via createQuizEngine)", () => {
       expect(option.facets.setting).toBeUndefined();
     }
   });
+
+  it("the static fallback's 'mustHave' options all cite a real experience ref, not just a venue (the owner-reported defect)", async () => {
+    const entries: TranscriptEntry[] = [
+      {
+        stepId: "gen-1",
+        question: "Q1",
+        topic: "T1",
+        chosen: {
+          id: "o1",
+          title: "O1",
+          summary: "S1",
+          facets: { style: "colonial", setting: "night_casona" },
+          refs: { venueIds: [], experienceIds: [] },
+        },
+      },
+      {
+        stepId: "gen-2",
+        question: "Q2",
+        topic: "T2",
+        chosen: {
+          id: "o2",
+          title: "O2",
+          summary: "S2",
+          facets: { scale: "intimate" },
+          refs: { venueIds: [], experienceIds: [] },
+        },
+      },
+    ];
+
+    // No `llm` configured: the curated "experience" step (sets only scale,
+    // not the "experience" facet target) gets skipped, landing on "mustHave".
+    const engine = createQuizEngine({ images: createStaticImageProvider(), maxSteps: 7 });
+    const result = await engine.nextStep({ entries });
+
+    expect(result.done).toBe(false);
+    if (result.done) return;
+    expect(result.step.source).toBe("static");
+    expect(result.step.id).toBe("mustHave");
+    expect(result.step.options).toHaveLength(4);
+    for (const option of result.step.options) {
+      expect(option.refs.experienceIds.length).toBeGreaterThan(0);
+    }
+  });
+
+  it("the static fallback does NOT zone-restrict curated options (unlike a generated step) — it only drops ones that contradict a known facet", async () => {
+    // A zone implied from a chosen venue in step 1 (exactly what happens in
+    // real sessions once `knownFacets` implies zone from a venue ref) must
+    // never gut the curated "mustHave" deck down past the 3-option floor:
+    // each of its 4 options cites a venue in a *different* zone by design
+    // (showcasing variety), so zone-restricting them here would make the
+    // one safety net for an LLM outage fail far too easily.
+    const entries: TranscriptEntry[] = [
+      {
+        stepId: "gen-1",
+        question: "Q1",
+        topic: "T1",
+        chosen: {
+          id: "o1",
+          title: "O1",
+          summary: "S1",
+          facets: { style: "colonial", setting: "night_casona" },
+          refs: { venueIds: ["v_casona-cinco-patios"], experienceIds: [] }, // implies zone: centro_historico
+        },
+      },
+      {
+        stepId: "gen-2",
+        question: "Q2",
+        topic: "T2",
+        chosen: {
+          id: "o2",
+          title: "O2",
+          summary: "S2",
+          facets: { scale: "intimate" },
+          refs: { venueIds: [], experienceIds: [] },
+        },
+      },
+    ];
+
+    const engine = createQuizEngine({ images: createStaticImageProvider(), maxSteps: 7 });
+    const result = await engine.nextStep({ entries });
+
+    expect(result.done).toBe(false);
+    if (result.done) return;
+    expect(result.step.source).toBe("static");
+    expect(result.step.id).toBe("mustHave");
+    expect(result.step.options).toHaveLength(4);
+  });
 });
 
 describe("replaying the demo fixtures (test/fixtures/demo)", () => {

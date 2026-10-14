@@ -1,0 +1,188 @@
+{
+  "reports": [
+    {
+      "index": 1,
+      "question": "¿Qué vibra define su historia?",
+      "topic": "Estilo",
+      "targetFacet": "setting",
+      "source": "static",
+      "options": [
+        {
+          "id": "colonial",
+          "title": "Colonial Imperial & Casonas",
+          "facets": {
+            "style": "colonial"
+          },
+          "refs": {
+            "venueIds": ["v_casona-cinco-patios"],
+            "experienceIds": []
+          }
+        },
+        {
+          "id": "rustic_vineyard",
+          "title": "Rústico Viñedo & Enológico",
+          "facets": {
+            "style": "rustic_vineyard"
+          },
+          "refs": {
+            "venueIds": ["v_vinedos-la-redonda"],
+            "experienceIds": []
+          }
+        },
+        {
+          "id": "boho_chic",
+          "title": "Boho Chic Semidesierto",
+          "facets": {
+            "style": "boho_desert"
+          },
+          "refs": {
+            "venueIds": ["v_bodegas-de-cote"],
+            "experienceIds": []
+          }
+        },
+        {
+          "id": "modern_elegant",
+          "title": "Elegante Contemporáneo",
+          "facets": {
+            "style": "modern_elegant"
+          },
+          "refs": {
+            "venueIds": ["v_hacienda-viborillas"],
+            "experienceIds": []
+          }
+        }
+      ],
+      "chosenOptionId": "colonial"
+    },
+    {
+      "index": 2,
+      "question": "¿En qué momento del día cobra vida su celebración?",
+      "topic": "Horario y Entorno",
+      "targetFacet": "setting",
+      "source": "static",
+      "options": [
+        {
+          "id": "sunset_garden",
+          "title": "Atardecer de Jardín",
+          "facets": {
+            "setting": "sunset_garden"
+          },
+          "refs": {
+            "venueIds": ["v_hacienda-lagunillas"],
+            "experienceIds": []
+          }
+        },
+        {
+          "id": "night_casona",
+          "title": "Noche de Casona",
+          "facets": {
+            "setting": "night_casona"
+          },
+          "refs": {
+            "venueIds": ["v_casona-cinco-patios"],
+            "experienceIds": []
+          }
+        },
+        {
+          "id": "day_vineyard",
+          "title": "Día de Viñedo",
+          "facets": {
+            "setting": "day_vineyard"
+          },
+          "refs": {
+            "venueIds": ["v_vinedos-la-redonda"],
+            "experienceIds": []
+          }
+        }
+      ],
+      "chosenOptionId": "night_casona"
+    },
+    {
+      "index": 3,
+      "question": "¿Cómo imagina la escalada de emociones en la noche de Casona?",
+      "topic": "Escala",
+      "targetFacet": "scale",
+      "source": "llm",
+      "options": [
+        {
+          "id": "escalada-noche-cinco-patios",
+          "title": "Escalada en los Cinco Patios",
+          "facets": {
+            "scale": "intimate"
+          },
+          "refs": {
+            "venueIds": ["v_casona-cinco-patios"],
+            "experienceIds": []
+          }
+        },
+        {
+          "id": "escalada-noche-virrey",
+          "title": "Escalada en la Casa Real del Virrey",
+          "facets": {
+            "scale": "medium"
+          },
+          "refs": {
+            "venueIds": ["v_placesfixturecasarealdelvirrey"],
+            "experienceIds": []
+          }
+        },
+        {
+          "id": "escalada-noche-callejoneada",
+          "title": "Escalada en Callejoneada",
+          "facets": {
+            "scale": "grand"
+          },
+          "refs": {
+            "venueIds": ["v_centro-historico-callejoneada"],
+            "experienceIds": []
+          }
+        }
+      ],
+      "chosenOptionId": "escalada-noche-cinco-patios"
+    },
+    {
+      "index": 4,
+      "question": "¿Quieren que la noche en Casona esté llena de tradición?",
+      "topic": "Experiencia",
+      "targetFacet": "experience",
+      "source": "llm",
+      "options": [
+        {
+          "id": "callejoneada-centro-historico",
+          "title": "Callejoneada por el Centro Histórico",
+          "facets": {
+            "experience": "callejoneada"
+          },
+          "refs": {
+            "venueIds": [],
+            "experienceIds": ["callejoneada-centro-historico"]
+          }
+        },
+        {
+          "id": "huapango-mariachi",
+          "title": "Huapango Arribeño y Mariachi Tradicional",
+          "facets": {
+            "experience": "mariachi_huapango"
+          },
+          "refs": {
+            "venueIds": [],
+            "experienceIds": ["huapango-mariachi"]
+          }
+        },
+        {
+          "id": "ruta-arte-queso-vino",
+          "title": "Ruta del Arte, Queso y Vino",
+          "facets": {
+            "experience": "vendimia"
+          },
+          "refs": {
+            "venueIds": [],
+            "experienceIds": ["ruta-arte-queso-vino"]
+          }
+        }
+      ],
+      "chosenOptionId": "callejoneada-centro-historico"
+    }
+  ],
+  "violations": []
+}

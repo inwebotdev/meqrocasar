@@ -215,7 +215,22 @@ export function computeTargetFacet(
   return undefined;
 }
 
-/** True when `facets` sets any key also present in `known` to a different value. */
+// --- static fallback (curated decks) --------------------------------------
+
+/**
+ * True when `facets` sets any key also present in `known` to a different
+ * value. Deliberately NOT the full `filterOptions` treatment: the curated
+ * decks predate per-zone targeting (each step's options are intentionally
+ * spread across different zones to showcase variety, not confined to one),
+ * so applying `filterOptions`'s zone-restriction/target-facet-presence
+ * rules here would gut every curated step down to 0-1 survivors as soon as
+ * any zone is known (e.g. implied from step 1's own venue) — turning the
+ * one safety net the real adaptive flow has (when the LLM is unavailable
+ * or fails) into an early "done" far more often than intended. Keeping
+ * this to contradiction-only (the one rule the curated decks' per-step,
+ * single-facet options can always satisfy) is what the plan actually
+ * calls for.
+ */
 function contradictsKnownFacets(facets: Facets, known: Facets): boolean {
   return (Object.keys(facets) as FacetKey[]).some((key) => {
     const value = facets[key];
@@ -223,8 +238,6 @@ function contradictsKnownFacets(facets: Facets, known: Facets): boolean {
     return value !== undefined && knownValue !== undefined && value !== knownValue;
   });
 }
-
-// --- static fallback (curated decks) --------------------------------------
 
 /**
  * Picks the next unused curated step, starting at `min(stepIndex - 1, 3)`

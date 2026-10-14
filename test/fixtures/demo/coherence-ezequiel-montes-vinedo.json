@@ -1,0 +1,72 @@
+{
+  "entries": [
+    {
+      "stepId": "style",
+      "question": "¿Qué vibra define su historia?",
+      "topic": "Estilo",
+      "chosen": {
+        "id": "rustic_vineyard",
+        "title": "Rústico Viñedo & Enológico",
+        "summary": "Atardeceres entre parras centenarias, barricas de roble americano, maridajes de quesos artesanales y brindis bajo las estrellas.",
+        "facets": {
+          "style": "rustic_vineyard"
+        },
+        "refs": {
+          "venueIds": ["v_vinedos-la-redonda"],
+          "experienceIds": []
+        }
+      }
+    },
+    {
+      "stepId": "setting",
+      "question": "¿En qué momento del día cobra vida su celebración?",
+      "topic": "Horario y Entorno",
+      "chosen": {
+        "id": "day_vineyard",
+        "title": "Día de Viñedo",
+        "summary": "Brindis matutinos entre las vides de Viñedos La Redonda, con la Peña de Bernal asomando en el horizonte y aroma a uva recién cortada.",
+        "facets": {
+          "setting": "day_vineyard"
+        },
+        "refs": {
+          "venueIds": ["v_vinedos-la-redonda"],
+          "experienceIds": []
+        }
+      }
+    },
+    {
+      "stepId": "escala-vinedos-la-redonda",
+      "question": "¿Qué escala prefieren para su boda en Viñedos La Redonda?",
+      "topic": "Escala",
+      "chosen": {
+        "id": "100-invitados",
+        "title": "100 invitados",
+        "summary": "Celebra con una fiesta íntima y elegante, donde cada detalle es cuidadosamente planeado para 100 personas.",
+        "facets": {
+          "scale": "intimate"
+        },
+        "refs": {
+          "venueIds": ["v_vinedos-la-redonda"],
+          "experienceIds": []
+        }
+      }
+    },
+    {
+      "stepId": "experiencia-vendimia-la-redonda",
+      "question": "¿La Fiesta de la Vendimia en Viñedos La Redonda les emociona?",
+      "topic": "Experiencia",
+      "chosen": {
+        "id": "vendimia-la-redonda",
+        "title": "Fiesta de la Vendimia en Viñedos La…",
+        "summary": "Participan en la celebración anual de la cosecha, rodeados por las vides más grandes y antiguas de Querétaro. Se maridan uvas pisadas tradicionalmente con…",
+        "facets": {
+          "experience": "vendimia"
+        },
+        "refs": {
+          "venueIds": ["v_vinedos-la-redonda"],
+          "experienceIds": ["vendimia-freixenet"]
+        }
+      }
+    }
+  ]
+}

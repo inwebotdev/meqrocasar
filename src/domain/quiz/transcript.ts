@@ -6,6 +6,7 @@ import {
   facetsFromLegacySetting,
   facetsFromLegacyStyle,
 } from "@/domain/kb/legacy-map";
+import { loadKb } from "@/domain/kb/load";
 import {
   FacetsSchema,
   type ExperienceValue,
@@ -165,6 +166,20 @@ export function kbVenueRefs(venueHint: string): string[] {
 }
 
 /**
+ * Resolves a legacy "mustHave" option's `experience` facet value (the only
+ * curated-step facet that's ever an `experience`) to a real knowledge-base
+ * experience id, so a curated option's refs ground it in an actual
+ * experience rather than only a venue — the exact defect the owner
+ * reported ("¿qué no puede faltar?" listing venues instead of
+ * must-have experiences). `[]` when no KB experience carries that value
+ * (defensive — every current `EXPERIENCE_VALUES` member has at least one).
+ */
+export function kbExperienceRefForValue(value: ExperienceValue, kb: Kb = loadKb()): string[] {
+  const match = kb.experiences.find((experience) => experience.facets.experiences.includes(value));
+  return match ? [match.id] : [];
+}
+
+/**
  * Builds a transcript entry from one of the curated step-1 decks
  * (`QUIZ_STEPS`): the facets come from the matching legacy-answer mapping
  * for that step, and the venue ref is resolved from the option's
@@ -172,6 +187,9 @@ export function kbVenueRefs(venueHint: string): string[] {
  * summary (it is already a one-sentence es-MX description of the choice).
  */
 export function entryFromCuratedOption(step: QuizStep, option: QuizOption): TranscriptEntry {
+  const facets = facetsForLegacyStepOption(step.id, option.id);
+  const experienceIds = facets.experience ? kbExperienceRefForValue(facets.experience) : [];
+
   return {
     stepId: step.id,
     question: step.question,
@@ -180,8 +198,8 @@ export function entryFromCuratedOption(step: QuizStep, option: QuizOption): Tran
       id: option.id,
       title: option.title,
       summary: option.promptHint,
-      facets: facetsForLegacyStepOption(step.id, option.id),
-      refs: { venueIds: kbVenueRefs(option.venueHint), experienceIds: [] },
+      facets,
+      refs: { venueIds: kbVenueRefs(option.venueHint), experienceIds },
     },
   };
 }

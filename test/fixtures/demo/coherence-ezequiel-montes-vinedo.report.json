@@ -1,0 +1,188 @@
+{
+  "reports": [
+    {
+      "index": 1,
+      "question": "¿Qué vibra define su historia?",
+      "topic": "Estilo",
+      "targetFacet": "setting",
+      "source": "static",
+      "options": [
+        {
+          "id": "colonial",
+          "title": "Colonial Imperial & Casonas",
+          "facets": {
+            "style": "colonial"
+          },
+          "refs": {
+            "venueIds": ["v_casona-cinco-patios"],
+            "experienceIds": []
+          }
+        },
+        {
+          "id": "rustic_vineyard",
+          "title": "Rústico Viñedo & Enológico",
+          "facets": {
+            "style": "rustic_vineyard"
+          },
+          "refs": {
+            "venueIds": ["v_vinedos-la-redonda"],
+            "experienceIds": []
+          }
+        },
+        {
+          "id": "boho_chic",
+          "title": "Boho Chic Semidesierto",
+          "facets": {
+            "style": "boho_desert"
+          },
+          "refs": {
+            "venueIds": ["v_bodegas-de-cote"],
+            "experienceIds": []
+          }
+        },
+        {
+          "id": "modern_elegant",
+          "title": "Elegante Contemporáneo",
+          "facets": {
+            "style": "modern_elegant"
+          },
+          "refs": {
+            "venueIds": ["v_hacienda-viborillas"],
+            "experienceIds": []
+          }
+        }
+      ],
+      "chosenOptionId": "rustic_vineyard"
+    },
+    {
+      "index": 2,
+      "question": "¿En qué momento del día cobra vida su celebración?",
+      "topic": "Horario y Entorno",
+      "targetFacet": "setting",
+      "source": "static",
+      "options": [
+        {
+          "id": "sunset_garden",
+          "title": "Atardecer de Jardín",
+          "facets": {
+            "setting": "sunset_garden"
+          },
+          "refs": {
+            "venueIds": ["v_hacienda-lagunillas"],
+            "experienceIds": []
+          }
+        },
+        {
+          "id": "night_casona",
+          "title": "Noche de Casona",
+          "facets": {
+            "setting": "night_casona"
+          },
+          "refs": {
+            "venueIds": ["v_casona-cinco-patios"],
+            "experienceIds": []
+          }
+        },
+        {
+          "id": "day_vineyard",
+          "title": "Día de Viñedo",
+          "facets": {
+            "setting": "day_vineyard"
+          },
+          "refs": {
+            "venueIds": ["v_vinedos-la-redonda"],
+            "experienceIds": []
+          }
+        }
+      ],
+      "chosenOptionId": "day_vineyard"
+    },
+    {
+      "index": 3,
+      "question": "¿Qué escala prefieren para su boda en Viñedos La Redonda?",
+      "topic": "Escala",
+      "targetFacet": "scale",
+      "source": "llm",
+      "options": [
+        {
+          "id": "100-invitados",
+          "title": "100 invitados",
+          "facets": {
+            "scale": "intimate"
+          },
+          "refs": {
+            "venueIds": ["v_vinedos-la-redonda"],
+            "experienceIds": []
+          }
+        },
+        {
+          "id": "200-invitados",
+          "title": "200 invitados",
+          "facets": {
+            "scale": "medium"
+          },
+          "refs": {
+            "venueIds": ["v_vinedos-la-redonda"],
+            "experienceIds": []
+          }
+        },
+        {
+          "id": "350-invitados",
+          "title": "350 invitados",
+          "facets": {
+            "scale": "grand"
+          },
+          "refs": {
+            "venueIds": ["v_vinedos-la-redonda"],
+            "experienceIds": []
+          }
+        }
+      ],
+      "chosenOptionId": "100-invitados"
+    },
+    {
+      "index": 4,
+      "question": "¿La Fiesta de la Vendimia en Viñedos La Redonda les emociona?",
+      "topic": "Experiencia",
+      "targetFacet": "experience",
+      "source": "llm",
+      "options": [
+        {
+          "id": "vendimia-la-redonda",
+          "title": "Fiesta de la Vendimia en Viñedos La…",
+          "facets": {
+            "experience": "vendimia"
+          },
+          "refs": {
+            "venueIds": ["v_vinedos-la-redonda"],
+            "experienceIds": ["vendimia-freixenet"]
+          }
+        },
+        {
+          "id": "tour-queserias",
+          "title": "Tour de Queserías Artesanales",
+          "facets": {
+            "experience": "temazcal"
+          },
+          "refs": {
+            "venueIds": [],
+            "experienceIds": ["tour-queserias"]
+          }
+        },
+        {
+          "id": "cena-vinedo-de-cote",
+          "title": "Cena en Viñedo con Alta Cocina",
+          "facets": {
+            "experience": "callejoneada"
+          },
+          "refs": {
+            "venueIds": ["v_bodegas-de-cote"],
+            "experienceIds": ["cena-vinedo-de-cote"]
+          }
+        }
+      ],
+      "chosenOptionId": "vendimia-la-redonda"
+    }
+  ],
+  "violations": []
+}
