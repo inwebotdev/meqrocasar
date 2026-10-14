@@ -14,6 +14,11 @@ import { VENUE_TAG_VALUES } from "@/domain/venues/types";
  * name/zone pair, and the response carries a short weekend-itinerary hint
  * grounded in the same knowledge base.
  */
+/** Catches a model that copies the prompt's example skeleton instead of writing real copy. */
+const PLACEHOLDER_COPY =
+  /primer p[aá]rrafo|segundo p[aá]rrafo|por qu[eé] este recinto conecta|lorem ipsum/i;
+const isRealCopy = (value: string) => !PLACEHOLDER_COPY.test(value);
+
 export const LlmExperienceV2Schema = z.object({
   conceptTitle: z.string().min(4).max(80),
   colorPalette: z
@@ -24,13 +29,17 @@ export const LlmExperienceV2Schema = z.object({
       }),
     )
     .length(4),
-  narrative: z.string().min(120).max(1400),
+  narrative: z
+    .string()
+    .min(120)
+    .max(1400)
+    .refine(isRealCopy, "Narrative must be real copy, not the example skeleton."),
   searchQueries: z.array(z.string().min(3).max(60)).length(3),
   recommendedVenues: z
     .array(
       z.object({
         venueId: z.string().min(1),
-        reason: z.string().min(20).max(300),
+        reason: z.string().min(20).max(300).refine(isRealCopy, "Reason must be real copy."),
       }),
     )
     .min(1)

@@ -109,7 +109,7 @@ const EXAMPLE_RESPONSE_JSON = JSON.stringify({
     { hex: "#4B5E3A", name: "Verde Viñedo" },
   ],
   narrative:
-    "Primer párrafo sensorial que retoma lo que la pareja eligió y nombra 1-2 recintos de forma orgánica dentro del relato.\n\nSegundo párrafo que cierra la historia, menciona otro recinto o experiencia y conecta con la escala y el presupuesto elegidos.",
+    "Imaginen la tarde cayendo sobre las hileras de Viñedos La Redonda: el sol dora las uvas, el aire huele a tierra húmeda y roble, y sus invitados brindan con un tinto joven mientras la Peña de Bernal se recorta al fondo. La ceremonia, íntima, se celebra entre barricas y faroles de hierro, con la cantera del casco como testigo.\n\nAl día siguiente, la celebración sigue en Bodegas De Cote, donde una cata guiada en su cava subterránea convierte el banquete en una conversación entre quesos de la región y vinos de autor. Es una boda pensada para pocas personas y muchos recuerdos, sin estridencias, con el paisaje de Ezequiel Montes como único decorado.",
   searchQueries: [
     "vineyard wedding golden hour",
     "wine cellar reception",
@@ -118,7 +118,8 @@ const EXAMPLE_RESPONSE_JSON = JSON.stringify({
   recommendedVenues: [
     {
       venueId: "v_vinedos-la-redonda",
-      reason: "Por qué este recinto conecta con lo que eligieron.",
+      reason:
+        "Sus hileras centenarias y la vista a la Peña de Bernal son exactamente el atardecer de viñedo que ustedes eligieron, y su cava permite la cata íntima que pidieron.",
     },
   ],
   reelTagline: "Vendimia Dorada en Ezequiel Montes",
