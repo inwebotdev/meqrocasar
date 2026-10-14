@@ -23,7 +23,7 @@ import type { Transcript } from "./transcript";
  */
 
 /** Bump when `SYSTEM_PROMPT`'s instructions change meaningfully. */
-export const ENGINE_PROMPT_VERSION = "quiz-engine-v3";
+export const ENGINE_PROMPT_VERSION = "quiz-engine-v4";
 
 /**
  * Fed back to the fast model as a correction-turn user message when
@@ -103,7 +103,7 @@ Margen (headroom): deja siempre margen de sobra, nunca cortes palabras. Objetivo
 
 El campo "facets" de cada opción debe contener exactamente el/los facet(s) que esa elección establece si la pareja la elige.
 
-Devuelve "done: true" solo cuando el paso actual (stepIndex) sea 5 o mayor y ya se conozcan al menos 5 facets distintos; nunca devuelvas "done: true" antes del paso 5 (aunque creas que ya se sabe suficiente); devuelve siempre "done: true" cuando stepIndex sea igual al máximo de pasos (maxSteps). Incluso cuando "done" sea true, sigue devolviendo 3-4 "options" válidas (se ignoran, pero el esquema las requiere).
+Devuelve SIEMPRE "done: false" — tú nunca decides cuándo termina el cuestionario (el sistema, no tú, decide eso a partir del facet objetivo de cada turno); "done" se ignora por completo, pero el esquema lo requiere.
 
 Ejemplo de referencia (longitudes, tono y formato — muestra solo 2 de las 3-4 opciones reales por brevedad; los ids de "refs" son ilustrativos, usa siempre ids reales de la base de conocimiento que se te da en cada turno):
 ${EXAMPLE_STEP_JSON}

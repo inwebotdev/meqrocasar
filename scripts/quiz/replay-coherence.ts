@@ -197,9 +197,16 @@ async function playConversation(name: string, preferredZone: ZoneValue): Promise
   console.log(`Saved report to ${reportPath}`);
 }
 
+/** `yarn tsx scripts/quiz/replay-coherence.ts [ezequiel-montes-vinedo|centro-historico]` — omit to run both. */
 async function main(): Promise<void> {
-  await playConversation("ezequiel-montes-vinedo", "ezequiel_montes");
-  await playConversation("centro-historico", "centro_historico");
+  const only = process.argv[2];
+
+  if (!only || only === "ezequiel-montes-vinedo") {
+    await playConversation("ezequiel-montes-vinedo", "ezequiel_montes");
+  }
+  if (!only || only === "centro-historico") {
+    await playConversation("centro-historico", "centro_historico");
+  }
 }
 
 main().catch((error: unknown) => {

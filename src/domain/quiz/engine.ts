@@ -55,16 +55,6 @@ const MAX_CACHE_ENTRIES = 1000;
 /** How long a generated step stays warm in the cache (also covers speculative prefetch warm-ups — see `prefetch.ts`). */
 const CACHE_TTL_MS = 15 * 60 * 1000;
 
-/**
- * The engine never honors a model-returned `done: true` before this many
- * entries have been answered — a premature "done" (the model still has
- * to return `options` either way, see `RawGeneratedStepSchema`) is
- * downgraded into a normal step built from those options instead. Only
- * `QUIZ_MAX_STEPS` (checked before the LLM is even called, see
- * `nextStep`) can force a stop earlier than this.
- */
-const MIN_ANSWERED_ENTRIES_BEFORE_DONE = 5;
-
 export interface QuizEngineMeta {
   model: string;
   durationMs: number;
@@ -593,27 +583,12 @@ async function generateStep(ctx: GenerateContext): Promise<QuizEngineResult> {
     return staticFallbackResult({ entries, stepIndex, known, start, now, attempts });
   }
 
-  // The model is instructed never to return `done: true` before 5
-  // answered entries (`engine-prompt.ts`), but it's generative output, not
-  // a guarantee — enforce it here too. A premature `done` still comes
-  // with real `options` (the schema requires them either way), so it's
-  // downgraded into a normal step instead of discarded.
-  if (candidate.done && entries.length >= MIN_ANSWERED_ENTRIES_BEFORE_DONE) {
-    return {
-      done: true,
-      meta: buildMeta({
-        model,
-        start,
-        now,
-        fallbackUsed: false,
-        source: "llm",
-        attempts,
-        usage,
-        normalisations,
-      }),
-    };
-  }
-
+  // The model's own `done` is never honored — the schema still requires
+  // the field (so it isn't a correction-worthy shape error), but the only
+  // two stop conditions are `computeTargetFacet` returning `undefined`
+  // (checked in `nextStep`, before the LLM is even called) and
+  // `QUIZ_MAX_STEPS`. `engine-prompt.ts` tells the model to always return
+  // `done: false` accordingly.
   const resolvedOptions = await Promise.all(
     validOptions.map((option) => resolveOptionPhoto(option, kb, images, known, placesUsable)),
   );
@@ -697,10 +672,10 @@ export function createQuizEngine(options: CreateQuizEngineOptions): QuizEngine {
       const { venueIds: chosenVenueIds } = chosenRefs(entries);
       const stepIndex = entries.length + 1;
 
-      // The only hard stop that skips the LLM entirely: `QUIZ_MAX_STEPS`
-      // reached. Stopping earlier (from 5 answered entries on) is the
-      // model's own call via `done: true` in its response — see
-      // `generateStep`/`MIN_ANSWERED_ENTRIES_BEFORE_DONE`.
+      // The only two stop conditions left are `QUIZ_MAX_STEPS` (checked
+      // here, before the LLM is even called) and `computeTargetFacet`
+      // returning `undefined` below — the model's own `done` is never
+      // honored (see `generateStep`).
       const hardStop = stepIndex > maxSteps;
       if (hardStop) {
         return {

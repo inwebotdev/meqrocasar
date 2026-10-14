@@ -456,9 +456,10 @@ describe("createQuizEngine", () => {
   });
 
   it("does not hard-stop before maxSteps even when 5+ facets are already known after 4 entries", async () => {
-    // 5 distinct facet keys across 4 entries (style+setting from the first entry) — this
-    // used to force a hard stop; now the engine still calls the LLM and lets the model
-    // (not a facet-count heuristic) decide when to stop, bounded only by QUIZ_MAX_STEPS.
+    // 5 distinct facet keys across 4 entries (style+setting from the first entry), with
+    // "experience" (the default fixture's target) still unknown — the engine keeps calling
+    // the LLM for the real unknown facet, bounded only by computeTargetFacet/QUIZ_MAX_STEPS,
+    // never a facet-count heuristic and never the model's own say-so.
     const entries: TranscriptEntry[] = [
       {
         stepId: "gen-1",
@@ -527,45 +528,33 @@ describe("createQuizEngine", () => {
     expect(result.done).toBe(false);
   });
 
-  it("ignores a premature done:true from the model before 5 answered entries, building a real step from its options instead", async () => {
-    server.use(
-      mockOpenRouterChat(() => chatCompletion(JSON.stringify(makeGeneratedStep({ done: true })))),
-    );
+  it.each([4, 5])(
+    "always ignores the model's own done:true, building a real step from its options instead (%i entries answered)",
+    async (entryCount) => {
+      server.use(
+        mockOpenRouterChat(() => chatCompletion(JSON.stringify(makeGeneratedStep({ done: true })))),
+      );
 
-    const engine = createQuizEngine({
-      llm: buildLlmClient(),
-      images: createStaticImageProvider(),
-      maxSteps: 7,
-    });
+      const engine = createQuizEngine({
+        llm: buildLlmClient(),
+        images: createStaticImageProvider(),
+        maxSteps: 7,
+      });
 
-    // Only 4 entries answered — below MIN_ANSWERED_ENTRIES_BEFORE_DONE (5).
-    const result = await engine.nextStep(makeTranscript(4));
+      // The only stop conditions are `computeTargetFacet(...) === undefined`
+      // (checked before the LLM is even called) and `QUIZ_MAX_STEPS` — the
+      // model's own `done` field is always ignored, however many entries
+      // have been answered.
+      const result = await engine.nextStep(makeTranscript(entryCount));
 
-    expect(result.done).toBe(false);
-    if (result.done) return;
-    expect(result.step.source).toBe("llm");
-    expect(result.step.options.length).toBeGreaterThanOrEqual(3);
-    expect(result.meta.source).toBe("llm");
-    expect(result.meta.fallbackUsed).toBe(false);
-  });
-
-  it("maps the model's own done: true into an engine-level done result once 5+ entries are answered", async () => {
-    server.use(
-      mockOpenRouterChat(() => chatCompletion(JSON.stringify(makeGeneratedStep({ done: true })))),
-    );
-
-    const engine = createQuizEngine({
-      llm: buildLlmClient(),
-      images: createStaticImageProvider(),
-      maxSteps: 7,
-    });
-
-    const result = await engine.nextStep(makeTranscript(5));
-
-    expect(result.done).toBe(true);
-    expect(result.meta.source).toBe("llm");
-    expect(result.meta.fallbackUsed).toBe(false);
-  });
+      expect(result.done).toBe(false);
+      if (result.done) return;
+      expect(result.step.source).toBe("llm");
+      expect(result.step.options.length).toBeGreaterThanOrEqual(3);
+      expect(result.meta.source).toBe("llm");
+      expect(result.meta.fallbackUsed).toBe(false);
+    },
+  );
 
   it("prefers a Places photo over the image provider when a venue ref has one", async () => {
     const placesVenueId = "v_placesfixturehotellasjacarandas";
