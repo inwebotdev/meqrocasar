@@ -32,6 +32,8 @@ export function useNarration(
 ): ExperienceResult | undefined {
   const [current, setCurrent] = useState(result);
   const resultRef = useRef(result);
+  const onUnavailableRef = useRef(onUnavailable);
+  onUnavailableRef.current = onUnavailable;
 
   useEffect(() => {
     resultRef.current = result;
@@ -93,7 +95,7 @@ export function useNarration(
         saveResult(updated);
         resultRef.current = updated;
         setCurrent(updated);
-        onUnavailable?.();
+        onUnavailableRef.current?.();
         return;
       }
 
@@ -106,7 +108,7 @@ export function useNarration(
       cancelled = true;
       clearTimeout(timer);
     };
-  }, [pendingHash, pollIntervalMs, pollTimeoutMs, onUnavailable]);
+  }, [pendingHash, pollIntervalMs, pollTimeoutMs]);
 
   if (fixtureNarration && current) {
     return { ...current, narration: fixtureNarration };
