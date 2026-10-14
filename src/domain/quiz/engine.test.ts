@@ -1133,3 +1133,115 @@ describe("replaying the demo fixtures (test/fixtures/demo)", () => {
     });
   }
 });
+
+describe("template steps (budget/lodging/season)", () => {
+  it("serves budget, lodging and season as deterministic template steps, never calling the LLM, until done", async () => {
+    const entries: TranscriptEntry[] = [
+      {
+        stepId: "gen-1",
+        question: "Q1",
+        topic: "T1",
+        chosen: {
+          id: "o1",
+          title: "O1",
+          summary: "S1",
+          facets: { setting: "day_vineyard" },
+          // implies zone: ezequiel_montes and style: rustic_vineyard (single-style venue)
+          refs: { venueIds: ["v_vinedos-la-redonda"], experienceIds: [] },
+        },
+      },
+      {
+        stepId: "gen-2",
+        question: "Q2",
+        topic: "T2",
+        chosen: {
+          id: "o2",
+          title: "O2",
+          summary: "S2",
+          facets: { scale: "intimate" },
+          refs: { venueIds: [], experienceIds: [] },
+        },
+      },
+      {
+        stepId: "gen-3",
+        question: "Q3",
+        topic: "T3",
+        chosen: {
+          id: "o3",
+          title: "O3",
+          summary: "S3",
+          facets: { experience: "wine_tasting" },
+          refs: { venueIds: [], experienceIds: [] },
+        },
+      },
+    ];
+
+    // `throwingLlm` proves these three facets never reach the model.
+    const engine = createQuizEngine({
+      llm: throwingLlm,
+      images: createStaticImageProvider(),
+      maxSteps: 7,
+    });
+
+    const budget = await engine.nextStep({ entries });
+    expect(budget.done).toBe(false);
+    if (budget.done) return;
+    expect(budget.step.source).toBe("static");
+    expect(budget.step.id).toBe("presupuesto-boda");
+    expect(budget.step.options.map((option) => option.facets.budget).sort()).toEqual([
+      "exclusivo",
+      "medio",
+      "medio_alto",
+    ]);
+    // Mentions the chosen venue by name.
+    expect(
+      budget.step.options.some((option) => option.description.includes("Viñedos La Redonda")),
+    ).toBe(true);
+    entries.push(entryFromChosen(budget.step, budget.step.options[0]!));
+
+    const lodging = await engine.nextStep({ entries });
+    expect(lodging.done).toBe(false);
+    if (lodging.done) return;
+    expect(lodging.step.source).toBe("static");
+    expect(lodging.step.id).toBe("hospedaje-invitados");
+    expect(lodging.step.options.map((option) => option.facets.lodging).sort()).toEqual([
+      "needed",
+      "not_needed",
+    ]);
+    entries.push(entryFromChosen(lodging.step, lodging.step.options[0]!));
+
+    const season = await engine.nextStep({ entries });
+    expect(season.done).toBe(false);
+    if (season.done) return;
+    expect(season.step.source).toBe("static");
+    expect(season.step.id).toBe("temporada-boda");
+    expect(season.step.options.map((option) => option.facets.season).sort()).toEqual([
+      "invierno",
+      "otono",
+      "primavera",
+      "verano",
+    ]);
+    entries.push(entryFromChosen(season.step, season.step.options[0]!));
+
+    const done = await engine.nextStep({ entries });
+    expect(done.done).toBe(true);
+  });
+});
+
+function entryFromChosen(
+  step: { id: string; question: string; topic: string },
+  option: { id: string; title: string; description: string; facets: unknown; refs: unknown },
+): TranscriptEntry {
+  return {
+    stepId: step.id,
+    question: step.question,
+    topic: step.topic,
+    chosen: {
+      id: option.id,
+      title: option.title,
+      summary: option.description,
+      facets: option.facets as TranscriptEntry["chosen"]["facets"],
+      refs: option.refs as TranscriptEntry["chosen"]["refs"],
+    },
+  };
+}

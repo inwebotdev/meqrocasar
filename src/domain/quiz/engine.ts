@@ -31,9 +31,44 @@ import {
 } from "./generated-step";
 import { normaliseGeneratedStep } from "./normalise-step";
 import { QUIZ_STEPS } from "./questions";
+import { templateStepFor, type TemplateFacet } from "./template-steps";
 import type { QuizStep } from "./types";
 import { chosenRefs, knownFacets, type Transcript, type TranscriptEntry } from "./transcript";
 import { hashTranscript } from "./transcript-hash";
+
+/** `budget`/`lodging`/`season` never reach the LLM or the curated decks — see `template-steps.ts`. */
+function isTemplateFacet(facet: FacetPriority): facet is TemplateFacet {
+  return facet === "budget" || facet === "lodging" || facet === "season";
+}
+
+function templateStepResult(
+  targetFacet: TemplateFacet,
+  known: Facets,
+  chosenVenueIds: readonly string[],
+  kb: Kb,
+  stepIndex: number,
+  start: number,
+  now: () => number,
+): QuizEngineResult {
+  const chosenVenue = kb.venues.find((venue) => venue.id === chosenVenueIds[0]);
+  const step: ResolvedStep = {
+    ...templateStepFor(targetFacet, { known, chosenVenue, kb }),
+    index: stepIndex,
+  };
+
+  return {
+    done: false,
+    step,
+    meta: buildMeta({
+      model: STATIC_MODEL,
+      start,
+      now,
+      fallbackUsed: false,
+      source: "static",
+      attempts: 0,
+    }),
+  };
+}
 
 /**
  * The adaptive quiz engine: given the transcript so far, decides whether
@@ -269,7 +304,10 @@ function pickFallbackStep(
 interface StaticFallbackContext {
   entries: readonly TranscriptEntry[];
   stepIndex: number;
+  targetFacet: FacetPriority;
   known: Facets;
+  chosenVenueIds: readonly string[];
+  kb: Kb;
   start: number;
   now: () => number;
   attempts: number;
@@ -284,6 +322,21 @@ function staticFallbackResult(ctx: StaticFallbackContext): QuizEngineResult {
     source: "static",
     attempts: ctx.attempts,
   });
+
+  // `budget`/`lodging`/`season` have no curated deck of their own (and
+  // forcing them through `pickFallbackStep`'s contradiction-only filter is
+  // exactly what exhausted the curated steps once style/setting/scale/
+  // experience were already pinned — see the template-steps.ts doc
+  // comment): any failure at these three facets falls back to the same
+  // deterministic template the primary path uses, never to `done`.
+  if (isTemplateFacet(ctx.targetFacet)) {
+    const chosenVenue = ctx.kb.venues.find((venue) => venue.id === ctx.chosenVenueIds[0]);
+    const step: ResolvedStep = {
+      ...templateStepFor(ctx.targetFacet, { known: ctx.known, chosenVenue, kb: ctx.kb }),
+      index: ctx.stepIndex,
+    };
+    return { done: false, step, meta };
+  }
 
   const step = pickFallbackStep(ctx.entries, ctx.stepIndex, ctx.known);
   if (!step) {
@@ -500,7 +553,17 @@ async function generateStep(ctx: GenerateContext): Promise<QuizEngineResult> {
   } = ctx;
 
   if (!llm) {
-    return staticFallbackResult({ entries, stepIndex, known, start, now, attempts: 0 });
+    return staticFallbackResult({
+      entries,
+      stepIndex,
+      targetFacet,
+      known,
+      chosenVenueIds,
+      kb,
+      start,
+      now,
+      attempts: 0,
+    });
   }
 
   const messages = buildStepMessages({
@@ -517,7 +580,10 @@ async function generateStep(ctx: GenerateContext): Promise<QuizEngineResult> {
     return staticFallbackResult({
       entries,
       stepIndex,
+      targetFacet,
       known,
+      chosenVenueIds,
+      kb,
       start,
       now,
       attempts: primary.attempts.length,
@@ -550,7 +616,17 @@ async function generateStep(ctx: GenerateContext): Promise<QuizEngineResult> {
   }
 
   if (!normalised.ok) {
-    return staticFallbackResult({ entries, stepIndex, known, start, now, attempts });
+    return staticFallbackResult({
+      entries,
+      stepIndex,
+      targetFacet,
+      known,
+      chosenVenueIds,
+      kb,
+      start,
+      now,
+      attempts,
+    });
   }
 
   let candidate = normalised.step;
@@ -580,7 +656,17 @@ async function generateStep(ctx: GenerateContext): Promise<QuizEngineResult> {
   }
 
   if (validOptions.length < 3) {
-    return staticFallbackResult({ entries, stepIndex, known, start, now, attempts });
+    return staticFallbackResult({
+      entries,
+      stepIndex,
+      targetFacet,
+      known,
+      chosenVenueIds,
+      kb,
+      start,
+      now,
+      attempts,
+    });
   }
 
   // The model's own `done` is never honored — the schema still requires
@@ -709,6 +795,12 @@ export function createQuizEngine(options: CreateQuizEngineOptions): QuizEngine {
             attempts: 0,
           }),
         };
+      }
+
+      // `budget`/`lodging`/`season` are deterministic, LLM-free steps (see
+      // `template-steps.ts`) — never cached, since they're already free.
+      if (isTemplateFacet(targetFacet)) {
+        return templateStepResult(targetFacet, known, chosenVenueIds, kb, stepIndex, start, now);
       }
 
       const cacheKey = hashTranscript(transcript);
