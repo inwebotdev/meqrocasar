@@ -5,6 +5,7 @@ import {
   FACET_PRIORITY,
   facetLabel,
   type FacetKey,
+  type FacetPriority,
   type Facets,
 } from "@/domain/kb/taxonomy";
 
@@ -86,7 +87,7 @@ Responde EXCLUSIVAMENTE en español de México; cualquier otro idioma (incluyend
 
 Estilo: escribe de forma sensorial y concreta (qué se ve, se escucha, se huele o se saborea), nunca genérica ni publicitaria; dirígete a la pareja de "ustedes" (nunca "tú" ni "usted"). Evita superlativos vacíos ("el mejor", "increíble", "único").
 
-En cada turno de esta conversación debes hacer UNA sola siguiente pregunta: la que llene el facet desconocido más valioso dado lo que ya se sabe de la pareja. Sigue este orden de cobertura salvo que el contexto sugiera lo contrario: entorno (setting) → escala (scale) → experiencia (experience) → zona/escapada (zone) → presupuesto/hospedaje (budget/lodging) → temporada (season).
+En cada turno de esta conversación debes hacer UNA sola pregunta: la que llena el "facet objetivo" de este turno, indicado más abajo junto con su contrato específico — el sistema (no tú) ya decidió cuál es. Toda opción debe fijar EXACTAMENTE ese facet objetivo ("facets" debe incluir esa clave) a un valor de la taxonomía distinto del de cada una de las demás opciones de este mismo paso. Ninguna opción puede fijar ningún OTRO facet a un valor distinto del que ya se conoce (ver "Facets conocidos de la pareja": son hechos fijos, no los contradigas ni los vuelvas a preguntar).
 
 Ofrece 3 o 4 opciones contrastantes entre sí, concretas y sensoriales (nunca genéricas). Cada opción debe estar anclada en un lugar o experiencia real de la base de conocimiento que se te da ("refs"): cita ahí los ids reales de los venues y/o experiencias en los que se basa; nunca inventes lugares ni ids. Una opción puede citar solo una experiencia, sin ningún venue.
 
@@ -153,12 +154,32 @@ function describeKnownFacets(facets: Facets): string {
   return lines.length > 0 ? lines.join("\n") : "(ninguno todavía)";
 }
 
-function describeUnknownFacets(facets: Facets): string {
-  const unknown = FACET_PRIORITY.filter((key) => facets[key] === undefined);
+/** The facets still unknown after this turn's target, in priority order — context only, never the model's to pick from. */
+function describeUnknownFacets(facets: Facets, targetFacet: FacetPriority): string {
+  const unknown = FACET_PRIORITY.filter((key) => key !== targetFacet && facets[key] === undefined);
   if (unknown.length === 0) {
     return "(ninguno)";
   }
   return unknown.map((key) => FACET_KEY_LABELS[key]).join(", ");
+}
+
+/**
+ * The per-facet question contract: what every option must be about and
+ * what its "refs" may cite, enforced both here (in the prompt) and in
+ * `engine.ts`'s `filterOptions` (code-side, never trusting the model
+ * alone). `zone` only ever reaches the model when no venue has been
+ * chosen yet (see `engine.ts`'s `computeTargetFacet`) — once one has, the
+ * couple's zone is already known and this question is skipped entirely.
+ */
+function targetFacetContract(targetFacet: FacetPriority): string {
+  switch (targetFacet) {
+    case "experience":
+      return 'Esta pregunta es "¿qué no puede faltar?": cada opción debe citar al menos un id real de EXPERIENCIA en "refs.experienceIds" (nunca solo un venue) — el sujeto de la opción es la experiencia en sí, no un lugar. Puede además citar un venue donde vivirla, pero nunca en lugar de la experiencia.';
+    case "zone":
+      return 'Cada opción propone una ZONA distinta ("facets.zone") de la base de conocimiento, ilustrada citando en "refs.venueIds" un venue real que esté en esa misma zona.';
+    default:
+      return `Cada opción describe cómo sería "${FACET_KEY_LABELS[targetFacet]}" para el lugar/zona que la pareja YA eligió (ver "Facets conocidos" abajo) — no introduzcas un lugar o zona nuevos. Si citas un venue en "refs.venueIds", debe ser consistente con la zona ya conocida (o no cites ninguno).`;
+  }
 }
 
 function describeTranscript(transcript: Transcript): string {
@@ -173,18 +194,23 @@ export interface BuildStepMessagesInput {
   transcript: Transcript;
   facets: Facets;
   digest: Digest;
+  /** Which facet this step must fill — computed by the engine (`computeTargetFacet`), never the model's choice. */
+  targetFacet: FacetPriority;
   /** 1-based index of the step about to be generated. */
   stepIndex: number;
   maxSteps: number;
 }
 
 function buildUserMessage(input: BuildStepMessagesInput): string {
-  const { transcript, facets, digest, stepIndex, maxSteps } = input;
+  const { transcript, facets, digest, targetFacet, stepIndex, maxSteps } = input;
 
-  return `Facets conocidos de la pareja:
+  return `Facet objetivo de este paso: ${FACET_KEY_LABELS[targetFacet]}
+Contrato de este facet objetivo: ${targetFacetContract(targetFacet)}
+
+Facets conocidos de la pareja (hechos fijos, no los contradigas):
 ${describeKnownFacets(facets)}
 
-Facets desconocidos, en orden de prioridad: ${describeUnknownFacets(facets)}
+Otros facets aún no preguntados (no son el objetivo de este turno): ${describeUnknownFacets(facets, targetFacet)}
 
 Conversación hasta ahora (pregunta → respuesta elegida):
 ${describeTranscript(transcript)}

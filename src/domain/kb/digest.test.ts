@@ -62,4 +62,41 @@ describe("buildDigest", () => {
     // whatever survives the tight budget must be a prefix of the generous ranking
     expect(generous.venueIds.slice(0, tight.venueIds.length)).toEqual(tight.venueIds);
   });
+
+  it("narrows to a single zone's venues plus state-wide experiences when zone is known", () => {
+    const digest = buildDigest({}, { zone: "ezequiel_montes", maxVenues: 50, maxExperiences: 50 });
+
+    for (const id of digest.venueIds) {
+      expect(getVenue(id)?.zone).toBe("ezequiel_montes");
+    }
+    // "ruta-arte-queso-vino" spans 4 zones (including ezequiel_montes) — a
+    // touring/state-wide experience, so it stays even once a zone is known.
+    expect(digest.experienceIds).toContain("ruta-arte-queso-vino");
+    // "callejoneada-centro-historico" is single-zone, a different zone.
+    expect(digest.experienceIds).not.toContain("callejoneada-centro-historico");
+  });
+
+  it("ranks venues lacking the known style last and caps them", () => {
+    const digest = buildDigest({}, { style: "colonial", maxVenues: 50, maxExperiences: 1 });
+
+    const stylesInOrder = digest.venueIds.map((id) =>
+      getVenue(id)?.facets.styles.includes("colonial"),
+    );
+    const firstFalse = stylesInOrder.indexOf(false);
+    if (firstFalse !== -1) {
+      expect(stylesInOrder.slice(firstFalse).every((matches) => matches === false)).toBe(true);
+    }
+    expect(stylesInOrder.filter((matches) => matches === false).length).toBeLessThanOrEqual(5);
+  });
+
+  it("always includes a chosen venue, first, tagged 'ya elegido', even outside the known zone's top ranking", () => {
+    const digest = buildDigest(
+      {},
+      { zone: "bernal", chosenVenueIds: ["v_vinedos-la-redonda"], maxVenues: 3 },
+    );
+
+    expect(digest.venueIds[0]).toBe("v_vinedos-la-redonda");
+    expect(digest.text).toContain("[v_vinedos-la-redonda] Viñedos La Redonda");
+    expect(digest.text).toContain("ya elegido");
+  });
 });

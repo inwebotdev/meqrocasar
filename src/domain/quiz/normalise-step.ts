@@ -1,5 +1,17 @@
 import { loadKb } from "@/domain/kb/load";
-import type { FacetKey, Facets } from "@/domain/kb/taxonomy";
+import {
+  BUDGET_VALUES,
+  EXPERIENCE_VALUES,
+  LODGING_VALUES,
+  SCALE_VALUES,
+  SEASON_VALUES,
+  SETTING_VALUES,
+  STYLE_VALUES,
+  ZONE_VALUES,
+  facetLabel,
+  type FacetKey,
+  type Facets,
+} from "@/domain/kb/taxonomy";
 
 import {
   GeneratedStepSchema,
@@ -329,14 +341,143 @@ function collectRawStrings(raw: ReturnType<typeof RawGeneratedStepSchema.parse>)
  */
 const SELECT_LABEL = "Elegir esta opción";
 
+// --- facet-value canonicalisation (runs before shape validation) --------
+
+/** Every facet key's closed vocabulary, for canonicalising a free-text value back to one of these. */
+const FACET_VALUE_SETS: Record<FacetKey, readonly string[]> = {
+  style: STYLE_VALUES,
+  setting: SETTING_VALUES,
+  scale: SCALE_VALUES,
+  zone: ZONE_VALUES,
+  experience: EXPERIENCE_VALUES,
+  budget: BUDGET_VALUES,
+  lodging: LODGING_VALUES,
+  season: SEASON_VALUES,
+};
+
+/** Lowercases, strips accents/diacritics and collapses anything non-alphanumeric into a single "_", so "íntima", "Íntima" and "intima" all normalise to the same token. */
+function facetToken(value: string): string {
+  return stripDiacritics(value.trim().toLowerCase())
+    .replace(/[^a-z0-9]+/g, "_")
+    .replace(/^_+|_+$/g, "");
+}
+
+/**
+ * Common es-MX words/phrases the fast model sometimes returns instead of
+ * the canonical taxonomy id, keyed by `facetToken`. Not exhaustive — just
+ * the aliases real runs have actually produced — anything else falls
+ * through to the direct-match/label-match checks in `canonicalFacetValue`,
+ * and ultimately to shape validation rejecting it (triggering the normal
+ * correction-turn retry) if nothing resolves it.
+ */
+const FACET_ALIASES: { [K in FacetKey]?: Record<string, string> } = {
+  style: {
+    rustico: "rustic_vineyard",
+    vinedo: "rustic_vineyard",
+    boho: "boho_desert",
+    semidesierto: "boho_desert",
+    moderno: "modern_elegant",
+    jardin: "garden_romantic",
+  },
+  setting: {
+    atardecer: "sunset_garden",
+    noche: "night_casona",
+    dia: "day_vineyard",
+    azotea: "rooftop_city",
+    capilla: "chapel_courtyard",
+  },
+  scale: {
+    intima: "intimate",
+    mediana: "medium",
+    grande: "grand",
+  },
+  lodging: {
+    con_hospedaje: "needed",
+    necesario: "needed",
+    sin_hospedaje: "not_needed",
+    no_necesario: "not_needed",
+  },
+};
+
+/**
+ * Maps a free-text facet value back onto its canonical taxonomy id: an
+ * exact match first, then a token match against every value and its es-MX
+ * label (e.g. "Tequisquiapan" ~ "tequisquiapan", "íntima" ~ the "Íntima
+ * (hasta 60)" label for `scale: "intimate"`), then the manual
+ * `FACET_ALIASES` table. Returns `raw` unchanged when nothing resolves it
+ * (shape validation rejects it from there, same as before this layer).
+ */
+function canonicalFacetValue(key: FacetKey, raw: string): string {
+  const values = FACET_VALUE_SETS[key];
+  if ((values as readonly string[]).includes(raw)) {
+    return raw;
+  }
+
+  const token = facetToken(raw);
+
+  for (const value of values) {
+    if (facetToken(value) === token) return value;
+    if (facetToken(facetLabel(key, value as never)).startsWith(token)) return value;
+  }
+
+  return FACET_ALIASES[key]?.[token] ?? raw;
+}
+
+/**
+ * Best-effort pre-pass over the model's raw (still-`unknown`) JSON: for
+ * every option, canonicalises `facets[targetFacet]` (see
+ * `canonicalFacetValue`) before `RawGeneratedStepSchema`'s strict enum
+ * validation ever sees it — that schema would otherwise reject a
+ * non-canonical label like "íntima" outright as a shape error, with no
+ * chance for normalisation to fix it. Never throws: any shape surprise
+ * just returns `raw` unchanged, and shape validation handles it from there.
+ */
+function canonicaliseTargetFacet(raw: unknown, targetFacet: FacetKey | undefined): unknown {
+  if (!targetFacet || typeof raw !== "object" || raw === null || !("options" in raw)) {
+    return raw;
+  }
+
+  const { options, ...rest } = raw as { options: unknown };
+  if (!Array.isArray(options)) {
+    return raw;
+  }
+
+  const nextOptions = options.map((option) => {
+    if (typeof option !== "object" || option === null || !("facets" in option)) {
+      return option;
+    }
+
+    const { facets, ...optionRest } = option as { facets: unknown };
+    if (typeof facets !== "object" || facets === null || !(targetFacet in facets)) {
+      return option;
+    }
+
+    const value = (facets as Record<string, unknown>)[targetFacet];
+    if (typeof value !== "string") {
+      return option;
+    }
+
+    return {
+      ...optionRest,
+      facets: { ...facets, [targetFacet]: canonicalFacetValue(targetFacet, value) },
+    };
+  });
+
+  return { ...rest, options: nextOptions };
+}
+
 /**
  * Normalises a raw LLM step (any `unknown` — typically `RawGeneratedStep`-
  * shaped JSON parsed straight from the model's response) into a step that
  * satisfies `GeneratedStepSchema`. See the module doc comment for the
  * fixes applied and why a language violation can't be fixed here.
+ *
+ * `targetFacet`, when given, canonicalises `facets[targetFacet]` on every
+ * option (e.g. "íntima" → "intimate") before shape validation — see
+ * `canonicaliseTargetFacet`.
  */
-export function normaliseGeneratedStep(raw: unknown): NormaliseStepResult {
-  const shape = RawGeneratedStepSchema.safeParse(raw);
+export function normaliseGeneratedStep(raw: unknown, targetFacet?: FacetKey): NormaliseStepResult {
+  const shape = RawGeneratedStepSchema.safeParse(canonicaliseTargetFacet(raw, targetFacet));
   if (!shape.success) {
     return { ok: false, reason: "shape" };
   }

@@ -46,6 +46,7 @@ describe("buildStepMessages", () => {
       transcript: makeTranscript(),
       facets,
       digest,
+      targetFacet: "scale",
       stepIndex: 3,
       maxSteps: 7,
     });
@@ -55,12 +56,13 @@ describe("buildStepMessages", () => {
     expect(messages[1]?.role).toBe("user");
   });
 
-  it("includes the digest's venue/experience ids, known and unknown facets, and the step counters", () => {
+  it("includes the digest's venue/experience ids, known and unknown facets, the target facet and the step counters", () => {
     const digest = buildDigest(facets, { maxVenues: 5, maxExperiences: 3 });
     const messages = buildStepMessages({
       transcript: makeTranscript(),
       facets,
       digest,
+      targetFacet: "zone",
       stepIndex: 3,
       maxSteps: 7,
     });
@@ -76,10 +78,33 @@ describe("buildStepMessages", () => {
 
     expect(userContent).toContain("Rústico Viñedo");
     expect(userContent).toContain("Día de Viñedo");
-    expect(userContent).toContain("Zona");
-    expect(userContent).toContain("Experiencia");
+    expect(userContent).toContain("Facet objetivo de este paso: Zona");
     expect(userContent).toContain("3");
     expect(userContent).toContain("7");
+  });
+
+  it("includes the per-target-facet contract text for the experience and zone targets", () => {
+    const digest = buildDigest(facets, { maxVenues: 5, maxExperiences: 3 });
+
+    const experienceMessages = buildStepMessages({
+      transcript: makeTranscript(),
+      facets,
+      digest,
+      targetFacet: "experience",
+      stepIndex: 3,
+      maxSteps: 7,
+    });
+    expect(experienceMessages[1]?.content).toContain("refs.experienceIds");
+
+    const zoneMessages = buildStepMessages({
+      transcript: makeTranscript(),
+      facets,
+      digest,
+      targetFacet: "zone",
+      stepIndex: 3,
+      maxSteps: 7,
+    });
+    expect(zoneMessages[1]?.content).toContain("ZONA distinta");
   });
 
   it("includes the transcript as question → chosen title lines", () => {
@@ -88,6 +113,7 @@ describe("buildStepMessages", () => {
       transcript: makeTranscript(),
       facets,
       digest,
+      targetFacet: "scale",
       stepIndex: 3,
       maxSteps: 7,
     });
@@ -102,6 +128,7 @@ describe("buildStepMessages", () => {
       transcript: makeTranscript(),
       facets,
       digest,
+      targetFacet: "scale",
       stepIndex: 3,
       maxSteps: 7,
     });

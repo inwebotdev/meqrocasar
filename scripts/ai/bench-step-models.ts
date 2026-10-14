@@ -31,12 +31,15 @@ import {
   LLM_STEP_JSON_SCHEMA,
   type GeneratedStep,
 } from "../../src/domain/quiz/generated-step";
+import { computeTargetFacet } from "../../src/domain/quiz/engine";
 import { getOption, QUIZ_STEPS } from "../../src/domain/quiz/questions";
 import {
+  chosenRefs,
   entryFromCuratedOption,
-  foldFacets,
+  knownFacets,
   type Transcript,
 } from "../../src/domain/quiz/transcript";
+import { loadKb } from "../../src/domain/kb/load";
 
 const MODELS_ENDPOINT = "https://openrouter.ai/api/v1/models";
 const ENDPOINTS_ENDPOINT = (modelId: string) =>
@@ -273,12 +276,23 @@ async function runOnce(
   transcript: Transcript,
   providerOrder?: string[],
 ): Promise<RunResult> {
-  const facets = foldFacets(transcript.entries);
-  const digest = buildDigest(facets, { maxVenues: 20, maxExperiences: 10, maxChars: 4500 });
+  const kb = loadKb();
+  const facets = knownFacets(transcript.entries, kb);
+  const { venueIds: chosenVenueIds } = chosenRefs(transcript.entries);
+  const targetFacet = computeTargetFacet(facets, chosenVenueIds) ?? "season";
+  const digest = buildDigest(facets, {
+    maxVenues: 20,
+    maxExperiences: 10,
+    maxChars: 4500,
+    zone: facets.zone,
+    style: facets.style,
+    chosenVenueIds,
+  });
   const messages = buildStepMessages({
     transcript,
     facets,
     digest,
+    targetFacet,
     stepIndex: transcript.entries.length + 1,
     maxSteps: MAX_STEPS,
   });

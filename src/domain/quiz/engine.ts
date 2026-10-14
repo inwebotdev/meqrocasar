@@ -2,7 +2,12 @@ import { estimateCostUsd } from "@/domain/ai/pricing";
 import type { ChatMessage, LlmUsage, StructuredClient } from "@/domain/ai/structured";
 import { buildDigest } from "@/domain/kb/digest";
 import { loadKb } from "@/domain/kb/load";
-import type { Facets } from "@/domain/kb/taxonomy";
+import {
+  FACET_PRIORITY,
+  type FacetKey,
+  type FacetPriority,
+  type Facets,
+} from "@/domain/kb/taxonomy";
 import type { Kb } from "@/domain/kb/types";
 import type { ImageProvider } from "@/domain/images/provider";
 import { isPlacesUsable } from "@/domain/places/availability";
@@ -27,7 +32,7 @@ import {
 import { normaliseGeneratedStep } from "./normalise-step";
 import { QUIZ_STEPS } from "./questions";
 import type { QuizStep } from "./types";
-import { foldFacets, type Transcript, type TranscriptEntry } from "./transcript";
+import { chosenRefs, knownFacets, type Transcript, type TranscriptEntry } from "./transcript";
 import { hashTranscript } from "./transcript-hash";
 
 /**
@@ -184,25 +189,74 @@ function cacheSet(
   }
 }
 
+// --- targeting -------------------------------------------------------------
+
+/**
+ * The facet this step must fill, computed by the engine — never left to
+ * the model. The first unknown key in `FACET_PRIORITY`, except `zone`:
+ * once any venue has been chosen, its zone is already known (via
+ * `knownFacets`/`impliedFacets`), so the zone question is skipped
+ * entirely rather than asked again. `undefined` once nothing is left to
+ * ask (the step is `done`).
+ */
+export function computeTargetFacet(
+  known: Facets,
+  chosenVenueIds: readonly string[],
+): FacetPriority | undefined {
+  for (const key of FACET_PRIORITY) {
+    if (key === "zone" && chosenVenueIds.length > 0) {
+      continue;
+    }
+    if (known[key] === undefined) {
+      return key;
+    }
+  }
+
+  return undefined;
+}
+
+/** True when `facets` sets any key also present in `known` to a different value. */
+function contradictsKnownFacets(facets: Facets, known: Facets): boolean {
+  return (Object.keys(facets) as FacetKey[]).some((key) => {
+    const value = facets[key];
+    const knownValue = known[key];
+    return value !== undefined && knownValue !== undefined && value !== knownValue;
+  });
+}
+
 // --- static fallback (curated decks) --------------------------------------
 
 /**
  * Picks the next unused curated step, starting at `min(stepIndex - 1, 3)`
  * and searching forward (wrapping around) for one whose id hasn't already
- * been answered in `entries`. `undefined` when all 4 curated steps have
- * already been used.
+ * been answered in `entries` and whose options — once any contradicting
+ * `known` facets are dropped (`contradictsKnownFacets`) — still leave at
+ * least 3. The curated decks have no dedicated "zone" step today, but this
+ * generically covers the same defect for whichever curated step is picked:
+ * a step whose fixed options no longer make sense (e.g. a style other
+ * than the one already chosen) is skipped rather than asked half-empty.
+ * `undefined` once every curated step has been used or exhausted this way.
  */
 function pickFallbackStep(
   entries: readonly TranscriptEntry[],
   stepIndex: number,
-): QuizStep | undefined {
+  known: Facets,
+): ResolvedStep | undefined {
   const usedIds = new Set(entries.map((entry) => entry.stepId));
   const startIndex = Math.min(stepIndex - 1, QUIZ_STEPS.length - 1);
 
   for (let offset = 0; offset < QUIZ_STEPS.length; offset += 1) {
     const candidate = QUIZ_STEPS[(startIndex + offset) % QUIZ_STEPS.length];
-    if (candidate && !usedIds.has(candidate.id)) {
-      return candidate;
+    if (!candidate || usedIds.has(candidate.id)) {
+      continue;
+    }
+
+    const resolved = resolvedStepFromCurated(candidate, stepIndex);
+    const options = resolved.options.filter(
+      (option) => !contradictsKnownFacets(option.facets, known),
+    );
+    if (options.length >= 3) {
+      return { ...resolved, options };
     }
   }
 
@@ -212,6 +266,7 @@ function pickFallbackStep(
 interface StaticFallbackContext {
   entries: readonly TranscriptEntry[];
   stepIndex: number;
+  known: Facets;
   start: number;
   now: () => number;
   attempts: number;
@@ -227,65 +282,140 @@ function staticFallbackResult(ctx: StaticFallbackContext): QuizEngineResult {
     attempts: ctx.attempts,
   });
 
-  const candidateStep = pickFallbackStep(ctx.entries, ctx.stepIndex);
-  if (!candidateStep) {
+  const step = pickFallbackStep(ctx.entries, ctx.stepIndex, ctx.known);
+  if (!step) {
     return { done: true, meta };
   }
 
-  return { done: false, step: resolvedStepFromCurated(candidateStep, ctx.stepIndex), meta };
+  return { done: false, step, meta };
 }
 
-// --- ref validation ------------------------------------------------------
+// --- option validation (refs + coherence) ---------------------------------
 
 interface FilterOptionsResult {
   options: GeneratedOption[];
-  invalidIds: string[];
+  /** Human-readable rule violations, fed back as one correction-turn message (`correctionMessage`) when fewer than 3 options survive. */
+  violations: string[];
 }
 
 /**
- * Drops venue/experience ids that aren't real KB entries, drops any option
- * that ends up with no valid refs at all (nothing grounds it in a real
- * place or experience), and dedupes option ids (first occurrence wins).
+ * Validates every option against this step's target facet and the known
+ * facets — the per-facet question contract (see `engine-prompt.ts`'s
+ * `targetFacetContract`), enforced code-side rather than trusted from the
+ * model alone:
+ *
+ * - refs must resolve to real KB entries (unknown ids dropped);
+ * - every option must set `facets[targetFacet]` to a taxonomy value, and
+ *   that value must be distinct from every other kept option's (first
+ *   occurrence wins);
+ * - no option may set any OTHER facet to a value that contradicts `known`;
+ * - once a zone is known, a venue ref outside it invalidates the option;
+ * - the `experience` target requires at least one real experience ref
+ *   (never a venue standing in for one);
+ * - the `zone` target requires the option's own zone value to match a
+ *   cited venue's actual zone (when it cites one).
+ *
+ * Also dedupes option ids (first occurrence wins), same as before this
+ * layer.
  */
-function filterOptions(step: GeneratedStep, kb: Kb): FilterOptionsResult {
-  const invalidIds = new Set<string>();
+function filterOptions(
+  step: GeneratedStep,
+  kb: Kb,
+  targetFacet: FacetPriority,
+  known: Facets,
+): FilterOptionsResult {
+  const violations = new Set<string>();
   const seenIds = new Set<string>();
+  const seenTargetValues = new Set<string>();
   const options: GeneratedOption[] = [];
 
   for (const option of step.options) {
+    if (seenIds.has(option.id)) {
+      continue;
+    }
+
     const venueIds = option.refs.venueIds.filter((id) => {
       const valid = kb.venues.some((venue) => venue.id === id);
-      if (!valid) invalidIds.add(id);
+      if (!valid) violations.add(`el id "${id}" no existe en la base de conocimiento`);
       return valid;
     });
     const experienceIds = option.refs.experienceIds.filter((id) => {
       const valid = kb.experiences.some((experience) => experience.id === id);
-      if (!valid) invalidIds.add(id);
+      if (!valid) violations.add(`el id "${id}" no existe en la base de conocimiento`);
       return valid;
     });
 
     if (venueIds.length === 0 && experienceIds.length === 0) {
+      violations.add("cada opción debe citar al menos un venue o experiencia real en refs");
       continue;
     }
-    if (seenIds.has(option.id)) {
+
+    const targetValue = option.facets[targetFacet];
+    if (targetValue === undefined) {
+      violations.add(`cada opción debe fijar facets.${targetFacet}`);
       continue;
     }
+    if (seenTargetValues.has(targetValue)) {
+      violations.add(`cada opción debe tener un valor distinto de facets.${targetFacet}`);
+      continue;
+    }
+
+    const contradictsOtherFacets = (Object.keys(option.facets) as FacetKey[]).some((key) => {
+      if (key === targetFacet) return false;
+      const value = option.facets[key];
+      const knownValue = known[key];
+      return value !== undefined && knownValue !== undefined && value !== knownValue;
+    });
+    if (contradictsOtherFacets) {
+      violations.add("ninguna opción puede contradecir un facet ya conocido");
+      continue;
+    }
+
+    if (known.zone !== undefined) {
+      const venueOutsideZone = venueIds.some((id) => {
+        const venue = kb.venues.find((candidate) => candidate.id === id);
+        return venue !== undefined && venue.zone !== known.zone;
+      });
+      if (venueOutsideZone) {
+        violations.add("los venues citados deben estar en la zona ya conocida");
+        continue;
+      }
+    }
+
+    if (targetFacet === "experience" && experienceIds.length === 0) {
+      violations.add("las opciones de experiencia deben citar al menos un id de experiencia real");
+      continue;
+    }
+
+    if (targetFacet === "zone") {
+      const matchesCitedVenue =
+        venueIds.length === 0 ||
+        venueIds.some(
+          (id) => kb.venues.find((candidate) => candidate.id === id)?.zone === targetValue,
+        );
+      if (!matchesCitedVenue) {
+        violations.add("cada opción de zona debe ilustrarse con un venue real de esa misma zona");
+        continue;
+      }
+    }
+
     seenIds.add(option.id);
+    seenTargetValues.add(targetValue);
 
     const refs: GeneratedRefs = { venueIds, experienceIds };
     options.push({ ...option, refs });
   }
 
-  return { options, invalidIds: [...invalidIds] };
+  return { options, violations: [...violations] };
 }
 
-function correctionMessage(invalidIds: readonly string[]): string {
-  const idsText =
-    invalidIds.length > 0
-      ? invalidIds.join(", ")
-      : "(ninguno inválido, pero quedaron menos de 3 opciones con refs válidos)";
+function correctionMessage(violations: readonly string[]): string {
+  const rulesText =
+    violations.length > 0
+      ? violations.join("; ")
+      : "quedaron menos de 3 opciones válidas tras aplicar las reglas de coherencia de este paso";
 
-  return `Los siguientes ids no existen en la base de conocimiento: ${idsText}. Devuelve el objeto JSON corregido citando solo ids reales del digest, con al menos 3 opciones válidas.`;
+  return `La respuesta anterior rompió esta(s) regla(s): ${rulesText}. Devuelve el objeto JSON corregido cumpliendo todas las reglas, con al menos 3 opciones válidas.`;
 }
 
 // --- photo resolution ------------------------------------------------------
@@ -337,7 +467,9 @@ interface GenerateContext {
   llm: StructuredClient<RawGeneratedStep> | undefined;
   transcript: Transcript;
   entries: readonly TranscriptEntry[];
-  facets: Facets;
+  known: Facets;
+  targetFacet: FacetPriority;
+  chosenVenueIds: readonly string[];
   stepIndex: number;
   maxSteps: number;
   kb: Kb;
@@ -352,7 +484,9 @@ async function generateStep(ctx: GenerateContext): Promise<QuizEngineResult> {
     llm,
     transcript,
     entries,
-    facets,
+    known,
+    targetFacet,
+    chosenVenueIds,
     stepIndex,
     maxSteps,
     kb,
@@ -363,13 +497,14 @@ async function generateStep(ctx: GenerateContext): Promise<QuizEngineResult> {
   } = ctx;
 
   if (!llm) {
-    return staticFallbackResult({ entries, stepIndex, start, now, attempts: 0 });
+    return staticFallbackResult({ entries, stepIndex, known, start, now, attempts: 0 });
   }
 
   const messages = buildStepMessages({
     transcript,
-    facets,
-    digest: buildDigestFor(facets),
+    facets: known,
+    digest: buildDigestFor(known, chosenVenueIds),
+    targetFacet,
     stepIndex,
     maxSteps,
   });
@@ -379,6 +514,7 @@ async function generateStep(ctx: GenerateContext): Promise<QuizEngineResult> {
     return staticFallbackResult({
       entries,
       stepIndex,
+      known,
       start,
       now,
       attempts: primary.attempts.length,
@@ -388,7 +524,7 @@ async function generateStep(ctx: GenerateContext): Promise<QuizEngineResult> {
   let model = primary.model;
   let usage = primary.usage;
   let attempts = primary.attempts.length;
-  let normalised = normaliseGeneratedStep(primary.value);
+  let normalised = normaliseGeneratedStep(primary.value, targetFacet);
 
   // The one thing normalisation can't fix itself: non-Latin script means
   // the model answered off-language, so give it one explicit correction
@@ -406,42 +542,42 @@ async function generateStep(ctx: GenerateContext): Promise<QuizEngineResult> {
     if (languageRetry.ok) {
       model = languageRetry.model;
       usage = languageRetry.usage;
-      normalised = normaliseGeneratedStep(languageRetry.value);
+      normalised = normaliseGeneratedStep(languageRetry.value, targetFacet);
     }
   }
 
   if (!normalised.ok) {
-    return staticFallbackResult({ entries, stepIndex, start, now, attempts });
+    return staticFallbackResult({ entries, stepIndex, known, start, now, attempts });
   }
 
   let candidate = normalised.step;
   const normalisations = normalised.fixes.length;
 
-  let { options: validOptions, invalidIds } = filterOptions(candidate, kb);
+  let { options: validOptions, violations } = filterOptions(candidate, kb, targetFacet, known);
 
   if (validOptions.length < 3) {
     const retryMessages: ChatMessage[] = [
       ...messages,
       { role: "assistant", content: JSON.stringify(candidate) },
-      { role: "user", content: correctionMessage(invalidIds) },
+      { role: "user", content: correctionMessage(violations) },
     ];
 
     const retry = await llm.generate(retryMessages);
     attempts += retry.attempts.length;
 
     if (retry.ok) {
-      const retryNormalised = normaliseGeneratedStep(retry.value);
+      const retryNormalised = normaliseGeneratedStep(retry.value, targetFacet);
       if (retryNormalised.ok) {
         candidate = retryNormalised.step;
         model = retry.model;
         usage = retry.usage;
-        ({ options: validOptions, invalidIds } = filterOptions(candidate, kb));
+        ({ options: validOptions, violations } = filterOptions(candidate, kb, targetFacet, known));
       }
     }
   }
 
   if (validOptions.length < 3) {
-    return staticFallbackResult({ entries, stepIndex, start, now, attempts });
+    return staticFallbackResult({ entries, stepIndex, known, start, now, attempts });
   }
 
   // The model is instructed never to return `done: true` before 5
@@ -466,7 +602,7 @@ async function generateStep(ctx: GenerateContext): Promise<QuizEngineResult> {
   }
 
   const resolvedOptions = await Promise.all(
-    validOptions.map((option) => resolveOptionPhoto(option, kb, images, facets, placesUsable)),
+    validOptions.map((option) => resolveOptionPhoto(option, kb, images, known, placesUsable)),
   );
 
   const step: ResolvedStep = {
@@ -497,8 +633,15 @@ async function generateStep(ctx: GenerateContext): Promise<QuizEngineResult> {
   };
 }
 
-function buildDigestFor(facets: Facets) {
-  return buildDigest(facets, { maxVenues: 20, maxExperiences: 10, maxChars: 4500 });
+function buildDigestFor(known: Facets, chosenVenueIds: readonly string[]) {
+  return buildDigest(known, {
+    maxVenues: 20,
+    maxExperiences: 10,
+    maxChars: 4500,
+    zone: known.zone,
+    style: known.style,
+    chosenVenueIds,
+  });
 }
 
 // --- public entry point --------------------------------------------------
@@ -537,7 +680,8 @@ export function createQuizEngine(options: CreateQuizEngineOptions): QuizEngine {
         };
       }
 
-      const facets = foldFacets(entries);
+      const known = knownFacets(entries, kb);
+      const { venueIds: chosenVenueIds } = chosenRefs(entries);
       const stepIndex = entries.length + 1;
 
       // The only hard stop that skips the LLM entirely: `QUIZ_MAX_STEPS`
@@ -546,6 +690,26 @@ export function createQuizEngine(options: CreateQuizEngineOptions): QuizEngine {
       // `generateStep`/`MIN_ANSWERED_ENTRIES_BEFORE_DONE`.
       const hardStop = stepIndex > maxSteps;
       if (hardStop) {
+        return {
+          done: true,
+          meta: buildMeta({
+            model: STATIC_MODEL,
+            start,
+            now,
+            fallbackUsed: false,
+            source: "static",
+            attempts: 0,
+          }),
+        };
+      }
+
+      // Code-driven targeting: the engine (not the model) decides which
+      // facet this step must fill. Once nothing is left unknown, the quiz
+      // is done — this is checked before the LLM is even called, which is
+      // also what makes the zone question disappear entirely once a venue
+      // has been chosen (`computeTargetFacet` treats zone as known then).
+      const targetFacet = computeTargetFacet(known, chosenVenueIds);
+      if (targetFacet === undefined) {
         return {
           done: true,
           meta: buildMeta({
@@ -569,7 +733,9 @@ export function createQuizEngine(options: CreateQuizEngineOptions): QuizEngine {
         llm: options.llm,
         transcript,
         entries,
-        facets,
+        known,
+        targetFacet,
+        chosenVenueIds,
         stepIndex,
         maxSteps,
         kb,

@@ -251,4 +251,63 @@ describe("normaliseGeneratedStep", () => {
     const result = normaliseGeneratedStep(validStep());
     expect(result.ok).toBe(true);
   });
+
+  describe("targetFacet canonicalisation", () => {
+    it("maps a free-text Spanish label back to the canonical taxonomy id ('íntima' → 'intimate')", () => {
+      const step = validStep({
+        options: [
+          validOption({ id: "opt-a", facets: { scale: "íntima" } }),
+          validOption({ id: "opt-b", facets: { scale: "medium" } }),
+          validOption({ id: "opt-c", facets: { scale: "grand" } }),
+        ],
+      });
+
+      const result = normaliseGeneratedStep(step, "scale");
+      expect(result.ok).toBe(true);
+      if (!result.ok) return;
+      expect(result.step.options[0]?.facets.scale).toBe("intimate");
+    });
+
+    it("maps a setting label to its canonical id ('atardecer' → 'sunset_garden')", () => {
+      const step = validStep({
+        options: [
+          validOption({ id: "opt-a", facets: { setting: "atardecer" } }),
+          validOption({ id: "opt-b", facets: { setting: "night_casona" } }),
+          validOption({ id: "opt-c", facets: { setting: "day_vineyard" } }),
+        ],
+      });
+
+      const result = normaliseGeneratedStep(step, "setting");
+      expect(result.ok).toBe(true);
+      if (!result.ok) return;
+      expect(result.step.options[0]?.facets.setting).toBe("sunset_garden");
+    });
+
+    it("maps a capitalized zone name to its canonical id ('Tequisquiapan' → 'tequisquiapan')", () => {
+      const step = validStep({
+        options: [
+          validOption({ id: "opt-a", facets: { zone: "Tequisquiapan" } }),
+          validOption({ id: "opt-b", facets: { zone: "bernal" } }),
+          validOption({ id: "opt-c", facets: { zone: "colon" } }),
+        ],
+      });
+
+      const result = normaliseGeneratedStep(step, "zone");
+      expect(result.ok).toBe(true);
+      if (!result.ok) return;
+      expect(result.step.options[0]?.facets.zone).toBe("tequisquiapan");
+    });
+
+    it("leaves facets untouched (and still rejects, if invalid) when no targetFacet is given", () => {
+      const step = validStep({
+        options: [
+          validOption({ id: "opt-a", facets: { scale: "íntima" } }),
+          validOption({ id: "opt-b", facets: { scale: "medium" } }),
+          validOption({ id: "opt-c", facets: { scale: "grand" } }),
+        ],
+      });
+
+      expect(normaliseGeneratedStep(step)).toEqual({ ok: false, reason: "shape" });
+    });
+  });
 });

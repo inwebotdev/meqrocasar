@@ -10,15 +10,22 @@ import { createStaticImageProvider } from "@/domain/images/static-fallback";
 import { createUnsplashImageProvider } from "@/domain/images/unsplash";
 import type { ImageProvider } from "@/domain/images/provider";
 
+import { loadKb } from "@/domain/kb/load";
+import type { FacetKey } from "@/domain/kb/taxonomy";
+
+import coupleATranscript from "../../../test/fixtures/demo/couple-a-intima-colonial.transcript.json";
+import coupleBTranscript from "../../../test/fixtures/demo/couple-b-grande-vinedos.transcript.json";
 import { mockOpenRouterChat, mockUnsplashSearch } from "../../../test/msw/handlers";
 import { server } from "../../../test/msw/server";
-import { createQuizEngine } from "./engine";
+import { computeTargetFacet, createQuizEngine } from "./engine";
 import {
   RAW_LLM_STEP_JSON_SCHEMA,
   RawGeneratedStepSchema,
   type RawGeneratedStep,
 } from "./generated-step";
-import type { Transcript, TranscriptEntry } from "./transcript";
+import { chosenRefs, knownFacets, type Transcript, type TranscriptEntry } from "./transcript";
+
+const kb = loadKb();
 
 const PRIMARY_MODEL = "deepseek/deepseek-chat";
 const FALLBACK_MODEL = "qwen/qwen-turbo";
@@ -57,6 +64,11 @@ interface StepOverrides {
   done?: boolean;
 }
 
+// All 4 default options target the "experience" facet (the computed
+// targetFacet for `makeTranscript(3)`/`makeEntries(3..5)` below — see their
+// facets: style/setting/scale are known by then, experience isn't yet),
+// each with a distinct `facets.experience` value and a real experience
+// ref, consistent with the known style/setting/scale.
 function makeGeneratedStep(overrides: StepOverrides = {}): RawGeneratedStep {
   const options: RawGeneratedStep["options"] = overrides.options ?? [
     {
@@ -73,8 +85,8 @@ function makeGeneratedStep(overrides: StepOverrides = {}): RawGeneratedStep {
       title: "Cata Íntima en Cava",
       description: "Una cata privada entre barricas, con menú de autor para pocos invitados.",
       hashtags: ["#CataPrivada", "#CavaExclusiva", "#MenuDeAutor"],
-      facets: { scale: "intimate" },
-      refs: { venueIds: ["v_bodegas-de-cote"], experienceIds: [] },
+      facets: { experience: "wine_tasting" },
+      refs: { venueIds: ["v_bodegas-de-cote"], experienceIds: ["cata-vinos-de-cote"] },
       photoQuery: "wine cellar intimate wedding dinner",
     },
     {
@@ -82,18 +94,19 @@ function makeGeneratedStep(overrides: StepOverrides = {}): RawGeneratedStep {
       title: "Globo al Amanecer",
       description: "Un vuelo en globo aerostático sobre los viñedos antes de la fiesta.",
       hashtags: ["#GloboAerostatico", "#AmanecerQueretano", "#Tequisquiapan"],
-      facets: { zone: "tequisquiapan" },
-      refs: { venueIds: [], experienceIds: ["vendimia-freixenet"] },
+      facets: { experience: "hot_air_balloon" },
+      refs: { venueIds: [], experienceIds: ["globo-tequisquiapan"] },
       photoQuery: "hot air balloon sunrise wedding",
     },
     {
       id: "ruta-queso",
-      title: "Ruta del Arte Queso y Vino",
-      description: "Una tarde probando quesos artesanales y vinos locales con sus invitados.",
-      hashtags: ["#RutaDelQueso", "#SaboresLocales", "#Tequisquiapan"],
-      facets: { experience: "cheese_route" },
-      refs: { venueIds: [], experienceIds: ["ruta-arte-queso-vino"] },
-      photoQuery: "artisan cheese and wine tasting",
+      title: "Cena Gourmet entre Barricas",
+      description:
+        "Una cena gourmet entre barricas, maridada con vinos locales para sus invitados.",
+      hashtags: ["#CenaGourmet", "#MaridajeLocal", "#ValleDeColon"],
+      facets: { experience: "gourmet_banquet" },
+      refs: { venueIds: [], experienceIds: ["cena-vinedo-de-cote"] },
+      photoQuery: "gourmet dinner wine barrels",
     },
   ];
 
@@ -107,15 +120,20 @@ function makeGeneratedStep(overrides: StepOverrides = {}): RawGeneratedStep {
   };
 }
 
+// `experience` is deliberately last: every test below computes the
+// targetFacet from a prefix of this list, and keeping `experience` unknown
+// through at least 5 entries keeps it the target (matching the default
+// `makeGeneratedStep()` fixture, which targets "experience") for every
+// entry count these tests actually use (3, 4, 5).
 function makeEntries(count: number): TranscriptEntry[] {
   const facetsList = [
     { style: "rustic_vineyard" as const },
     { setting: "day_vineyard" as const },
     { scale: "intimate" as const },
     { zone: "ezequiel_montes" as const },
-    { experience: "wine_tasting" as const },
     { budget: "medio_alto" as const },
     { lodging: "needed" as const },
+    { experience: "wine_tasting" as const },
   ];
 
   return Array.from({ length: count }, (_, i) => ({
@@ -366,7 +384,7 @@ describe("createQuizEngine", () => {
     const correctionMessages = bodies[1]?.messages as Array<{ role: string; content: string }>;
     expect(correctionMessages.at(-2)?.role).toBe("assistant");
     expect(correctionMessages.at(-1)?.role).toBe("user");
-    expect(correctionMessages.at(-1)?.content).toContain("no existen en la base de conocimiento");
+    expect(correctionMessages.at(-1)?.content).toContain("no existe en la base de conocimiento");
 
     expect(result.meta.fallbackUsed).toBe(true);
     expect(result.meta.source).toBe("static");
@@ -486,7 +504,10 @@ describe("createQuizEngine", () => {
           id: "o4",
           title: "O4",
           summary: "S4",
-          facets: { experience: "wine_tasting" },
+          // Not "experience": the default `makeGeneratedStep()` fixture
+          // targets "experience", so it must stay unknown here too for
+          // the mocked response below to survive validation.
+          facets: { budget: "medio_alto" },
           refs: { venueIds: [], experienceIds: [] },
         },
       },
@@ -551,7 +572,9 @@ describe("createQuizEngine", () => {
     const step = makeGeneratedStep({
       options: makeGeneratedStep().options.map((option) => ({
         ...option,
-        refs: { venueIds: [placesVenueId], experienceIds: [] },
+        // Keep the option's own (real) experience ref — the "experience"
+        // target requires one — only the venue swaps to the Places fixture.
+        refs: { venueIds: [placesVenueId], experienceIds: option.refs.experienceIds },
       })),
     });
 
@@ -581,7 +604,9 @@ describe("createQuizEngine", () => {
     const step = makeGeneratedStep({
       options: makeGeneratedStep().options.map((option) => ({
         ...option,
-        refs: { venueIds: [placesVenueId], experienceIds: [] },
+        // Keep the option's own (real) experience ref — the "experience"
+        // target requires one — only the venue swaps to the Places fixture.
+        refs: { venueIds: [placesVenueId], experienceIds: option.refs.experienceIds },
       })),
     });
 
@@ -609,7 +634,9 @@ describe("createQuizEngine", () => {
     const step = makeGeneratedStep({
       options: makeGeneratedStep().options.map((option) => ({
         ...option,
-        refs: { venueIds: [placesVenueId], experienceIds: [] },
+        // Keep the option's own (real) experience ref — the "experience"
+        // target requires one — only the venue swaps to the Places fixture.
+        refs: { venueIds: [placesVenueId], experienceIds: option.refs.experienceIds },
       })),
     });
 
@@ -666,4 +693,367 @@ describe("createQuizEngine", () => {
       `https://images.unsplash.com/ok-${encodeURIComponent("vineyard harvest sunset wedding")}`,
     );
   });
+});
+
+describe("computeTargetFacet", () => {
+  it("picks the first unknown facet in FACET_PRIORITY order", () => {
+    expect(computeTargetFacet({}, [])).toBe("setting");
+    expect(computeTargetFacet({ setting: "day_vineyard" }, [])).toBe("scale");
+    expect(computeTargetFacet({ setting: "day_vineyard", scale: "intimate" }, [])).toBe(
+      "experience",
+    );
+  });
+
+  it("asks zone next once setting/scale/experience are known and no venue has been chosen", () => {
+    const known = {
+      setting: "day_vineyard",
+      scale: "intimate",
+      experience: "wine_tasting",
+    } as const;
+    expect(computeTargetFacet(known, [])).toBe("zone");
+  });
+
+  it("treats zone as known once any venue has been chosen, skipping straight to budget", () => {
+    const known = {
+      setting: "day_vineyard",
+      scale: "intimate",
+      experience: "wine_tasting",
+    } as const;
+    expect(computeTargetFacet(known, ["v_vinedos-la-redonda"])).toBe("budget");
+  });
+
+  it("returns undefined (done) once every facet is known", () => {
+    const known = {
+      setting: "day_vineyard",
+      scale: "intimate",
+      experience: "wine_tasting",
+      zone: "ezequiel_montes",
+      budget: "medio",
+      lodging: "not_needed",
+      season: "primavera",
+    } as const;
+    expect(computeTargetFacet(known, [])).toBeUndefined();
+  });
+});
+
+describe("filterOptions coherence rules (via createQuizEngine)", () => {
+  function engineWithLlm() {
+    return createQuizEngine({
+      llm: buildLlmClient(),
+      images: createStaticImageProvider(),
+      maxSteps: 7,
+    });
+  }
+
+  it("drops an option missing facets[targetFacet], keeping the rest when >= 3 survive", async () => {
+    const base = makeGeneratedStep().options;
+    const step = makeGeneratedStep({
+      options: [
+        { ...base[0]!, facets: { budget: "medio" } }, // no "experience" — the target for makeTranscript(3)
+        base[1]!,
+        base[2]!,
+        base[3]!,
+      ],
+    });
+    server.use(mockOpenRouterChat(() => chatCompletion(JSON.stringify(step))));
+
+    const result = await engineWithLlm().nextStep(makeTranscript(3));
+
+    expect(result.done).toBe(false);
+    if (result.done) return;
+    expect(result.step.source).toBe("llm");
+    expect(result.step.options).toHaveLength(3);
+    expect(result.step.options.some((option) => option.id === "vendimia-redonda")).toBe(false);
+  });
+
+  it("drops an option whose facets[targetFacet] duplicates an earlier option's", async () => {
+    const base = makeGeneratedStep().options;
+    const step = makeGeneratedStep({
+      options: [
+        base[0]!, // experience: "vendimia"
+        { ...base[1]!, facets: { experience: "vendimia" } }, // duplicate value
+        base[2]!,
+        base[3]!,
+      ],
+    });
+    server.use(mockOpenRouterChat(() => chatCompletion(JSON.stringify(step))));
+
+    const result = await engineWithLlm().nextStep(makeTranscript(3));
+
+    expect(result.done).toBe(false);
+    if (result.done) return;
+    expect(result.step.options.map((option) => option.id)).toEqual([
+      "vendimia-redonda",
+      "globo-tqp",
+      "ruta-queso",
+    ]);
+  });
+
+  it("drops an option that sets another facet to a value contradicting what's already known", async () => {
+    const base = makeGeneratedStep().options;
+    const step = makeGeneratedStep({
+      options: [
+        // makeTranscript(3) already knows scale: "intimate" — this option contradicts it.
+        { ...base[0]!, facets: { experience: "vendimia", scale: "grand" } },
+        base[1]!,
+        base[2]!,
+        base[3]!,
+      ],
+    });
+    server.use(mockOpenRouterChat(() => chatCompletion(JSON.stringify(step))));
+
+    const result = await engineWithLlm().nextStep(makeTranscript(3));
+
+    expect(result.done).toBe(false);
+    if (result.done) return;
+    expect(result.step.options).toHaveLength(3);
+    expect(result.step.options.some((option) => option.id === "vendimia-redonda")).toBe(false);
+  });
+
+  it("drops an option whose venue ref lies outside the known zone", async () => {
+    const base = makeGeneratedStep().options;
+    const step = makeGeneratedStep({
+      options: [
+        {
+          ...base[0]!,
+          // Tequisquiapan, not Ezequiel Montes (known from makeTranscript(4)).
+          refs: {
+            venueIds: ["v_placesfixturehotellasjacarandas"],
+            experienceIds: base[0]!.refs.experienceIds,
+          },
+        },
+        base[1]!,
+        base[2]!,
+        base[3]!,
+      ],
+    });
+    server.use(mockOpenRouterChat(() => chatCompletion(JSON.stringify(step))));
+
+    const result = await engineWithLlm().nextStep(makeTranscript(4));
+
+    expect(result.done).toBe(false);
+    if (result.done) return;
+    expect(result.step.options).toHaveLength(3);
+    expect(result.step.options.some((option) => option.id === "vendimia-redonda")).toBe(false);
+  });
+
+  it("for the experience target, drops an option that cites a venue but no real experience", async () => {
+    const base = makeGeneratedStep().options;
+    const step = makeGeneratedStep({
+      options: [
+        { ...base[0]!, refs: { venueIds: ["v_vinedos-la-redonda"], experienceIds: [] } },
+        base[1]!,
+        base[2]!,
+        base[3]!,
+      ],
+    });
+    server.use(mockOpenRouterChat(() => chatCompletion(JSON.stringify(step))));
+
+    const result = await engineWithLlm().nextStep(makeTranscript(3));
+
+    expect(result.done).toBe(false);
+    if (result.done) return;
+    expect(result.step.options).toHaveLength(3);
+    expect(result.step.options.some((option) => option.id === "vendimia-redonda")).toBe(false);
+  });
+
+  // --- the "zone" target: entries that leave setting/scale/experience known, no venue chosen ---
+
+  function zoneTargetEntries(): TranscriptEntry[] {
+    return [
+      {
+        stepId: "gen-1",
+        question: "Q1",
+        topic: "T1",
+        chosen: {
+          id: "o1",
+          title: "O1",
+          summary: "S1",
+          facets: { setting: "day_vineyard" },
+          refs: { venueIds: [], experienceIds: [] },
+        },
+      },
+      {
+        stepId: "gen-2",
+        question: "Q2",
+        topic: "T2",
+        chosen: {
+          id: "o2",
+          title: "O2",
+          summary: "S2",
+          facets: { scale: "intimate" },
+          refs: { venueIds: [], experienceIds: [] },
+        },
+      },
+      {
+        stepId: "gen-3",
+        question: "Q3",
+        topic: "T3",
+        chosen: {
+          id: "o3",
+          title: "O3",
+          summary: "S3",
+          facets: { experience: "wine_tasting" },
+          refs: { venueIds: [], experienceIds: [] },
+        },
+      },
+    ];
+  }
+
+  function makeZoneStep(): RawGeneratedStep {
+    return {
+      id: "zona-boda",
+      topic: "Zona",
+      question: "¿En qué zona imaginan celebrar?",
+      helper: "Cada zona tiene su propio carácter.",
+      done: false,
+      options: [
+        {
+          id: "zona-ezequiel",
+          title: "Viñedos de Ezequiel Montes",
+          description: "Atardeceres entre las vides de Ezequiel Montes.",
+          hashtags: ["#ValleDeColon", "#RutaDelVino", "#AtardecerVinedo"],
+          facets: { zone: "ezequiel_montes" },
+          refs: { venueIds: ["v_vinedos-la-redonda"], experienceIds: [] },
+          photoQuery: "vineyard wedding queretaro",
+        },
+        {
+          id: "zona-bernal",
+          title: "Peña de Bernal",
+          description: "Ceremonias con la Peña de Bernal de telón de fondo.",
+          hashtags: ["#PenaDeBernal", "#PuebloMagico", "#SunsetOcre"],
+          facets: { zone: "bernal" },
+          refs: { venueIds: ["v_bernal-pueblo-magico"], experienceIds: [] },
+          photoQuery: "bernal rock formation wedding",
+        },
+        {
+          id: "zona-centro",
+          title: "Centro Histórico",
+          description: "Patios de cantera rosa en el Centro Histórico.",
+          hashtags: ["#CentroHistorico", "#CanteraRosa", "#PatioColonial"],
+          facets: { zone: "centro_historico" },
+          refs: { venueIds: ["v_casona-cinco-patios"], experienceIds: [] },
+          photoQuery: "colonial courtyard wedding queretaro",
+        },
+      ],
+    };
+  }
+
+  it("accepts a well-formed zone-target step: distinct zones, each illustrated by a venue of that same zone", async () => {
+    const zoneStep = makeZoneStep();
+    server.use(mockOpenRouterChat(() => chatCompletion(JSON.stringify(zoneStep))));
+
+    const result = await engineWithLlm().nextStep({ entries: zoneTargetEntries() });
+
+    expect(result.done).toBe(false);
+    if (result.done) return;
+    expect(result.step.source).toBe("llm");
+    expect(result.step.options.map((option) => option.facets.zone).sort()).toEqual(
+      ["bernal", "centro_historico", "ezequiel_montes"].sort(),
+    );
+  });
+
+  it("for the zone target, drops an option whose own zone value doesn't match its cited venue's real zone", async () => {
+    const zoneStep = makeZoneStep();
+    const bad: RawGeneratedStep = {
+      ...zoneStep,
+      options: [
+        zoneStep.options[0]!,
+        zoneStep.options[1]!,
+        {
+          ...zoneStep.options[2]!,
+          // Claims centro_historico but cites an Ezequiel Montes venue.
+          refs: { venueIds: ["v_vinedos-la-redonda"], experienceIds: [] },
+        },
+      ],
+    };
+    server.use(mockOpenRouterChat(() => chatCompletion(JSON.stringify(bad))));
+
+    const result = await engineWithLlm().nextStep({ entries: zoneTargetEntries() });
+
+    // Only 2 of 3 options survive — below the 3-option floor, so the engine
+    // falls back to a static step rather than ever showing the mismatch.
+    expect(result.meta.fallbackUsed).toBe(true);
+    expect(result.meta.source).toBe("static");
+  });
+
+  it("skips a curated fallback step whose options mostly contradict known facets, falling through to the next", async () => {
+    const entries: TranscriptEntry[] = [
+      {
+        stepId: "gen-1",
+        question: "Q1",
+        topic: "T1",
+        chosen: {
+          id: "o1",
+          title: "O1",
+          summary: "S1",
+          facets: { setting: "day_vineyard" },
+          refs: { venueIds: [], experienceIds: [] },
+        },
+      },
+    ];
+
+    // No `llm` configured — always the static/curated fallback.
+    const engine = createQuizEngine({ images: createStaticImageProvider(), maxSteps: 7 });
+    const result = await engine.nextStep({ entries });
+
+    expect(result.done).toBe(false);
+    if (result.done) return;
+    expect(result.step.source).toBe("static");
+    // The curated "setting" step would normally be picked next, but 2 of
+    // its 3 options contradict the already-known setting (day_vineyard),
+    // leaving only 1 — below the floor, so it's skipped for "experience".
+    expect(result.step.id).toBe("experience");
+    expect(result.step.options).toHaveLength(3);
+    for (const option of result.step.options) {
+      expect(option.facets.setting).toBeUndefined();
+    }
+  });
+});
+
+describe("replaying the demo fixtures (test/fixtures/demo)", () => {
+  const fixtures: Array<{ name: string; transcript: Transcript }> = [
+    { name: "couple-a-intima-colonial", transcript: coupleATranscript as Transcript },
+    { name: "couple-b-grande-vinedos", transcript: coupleBTranscript as Transcript },
+  ];
+
+  for (const { name, transcript } of fixtures) {
+    const { entries } = transcript;
+
+    it(`${name}: computeTargetFacet never targets zone again once a venue has been chosen`, () => {
+      let sawVenue = false;
+
+      for (let i = 0; i <= entries.length; i += 1) {
+        const prefix = entries.slice(0, i);
+        const known = knownFacets(prefix, kb);
+        const { venueIds } = chosenRefs(prefix);
+        const target = computeTargetFacet(known, venueIds);
+
+        if (venueIds.length > 0) sawVenue = true;
+        if (sawVenue) {
+          expect(target).not.toBe("zone");
+        }
+      }
+    });
+
+    it(`${name}: a freshly generated (static-fallback) step's options never contradict the facets known at that point`, async () => {
+      const engine = createQuizEngine({ images: createStaticImageProvider(), maxSteps: 7 });
+
+      for (let i = 0; i < entries.length; i += 1) {
+        const prefix = entries.slice(0, i);
+        const known = knownFacets(prefix, kb);
+        const result = await engine.nextStep({ entries: prefix });
+
+        if (result.done) continue;
+        for (const option of result.step.options) {
+          const contradicts = (Object.keys(option.facets) as FacetKey[]).some((key) => {
+            const value = option.facets[key];
+            const knownValue = known[key];
+            return value !== undefined && knownValue !== undefined && value !== knownValue;
+          });
+          expect(contradicts).toBe(false);
+        }
+      }
+    });
+  }
 });
