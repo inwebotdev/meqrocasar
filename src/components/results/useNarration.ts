@@ -8,7 +8,7 @@ import { buildFixtureNarration, isNarrationFixtureEnabled } from "@/lib/narratio
 import { saveResult } from "@/lib/results-store";
 
 const POLL_INTERVAL_MS = 2000;
-const POLL_TIMEOUT_MS = 60000;
+const POLL_TIMEOUT_MS = 120000;
 
 /**
  * While `result.narration` is `"pending"`, polls `GET /api/narration/<hash>/meta`
@@ -28,6 +28,7 @@ export function useNarration(
   result: ExperienceResult | undefined,
   pollIntervalMs: number = POLL_INTERVAL_MS,
   pollTimeoutMs: number = POLL_TIMEOUT_MS,
+  onUnavailable?: () => void,
 ): ExperienceResult | undefined {
   const [current, setCurrent] = useState(result);
   const resultRef = useRef(result);
@@ -81,7 +82,18 @@ export function useNarration(
         return;
       }
 
-      if (Date.now() - start >= pollTimeoutMs) {
+      // "missing" after a pending ref means the background synthesis ended without
+      // producing audio (quota, network, provider error): stop waiting and let the
+      // reel play silently instead of leaving the play button disabled forever.
+      if (meta?.status === "missing" || Date.now() - start >= pollTimeoutMs) {
+        const base = resultRef.current;
+        if (!base) return;
+        const { narration: _narration, ...rest } = base;
+        const updated: ExperienceResult = { ...rest };
+        saveResult(updated);
+        resultRef.current = updated;
+        setCurrent(updated);
+        onUnavailable?.();
         return;
       }
 
@@ -94,7 +106,7 @@ export function useNarration(
       cancelled = true;
       clearTimeout(timer);
     };
-  }, [pendingHash, pollIntervalMs, pollTimeoutMs]);
+  }, [pendingHash, pollIntervalMs, pollTimeoutMs, onUnavailable]);
 
   if (fixtureNarration && current) {
     return { ...current, narration: fixtureNarration };

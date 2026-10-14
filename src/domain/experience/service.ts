@@ -106,7 +106,7 @@ function mergePhotos(
 }
 
 /** Budget `narration.ensure` gets before `generate` leaves it running in the background and reports "pending" instead. */
-const NARRATION_BUDGET_MS = 8000;
+const NARRATION_BUDGET_MS = 15000;
 
 /** `undefined` when there's no narration service, or it resolved "disabled" — never attached to the result either way. */
 async function resolveNarration(

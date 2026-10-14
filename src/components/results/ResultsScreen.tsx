@@ -15,7 +15,9 @@ export function ResultsScreen() {
   const router = useRouter();
   const toast = useToast();
   const [result, setResult] = useState<ExperienceResult | undefined | null>(null);
-  const narratedResult = useNarration(result ?? undefined);
+  const narratedResult = useNarration(result ?? undefined, undefined, undefined, () =>
+    toast.show("Narración no disponible por ahora; el reel se reproduce sin voz", "info"),
+  );
 
   useEffect(() => {
     const stored = loadResult();
