@@ -117,7 +117,7 @@ const envSchema = z.object({
   /** "auto" picks Google when a Google TTS key (or the Places key) exists, else ElevenLabs. */
   NARRATION_PROVIDER: z.enum(["auto", "google", "elevenlabs", "none"]).default("auto"),
   GOOGLE_TTS_API_KEY: optionalSecret,
-  GOOGLE_TTS_VOICE: z.string().trim().min(1).default("es-MX-Neural2-A"),
+  GOOGLE_TTS_VOICE: z.string().trim().min(1).default("es-US-Neural2-A"),
   APP_URL: z.string().url().default("http://localhost:3000"),
 });
 

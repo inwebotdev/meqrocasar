@@ -11,7 +11,7 @@ import type { NarrationAlignment, NarrationAudio, NarrationProvider } from "./na
  */
 export interface CreateGoogleTtsProviderOptions {
   apiKey: string;
-  /** e.g. "es-MX-Neural2-A" (female, Mexican Spanish). */
+  /** e.g. "es-US-Neural2-A" (female, Mexican Spanish). */
   voiceName?: string;
   languageCode?: string;
   speakingRate?: number;
@@ -19,7 +19,7 @@ export interface CreateGoogleTtsProviderOptions {
   timeoutMs?: number;
 }
 
-export const DEFAULT_GOOGLE_TTS_VOICE = "es-MX-Neural2-A";
+export const DEFAULT_GOOGLE_TTS_VOICE = "es-US-Neural2-A";
 export const GOOGLE_TTS_MODEL_ID = "google-tts-v1beta1";
 const ENDPOINT = "https://texttospeech.googleapis.com/v1beta1/text:synthesize";
 
@@ -82,7 +82,7 @@ export function createGoogleTtsProvider(
   const {
     apiKey,
     voiceName = DEFAULT_GOOGLE_TTS_VOICE,
-    languageCode = "es-MX",
+    languageCode = "es-US",
     speakingRate = 0.95,
     fetchImpl = fetch,
     timeoutMs = 20000,
