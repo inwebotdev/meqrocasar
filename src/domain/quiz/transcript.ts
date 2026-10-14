@@ -97,7 +97,9 @@ export function impliedFacets(entry: TranscriptEntry, kb: Kb): Facets {
   const facets: Facets = {};
   const { refs } = entry.chosen;
 
-  const venueId = refs.venueIds[0];
+  // The curated opening deck ("style") only *hints* a venue on each card; it
+  // is not a choice of place, so it must not lock the zone or style.
+  const venueId = entry.stepId === "style" ? undefined : refs.venueIds[0];
   if (venueId !== undefined) {
     const venue = kb.venues.find((candidate) => candidate.id === venueId);
     if (venue) {
@@ -108,13 +110,8 @@ export function impliedFacets(entry: TranscriptEntry, kb: Kb): Facets {
     }
   }
 
-  if (refs.experienceIds.length === 1) {
-    const experience = kb.experiences.find((candidate) => candidate.id === refs.experienceIds[0]);
-    const experienceValue = experience?.facets.experiences[0];
-    if (experienceValue !== undefined) {
-      facets.experience = experienceValue;
-    }
-  }
+  // Experiences cited on a card are illustration, not an answer to the
+  // "qué no puede faltar" question: only an explicit facets.experience counts.
 
   return facets;
 }

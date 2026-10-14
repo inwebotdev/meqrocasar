@@ -3,10 +3,14 @@ import type { ChatMessage, LlmUsage, StructuredClient } from "@/domain/ai/struct
 import { buildDigest } from "@/domain/kb/digest";
 import { loadKb } from "@/domain/kb/load";
 import {
+  EXPERIENCE_VALUES,
   FACET_PRIORITY,
+  facetLabel,
   type FacetKey,
   type FacetPriority,
   type Facets,
+  SCALE_VALUES,
+  SETTING_VALUES,
 } from "@/domain/kb/taxonomy";
 import type { Kb } from "@/domain/kb/types";
 import type { ImageProvider } from "@/domain/images/provider";
@@ -401,7 +405,11 @@ function filterOptions(
       return valid;
     });
 
-    if (venueIds.length === 0 && experienceIds.length === 0) {
+    if (
+      venueIds.length === 0 &&
+      experienceIds.length === 0 &&
+      (targetFacet === "experience" || targetFacet === "zone")
+    ) {
       violations.add("cada opción debe citar al menos un venue o experiencia real en refs");
       continue;
     }
@@ -412,7 +420,7 @@ function filterOptions(
       continue;
     }
     if (seenTargetValues.has(targetValue)) {
-      violations.add(`cada opción debe tener un valor distinto de facets.${targetFacet}`);
+      // A repeated value is just a duplicate card: keep the first one, drop this one.
       continue;
     }
 
@@ -427,15 +435,13 @@ function filterOptions(
       continue;
     }
 
-    if (known.zone !== undefined) {
-      const venueOutsideZone = venueIds.some((id) => {
+    let zoneSafeVenueIds = venueIds;
+    if (known.zone !== undefined && targetFacet !== "zone") {
+      // Keep the card, drop only the references that point outside the known zone.
+      zoneSafeVenueIds = venueIds.filter((id) => {
         const venue = kb.venues.find((candidate) => candidate.id === id);
-        return venue !== undefined && venue.zone !== known.zone;
+        return venue === undefined || venue.zone === known.zone;
       });
-      if (venueOutsideZone) {
-        violations.add("los venues citados deben estar en la zona ya conocida");
-        continue;
-      }
     }
 
     if (targetFacet === "experience" && experienceIds.length === 0) {
@@ -458,11 +464,72 @@ function filterOptions(
     seenIds.add(option.id);
     seenTargetValues.add(targetValue);
 
-    const refs: GeneratedRefs = { venueIds, experienceIds };
+    const refs: GeneratedRefs = { venueIds: zoneSafeVenueIds, experienceIds };
     options.push({ ...option, refs });
   }
 
   return { options, violations: [...violations] };
+}
+
+const PAD_VALUES: Partial<Record<FacetPriority, readonly string[]>> = {
+  setting: SETTING_VALUES,
+  scale: SCALE_VALUES,
+  experience: EXPERIENCE_VALUES,
+};
+
+/**
+ * Tops a generated step up to three options with plain template cards for
+ * the target facet's unused values, so one weak model answer never throws
+ * the whole step away.
+ */
+function padOptions(
+  options: readonly GeneratedOption[],
+  targetFacet: FacetPriority,
+  known: Facets,
+  kb: Kb,
+): GeneratedOption[] {
+  const values = PAD_VALUES[targetFacet];
+  if (!values || options.length >= 3) return [...options];
+  const used = new Set(options.map((option) => option.facets[targetFacet]));
+  const zoneLabel = known.zone ? facetLabel("zone", known.zone) : "Querétaro";
+  const padded = [...options];
+  for (const value of values) {
+    if (padded.length >= 3) break;
+    if (used.has(value as never)) continue;
+    const label = facetLabel(targetFacet, value as never);
+    const experienceIds =
+      targetFacet === "experience"
+        ? kb.experiences
+            .filter(
+              (experience) =>
+                experience.facets.experiences.includes(value as never) &&
+                (known.zone === undefined ||
+                  experience.zoneIds.includes(known.zone) ||
+                  experience.zoneIds.length > 1),
+            )
+            .slice(0, 1)
+            .map((experience) => experience.id)
+        : [];
+    if (targetFacet === "experience" && experienceIds.length === 0) continue;
+    const words = label
+      .replace(/[^\p{L}\p{N} ]/gu, "")
+      .split(/\s+/)
+      .filter(Boolean);
+    const camel = words.map((w) => w[0].toUpperCase() + w.slice(1)).join("");
+    padded.push({
+      id: `auto-${targetFacet}-${value}`,
+      title: label.slice(0, 40),
+      description:
+        `Una boda con ${label.toLowerCase()} en ${zoneLabel}, pensada a su medida.`.slice(0, 160),
+      hashtags: [`#${camel || "Boda"}`, `#${zoneLabel.replace(/\s+/g, "")}`, "#QueretaroRomance"],
+      facets: { [targetFacet]: value } as GeneratedOption["facets"],
+      refs: { venueIds: [], experienceIds },
+      photoQuery: `${label} wedding Mexico`.slice(0, 60),
+      badge: "Sugerencia SECTUR",
+      matchLabel: "88% AFINIDAD",
+    } as GeneratedOption);
+  }
+  return padded;
 }
 
 function correctionMessage(violations: readonly string[]): string {
@@ -633,6 +700,18 @@ async function generateStep(ctx: GenerateContext): Promise<QuizEngineResult> {
   const normalisations = normalised.fixes.length;
 
   let { options: validOptions, violations } = filterOptions(candidate, kb, targetFacet, known);
+  if (validOptions.length > 0) validOptions = padOptions(validOptions, targetFacet, known, kb);
+  if (validOptions.length < 3) {
+    console.warn(
+      "[quiz/engine] step rejected",
+      JSON.stringify({
+        targetFacet,
+        known,
+        violations: [...violations],
+        options: candidate.options.map((o) => ({ id: o.id, facets: o.facets, refs: o.refs })),
+      }),
+    );
+  }
 
   if (validOptions.length < 3) {
     const retryMessages: ChatMessage[] = [
@@ -651,6 +730,8 @@ async function generateStep(ctx: GenerateContext): Promise<QuizEngineResult> {
         model = retry.model;
         usage = retry.usage;
         ({ options: validOptions, violations } = filterOptions(candidate, kb, targetFacet, known));
+        if (validOptions.length > 0)
+          validOptions = padOptions(validOptions, targetFacet, known, kb);
       }
     }
   }
