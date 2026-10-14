@@ -1,6 +1,7 @@
 import "server-only";
 
 import { createElevenLabsProvider } from "@/domain/audio/elevenlabs";
+import { createGoogleTtsProvider, GOOGLE_TTS_MODEL_ID } from "@/domain/audio/google-tts";
 import { createNarrationService, type NarrationService } from "@/domain/audio/service";
 import { createNarrationStore, type NarrationStore } from "@/domain/audio/store";
 
@@ -22,21 +23,31 @@ function buildDeps(): NarrationDeps {
   const env = getEnv();
   const store = createNarrationStore(env.NARRATION_CACHE_DIR);
 
-  const provider =
-    env.ELEVENLABS_API_KEY && env.ELEVENLABS_VOICE_ID
-      ? createElevenLabsProvider({
-          apiKey: env.ELEVENLABS_API_KEY,
-          voiceId: env.ELEVENLABS_VOICE_ID,
-          modelId: env.ELEVENLABS_MODEL_ID,
-        })
-      : undefined;
+  const googleKey = env.GOOGLE_TTS_API_KEY ?? env.GOOGLE_PLACES_API_KEY;
+  const wantsGoogle =
+    env.NARRATION_PROVIDER === "google" ||
+    (env.NARRATION_PROVIDER === "auto" && Boolean(googleKey));
+  const wantsEleven =
+    env.NARRATION_PROVIDER === "elevenlabs" || (env.NARRATION_PROVIDER === "auto" && !wantsGoogle);
 
-  const service = createNarrationService({
-    provider,
-    store,
-    voiceId: env.ELEVENLABS_VOICE_ID ?? "",
-    modelId: env.ELEVENLABS_MODEL_ID,
-  });
+  let provider;
+  let voiceId = "";
+  let modelId = "none";
+  if (wantsGoogle && googleKey) {
+    provider = createGoogleTtsProvider({ apiKey: googleKey, voiceName: env.GOOGLE_TTS_VOICE });
+    voiceId = env.GOOGLE_TTS_VOICE;
+    modelId = GOOGLE_TTS_MODEL_ID;
+  } else if (wantsEleven && env.ELEVENLABS_API_KEY && env.ELEVENLABS_VOICE_ID) {
+    provider = createElevenLabsProvider({
+      apiKey: env.ELEVENLABS_API_KEY,
+      voiceId: env.ELEVENLABS_VOICE_ID,
+      modelId: env.ELEVENLABS_MODEL_ID,
+    });
+    voiceId = env.ELEVENLABS_VOICE_ID;
+    modelId = env.ELEVENLABS_MODEL_ID;
+  }
+
+  const service = createNarrationService({ provider, store, voiceId, modelId });
 
   return { store, service };
 }

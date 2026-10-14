@@ -114,6 +114,10 @@ const envSchema = z.object({
   ELEVENLABS_MODEL_ID: z.string().trim().min(1).default("eleven_multilingual_v2"),
   /** Disk cache for narration mp3s + their sentence-timing sidecar JSON (see `src/domain/audio/store.ts`), relative to the repo root. */
   NARRATION_CACHE_DIR: z.string().trim().min(1).default(".cache/narration"),
+  /** "auto" picks Google when a Google TTS key (or the Places key) exists, else ElevenLabs. */
+  NARRATION_PROVIDER: z.enum(["auto", "google", "elevenlabs", "none"]).default("auto"),
+  GOOGLE_TTS_API_KEY: optionalSecret,
+  GOOGLE_TTS_VOICE: z.string().trim().min(1).default("es-MX-Neural2-A"),
   APP_URL: z.string().url().default("http://localhost:3000"),
 });
 
