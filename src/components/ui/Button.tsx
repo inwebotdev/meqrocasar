@@ -18,11 +18,11 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 
 export const BUTTON_VARIANT_CLASSES: Record<ButtonVariant, string> = {
   primary: "bg-primary text-on-primary font-label-lg text-label-lg shadow-lg active:scale-95",
-  soft: "bg-primary/10 text-primary hover:bg-primary hover:text-on-primary font-label-sm text-label-sm",
+  soft: "bg-secondary/70 text-primary hover:bg-secondary hover:text-on-primary font-label-sm text-label-sm font-bold",
   accent:
-    "bg-gradient-to-r from-primary-container via-secondary to-primary text-on-primary font-label-md text-label-md shadow-sm",
+    "bg-gradient-to-r from-primary via-secondary to-primary text-on-primary font-label-md text-label-md shadow-lg",
   surface:
-    "bg-surface-container-high hover:bg-surface-container-highest text-primary font-label-sm text-label-sm",
+    "bg-surface-container-high hover:bg-surface-container-highest text-tertiary-container font-label-sm text-label-sm font-semibold",
   circle: "bg-surface-container-high text-on-surface shadow-md",
 };
 

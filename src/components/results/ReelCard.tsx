@@ -56,7 +56,7 @@ export function ReelCard({
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-space-xs">
           <Icon name="movie_filter" size={20} className="text-primary" />
-          <h3 className="font-label-lg text-label-lg font-bold text-primary">
+          <h3 className="font-headline-sm text-headline-sm font-bold text-tertiary">
             Video Reel de Inspiración
           </h3>
         </div>

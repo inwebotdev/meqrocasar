@@ -29,7 +29,7 @@ export function AppHeader({ title }: AppHeaderProps) {
             <span className="truncate font-label-sm text-label-sm font-bold tracking-widest text-secondary uppercase">
               Querétaro Romance
             </span>
-            <span className="truncate font-headline-sm text-headline-sm tracking-tight text-primary">
+            <span className="truncate font-headline-sm text-headline-sm tracking-tight text-tertiary">
               {title}
             </span>
           </div>
@@ -39,7 +39,7 @@ export function AppHeader({ title }: AppHeaderProps) {
           <Pill tone="primary-soft" icon="verified" aria-label="SECTUR Querétaro">
             <span className="hidden sm:inline">SECTUR Querétaro</span>
           </Pill>
-          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary">
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-secondary">
             <Icon name="person" size={18} className="text-on-primary" />
           </div>
         </div>

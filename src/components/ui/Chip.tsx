@@ -10,7 +10,7 @@ export interface ChipProps extends HTMLAttributes<HTMLSpanElement> {
 
 const TONE_CLASSES: Record<ChipTone, string> = {
   surface:
-    "bg-surface-container text-on-surface px-space-xs py-1 rounded-md font-label-sm text-label-sm",
+    "bg-secondary-container/50 text-primary px-space-xs py-1 rounded-md font-label-sm text-label-sm font-bold",
   "primary-container":
     "bg-primary-container/80 text-on-primary-container rounded-full px-2 py-0.5 font-label-sm text-label-sm",
 };

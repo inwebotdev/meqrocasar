@@ -26,7 +26,7 @@ export function SectionHeader({
         <span className="block font-label-sm text-label-sm font-bold tracking-wider text-secondary uppercase">
           {eyebrow}
         </span>
-        <Heading className="font-headline-sm text-headline-sm font-bold text-primary">
+        <Heading className="font-headline-sm text-headline-sm font-bold text-tertiary">
           {title}
         </Heading>
       </div>

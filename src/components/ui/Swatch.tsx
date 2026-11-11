@@ -26,7 +26,13 @@ const NAME_TONE_CLASSES: Record<SwatchTone, string> = {
 
 export function Swatch({ hex, name, tone, className }: SwatchProps) {
   return (
-    <div className={cn("flex flex-col items-center gap-1 rounded-md p-1 text-center", className)}>
+    <div
+      className={cn(
+        "flex flex-col items-center gap-1 rounded-md p-1 text-center",
+        tone === "light" && "bg-surface-container-lowest shadow-md",
+        className,
+      )}
+    >
       <div
         className={cn("w-full rounded shadow-inner", BLOCK_TONE_CLASSES[tone])}
         style={{ backgroundColor: hex }}

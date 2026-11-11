@@ -24,7 +24,7 @@ export function MoodboardCard({ result }: MoodboardCardProps) {
       <div className="space-y-space-sm rounded-xl bg-surface-container-lowest p-space-md shadow-md">
         <div className="flex items-center gap-space-xs">
           <Icon name="view_quilt" size={20} className="text-primary" />
-          <h3 className="font-label-lg text-label-lg font-bold text-primary">
+          <h3 className="font-headline-sm text-headline-sm font-bold text-tertiary">
             Moodboard Oficial de Inspiración
           </h3>
         </div>
@@ -43,7 +43,7 @@ export function MoodboardCard({ result }: MoodboardCardProps) {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-space-xs">
           <Icon name="view_quilt" size={20} className="text-primary" />
-          <h3 className="font-label-lg text-label-lg font-bold text-primary">
+          <h3 className="font-headline-sm text-headline-sm font-bold text-tertiary">
             Moodboard Oficial de Inspiración
           </h3>
         </div>

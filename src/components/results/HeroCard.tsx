@@ -13,14 +13,14 @@ export function HeroCard({ title, narrative, palette }: HeroCardProps) {
   const [firstParagraph] = narrative.split("\n\n");
 
   return (
-    <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-primary via-primary-container to-secondary p-space-lg text-on-primary shadow-xl">
+    <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-primary via-secondary to-primary p-space-lg text-on-primary shadow-xl">
       <div className="pointer-events-none absolute -top-10 -right-10 h-36 w-36 rounded-full bg-secondary-container/20 blur-2xl" />
       <div className="pointer-events-none absolute -bottom-8 -left-8 h-28 w-28 rounded-full bg-primary-fixed/20 blur-xl" />
       <div className="relative z-10 flex flex-col items-center space-y-space-sm text-center">
         <Pill
           tone="glass-light"
           icon="hotel_class"
-          className="bg-white/15 tracking-wider uppercase backdrop-blur-md [&>span:first-child]:text-tertiary-fixed-dim"
+          className="bg-white/85 tracking-wider text-primary uppercase [&>span:first-child]:text-secondary"
         >
           Curaduría Romance SECTUR Querétaro
         </Pill>

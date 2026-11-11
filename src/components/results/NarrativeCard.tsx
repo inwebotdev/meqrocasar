@@ -16,7 +16,7 @@ export function NarrativeCard({ title, narrative, itineraryHint }: NarrativeCard
           <span className="font-label-sm text-label-sm font-bold tracking-wider text-secondary uppercase">
             Estilo Matrimonial Curado
           </span>
-          <h3 className="font-headline-lg-mobile text-headline-lg-mobile font-bold text-primary">
+          <h3 className="font-headline-lg-mobile text-headline-lg-mobile font-bold text-tertiary">
             {title}
           </h3>
         </div>
