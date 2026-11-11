@@ -43,10 +43,10 @@ const CONCEPT_TITLES: Record<StyleId, Record<SettingId, string>> = {
 const PALETTES: Record<StyleId, readonly [PaletteColor, PaletteColor, PaletteColor, PaletteColor]> =
   {
     colonial: [
-      { hex: "#68182E", name: "Vino Tinto" },
-      { hex: "#D4AF37", name: "Oro Cantera" },
-      { hex: "#F5EDE0", name: "Lino Crudo" },
-      { hex: "#2F4839", name: "Verde Musgo" },
+      { hex: "#812B47", name: "Cereza" },
+      { hex: "#CDBA7B", name: "Arena" },
+      { hex: "#F7F1EB", name: "Papiro" },
+      { hex: "#7A7857", name: "Oliva" },
     ],
     rustic_vineyard: [
       { hex: "#5B1A2B", name: "Vino de Barrica" },

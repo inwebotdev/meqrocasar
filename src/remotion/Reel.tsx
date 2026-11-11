@@ -149,7 +149,7 @@ function Eyebrow() {
         fontSize: 24,
         fontWeight: 700,
         letterSpacing: 4,
-        color: "#E9A844",
+        color: "#CDBA7B",
         textTransform: "uppercase",
       }}
     >
@@ -335,7 +335,7 @@ function OutroCard({ tagline }: { tagline: string }) {
   return (
     <AbsoluteFill
       style={{
-        backgroundColor: "#4A1525",
+        backgroundColor: "#812B47",
         alignItems: "center",
         justifyContent: "center",
         opacity,
@@ -368,7 +368,7 @@ function OutroCard({ tagline }: { tagline: string }) {
             fontWeight: 600,
             letterSpacing: 3,
             textTransform: "uppercase",
-            color: "#FFDDB3",
+            color: "#F1E9D2",
           }}
         >
           {SEAL_TEXT}

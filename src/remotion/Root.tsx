@@ -27,10 +27,10 @@ const SAMPLE_PROPS: ReelProps = {
     },
   ],
   palette: [
-    { hex: "#68182E", name: "Vino Tinto" },
-    { hex: "#D4AF37", name: "Oro Cantera" },
-    { hex: "#F5EDE0", name: "Lino Crudo" },
-    { hex: "#2F4839", name: "Verde Musgo" },
+    { hex: "#812B47", name: "Cereza" },
+    { hex: "#CDBA7B", name: "Arena" },
+    { hex: "#F7F1EB", name: "Papiro" },
+    { hex: "#7A7857", name: "Oliva" },
   ],
   trackName: "Vals Huapango Queretano",
   script:

@@ -29,8 +29,8 @@ const RADIUS_LG = 24;
 const RADIUS_SM = 12;
 
 const LINEN = "#F7F4EE";
-const DEEP_BURGUNDY = "#4A1525";
-const AMBER = "#E9A844";
+const DEEP_BURGUNDY = "#812B47";
+const AMBER = "#CDBA7B";
 
 const TITLE_MAX_CHARS = 70;
 
@@ -155,7 +155,7 @@ function TaglinePill({ tagline, bottom, left }: { tagline: string; bottom: numbe
         left,
         display: "flex",
         alignItems: "center",
-        background: "rgba(74,21,37,0.75)",
+        background: "rgba(129,43,71,0.78)",
         borderRadius: RADIUS_SM,
         padding: "10px 16px",
       }}
@@ -185,9 +185,9 @@ function SealPill() {
         display: "flex",
         flexDirection: "row",
         alignItems: "center",
-        background: "rgba(74,21,37,0.88)",
+        background: "rgba(129,43,71,0.9)",
         borderRadius: 999,
-        border: "1px solid rgba(233,168,68,0.6)",
+        border: "1px solid rgba(205,186,123,0.7)",
         padding: "10px 16px",
         gap: 8,
       }}
@@ -209,7 +209,7 @@ function SealPill() {
           lineHeight: 1,
           letterSpacing: 1.5,
           textTransform: "uppercase",
-          color: "#FFDDB3",
+          color: "#F1E9D2",
         }}
       >
         SECRETARÍA DE TURISMO · QUERÉTARO
@@ -228,7 +228,7 @@ function PaletteSwatch({ hex, name }: { hex: string; name: string }) {
           height: 34,
           borderRadius: 999,
           backgroundColor: hex,
-          border: "1px solid rgba(212,175,55,0.5)",
+          border: "1px solid rgba(205,186,123,0.6)",
         }}
       />
       <div
@@ -238,7 +238,7 @@ function PaletteSwatch({ hex, name }: { hex: string; name: string }) {
           fontWeight: 700,
           fontSize: 12,
           lineHeight: 1.2,
-          color: "#FFD9DE",
+          color: "#F4D6DC",
         }}
       >
         {hex.toUpperCase()}
@@ -295,7 +295,7 @@ export function MoodboardTemplate({ params, images }: MoodboardTemplateProps) {
             top={16}
             left={16}
             background="rgba(252,249,243,0.9)"
-            color="#68182E"
+            color="#812B47"
           />
           {params.tagline ? <TaglinePill tagline={params.tagline} bottom={16} left={16} /> : null}
         </div>
