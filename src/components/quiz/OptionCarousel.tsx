@@ -85,7 +85,10 @@ export function OptionCarousel({
     const scroller = scrollerRef.current;
     if (!scroller) return;
     drag.current = { startX: event.clientX, startLeft: scroller.scrollLeft, moved: false };
-    scroller.classList.add("cursor-grabbing", "snap-none", "scroll-auto");
+    scroller.style.scrollBehavior = "auto";
+    scroller.style.scrollSnapType = "none";
+    scroller.classList.add("cursor-grabbing");
+    scroller.setPointerCapture?.(event.pointerId);
   }
 
   function handlePointerMove(event: PointerEvent<HTMLDivElement>) {
@@ -99,7 +102,11 @@ export function OptionCarousel({
 
   function endDrag() {
     const scroller = scrollerRef.current;
-    if (scroller) scroller.classList.remove("cursor-grabbing", "snap-none", "scroll-auto");
+    if (scroller) {
+      scroller.classList.remove("cursor-grabbing");
+      scroller.style.scrollSnapType = "";
+      scroller.style.scrollBehavior = "";
+    }
     const moved = drag.current?.moved ?? false;
     drag.current = null;
     if (moved && scroller) {
@@ -140,7 +147,6 @@ export function OptionCarousel({
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
         onPointerUp={endDrag}
-        onPointerLeave={endDrag}
         onPointerCancel={endDrag}
         onClickCapture={handleClickCapture}
         className="scrollbar-hidden flex cursor-grab touch-pan-x snap-x snap-mandatory gap-3 overflow-x-auto scroll-smooth px-[7%] pb-2 select-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-bernal/60 motion-reduce:scroll-auto"
