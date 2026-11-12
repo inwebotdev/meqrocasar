@@ -13,6 +13,7 @@ import {
 } from "@/domain/places";
 import { markPlacesFailure } from "@/domain/places/availability";
 import { fallbackPhotoForVenue } from "@/domain/places/fallback-photo";
+import { isVercel } from "@/lib/runtime";
 import { getPlacesPhotoDeps } from "@/lib/places-photo-deps";
 
 /**
@@ -25,6 +26,7 @@ import { getPlacesPhotoDeps } from "@/lib/places-photo-deps";
  */
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+export const maxDuration = 60;
 
 const CACHE_TTL_MS = 30 * 24 * 60 * 60 * 1000;
 
@@ -87,14 +89,19 @@ async function writeToCache(
   contentType: string,
 ): Promise<void> {
   const ext = MIME_TO_EXT[contentType] ?? "jpg";
-  await mkdir(cacheDir, { recursive: true });
-  await writeFile(path.join(cacheDir, `${key}.${ext}`), bytes);
+  try {
+    await mkdir(cacheDir, { recursive: true });
+    await writeFile(path.join(cacheDir, `${key}.${ext}`), bytes);
+  } catch (error) {
+    // Read-only or ephemeral FS: the cache is best-effort, never fail the request.
+    console.warn("[api/places/photo] cache write skipped", error);
+  }
 }
 
 function imageResponse(bytes: Uint8Array, contentType: string, attribution?: string): Response {
   const headers: Record<string, string> = {
     "Content-Type": contentType,
-    "Cache-Control": "public, max-age=86400, s-maxage=2592000",
+    "Cache-Control": "public, max-age=86400, s-maxage=2592000, stale-while-revalidate=604800",
   };
 
   if (attribution) {
@@ -203,7 +210,9 @@ export async function GET(request: Request): Promise<Response> {
   const cacheDir = path.resolve(deps.cacheDir);
   const key = cacheKeyFor(name, w);
 
-  const cached = await readFromCache(cacheDir, key);
+  // On Vercel the CDN caches the response; skip the (ephemeral) disk cache.
+  const useDisk = !isVercel();
+  const cached = useDisk ? await readFromCache(cacheDir, key) : undefined;
   if (cached) {
     return imageResponse(cached.bytes, cached.contentType, attribution);
   }
@@ -211,7 +220,9 @@ export async function GET(request: Request): Promise<Response> {
   try {
     const client = createPlacesClient({ apiKey: deps.apiKey });
     const photo = await client.fetchPhoto(name, w);
-    await writeToCache(cacheDir, key, photo.bytes, photo.contentType);
+    if (useDisk) {
+      await writeToCache(cacheDir, key, photo.bytes, photo.contentType);
+    }
     return imageResponse(photo.bytes, photo.contentType, attribution);
   } catch (error) {
     console.error("[api/places/photo] fetch failed", error);
