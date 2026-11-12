@@ -24,7 +24,8 @@ function buildDeps(): NarrationDeps {
   const env = getEnv();
   const mode = process.env.NARRATION_STORE ?? "auto";
   const useBlob =
-    mode === "blob" || (mode === "auto" && Boolean(process.env.BLOB_READ_WRITE_TOKEN));
+    mode === "blob" ||
+    (mode === "auto" && Boolean(process.env.BLOB_READ_WRITE_TOKEN || process.env.BLOB_STORE_ID));
   const store = useBlob
     ? createBlobNarrationStore()
     : createNarrationStore(env.NARRATION_CACHE_DIR);
