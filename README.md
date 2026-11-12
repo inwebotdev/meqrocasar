@@ -321,9 +321,7 @@ Estos archivos no se versionan en git y deben agregarse manualmente antes de un 
   menos 12 segundos (ver `public/audio/README.md` para la guía de tono — "Son Huapango
   Queretano" / cuerdas clásicas — y la nota de licencia que debe acompañarla). Mientras no
   exista, el reel se reproduce sin sonido y el chip de pista muestra "Sin audio".
-- **`public/brand/logo.svg`** y **`public/brand/logo-mark.svg`** — son placeholders; deben
-  reemplazarse por el logotipo oficial de Querétaro Romance / SECTUR (el segundo es solo el
-  isotipo, usado en el header a partir de 360px de ancho).
+- **`public/brand/logo.png`** — logotipo oficial "Me QRO Casar" exportado del archivo de Figma (`Me QRO Casar`, nodo 26:7).
 - Las fuentes (`Playfair Display`, `Plus Jakarta Sans`) ya están incluidas en
   `public/fonts/` bajo la licencia SIL Open Font License 1.1 (ver `public/fonts/README.md`); no
   requieren acción.

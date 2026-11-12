@@ -13,17 +13,13 @@ export function AppHeader({ title }: AppHeaderProps) {
     <header className="pt-safe fixed top-0 z-50 w-full bg-surface/85 shadow-header backdrop-blur-xl">
       <div className="mx-auto flex h-20 w-full max-w-[520px] items-center justify-between px-margin md:max-w-[768px] md:px-margin-tablet">
         <Link href="/" className="flex min-w-0 flex-1 items-center gap-space-sm">
-          {/* eslint-disable-next-line @next/next/no-img-element -- the brand logo is a static SVG, not a candidate for next/image optimization */}
+          {/* eslint-disable-next-line @next/next/no-img-element -- static brand asset exported from the Figma file, not a candidate for next/image optimization */}
           <img
-            src="/brand/logo-mark.svg"
-            alt="Querétaro Romance"
-            className="h-8 w-auto shrink-0 object-contain sm:hidden"
-          />
-          {/* eslint-disable-next-line @next/next/no-img-element -- the brand logo is a static SVG, not a candidate for next/image optimization */}
-          <img
-            src="/brand/logo.svg"
-            alt="Querétaro Romance"
-            className="hidden h-8 w-auto shrink-0 object-contain sm:block"
+            src="/brand/logo.png"
+            alt="Me QRO Casar"
+            width={411}
+            height={212}
+            className="h-10 w-auto shrink-0 object-contain sm:h-12"
           />
           <div className="flex min-w-0 flex-col">
             <span className="truncate font-label-sm text-label-sm font-bold tracking-widest text-secondary uppercase">
