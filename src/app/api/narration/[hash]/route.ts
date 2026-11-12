@@ -14,6 +14,7 @@ import { getNarrationDeps } from "@/lib/narration-deps";
  */
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+export const maxDuration = 60;
 
 const HASH_PATTERN = /^[0-9a-f]{64}$/;
 
@@ -75,6 +76,24 @@ export async function GET(
   const entry = await store.get(hash);
 
   if (!entry) {
+    return jsonError(
+      { ok: false, error: { code: "not_found", message: "Narration not found." } },
+      404,
+    );
+  }
+
+  if (entry.audioUrl) {
+    // Blob URLs are public and support range requests natively.
+    return new Response(null, {
+      status: 302,
+      headers: {
+        Location: entry.audioUrl,
+        "Cache-Control": "public, max-age=3600",
+      },
+    });
+  }
+
+  if (!entry.audioPath) {
     return jsonError(
       { ok: false, error: { code: "not_found", message: "Narration not found." } },
       404,

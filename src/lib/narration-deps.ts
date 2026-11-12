@@ -3,6 +3,7 @@ import "server-only";
 import { createElevenLabsProvider } from "@/domain/audio/elevenlabs";
 import { createGoogleTtsProvider, GOOGLE_TTS_MODEL_ID } from "@/domain/audio/google-tts";
 import { createNarrationService, type NarrationService } from "@/domain/audio/service";
+import { createBlobNarrationStore } from "@/domain/audio/blob-store";
 import { createNarrationStore, type NarrationStore } from "@/domain/audio/store";
 
 import { getEnv } from "./env";
@@ -21,7 +22,12 @@ export interface NarrationDeps {
  */
 function buildDeps(): NarrationDeps {
   const env = getEnv();
-  const store = createNarrationStore(env.NARRATION_CACHE_DIR);
+  const mode = process.env.NARRATION_STORE ?? "auto";
+  const useBlob =
+    mode === "blob" || (mode === "auto" && Boolean(process.env.BLOB_READ_WRITE_TOKEN));
+  const store = useBlob
+    ? createBlobNarrationStore()
+    : createNarrationStore(env.NARRATION_CACHE_DIR);
 
   const googleKey = env.GOOGLE_TTS_API_KEY ?? env.GOOGLE_PLACES_API_KEY;
   const wantsGoogle =

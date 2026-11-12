@@ -14,8 +14,10 @@ export interface NarrationMeta {
 }
 
 export interface NarrationStoreEntry {
-  /** Absolute path to the cached `<hash>.mp3`. */
-  audioPath: string;
+  /** Absolute path to the cached `<hash>.mp3` (disk store only). */
+  audioPath?: string;
+  /** Public URL of the cached mp3 (blob store only); the route redirects to it. */
+  audioUrl?: string;
   meta: NarrationMeta;
 }
 
