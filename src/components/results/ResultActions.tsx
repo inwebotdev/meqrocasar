@@ -61,12 +61,12 @@ export function ResultActions({ result }: ResultActionsProps) {
 
   return (
     <div className="space-y-space-sm pt-space-xs pb-space-md">
-      <Button variant="primary" fullWidth icon="bookmark" onClick={handleSave}>
-        Guardar mi Experiencia
+      <Button variant="accent" fullWidth icon="share" onClick={() => void handleShare()}>
+        Compartir en Redes
       </Button>
       <div className="grid grid-cols-2 gap-space-sm">
-        <Button variant="accent" icon="share" onClick={() => void handleShare()}>
-          Compartir en Redes
+        <Button variant="surface" icon="bookmark" className="text-secondary" onClick={handleSave}>
+          Guardar mi Experiencia
         </Button>
         <LinkButton variant="surface" icon="support_agent" href={buildMailtoHref(result)}>
           Contactar Planner
