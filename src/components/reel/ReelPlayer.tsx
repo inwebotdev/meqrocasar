@@ -33,6 +33,9 @@ export function ReelPlayer({ result, audioSrc, trackName }: ReelPlayerProps) {
   const [currentFrame, setCurrentFrame] = useState(0);
   const [playing, setPlaying] = useState(false);
   const [muted, setMuted] = useState(false);
+  // The composition fades its first scene in from black; show the first photo as a
+  // poster until playback starts so the card looks like the design at rest.
+  const [hasStarted, setHasStarted] = useState(false);
 
   const audioAvailability = useAudioAvailability(audioSrc);
   const effectiveAudioSrc =
@@ -84,6 +87,7 @@ export function ReelPlayer({ result, audioSrc, trackName }: ReelPlayerProps) {
     };
     const handlePlay = () => {
       setPlaying(true);
+      setHasStarted(true);
       const audio = narrationRef.current;
       if (audio) {
         syncNarration(player.getCurrentFrame(), true);
@@ -153,6 +157,15 @@ export function ReelPlayer({ result, audioSrc, trackName }: ReelPlayerProps) {
         initiallyMuted={false}
         acknowledgeRemotionLicense
       />
+      {!hasStarted && result.photos[0] && (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={result.photos[0].url}
+          alt=""
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0 h-full w-full object-cover"
+        />
+      )}
       {narration && (
         <audio
           ref={narrationRef}
