@@ -1,6 +1,8 @@
 import { estimateDurationSec, sentenceTimings, type NarrationProvider } from "./narration";
 import { narrationHash } from "./narration-hash";
 import { NarrationRefSchema, type NarrationRef } from "./narration-ref";
+import { runInBackground } from "@/lib/runtime";
+
 import type { NarrationStore } from "./store";
 
 /**
@@ -144,6 +146,8 @@ export function createNarrationService(deps: NarrationServiceDeps): NarrationSer
       }
 
       const task = startSynthesis(hash, script, deps.provider);
+      // Keep the synthesis alive past the response on serverless (waitUntil).
+      runInBackground(task);
       await withBudget(task, budgetMs);
 
       const finished = await deps.store.get(hash);

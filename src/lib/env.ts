@@ -2,6 +2,8 @@ import "server-only";
 
 import { z } from "zod";
 
+import { defaultCacheDir } from "./runtime";
+
 const optionalSecret = z
   .string()
   .trim()
@@ -101,7 +103,7 @@ const envSchema = z.object({
     ),
   UNSPLASH_ACCESS_KEY: optionalSecret,
   GOOGLE_PLACES_API_KEY: optionalSecret,
-  PLACES_PHOTO_CACHE_DIR: z.string().trim().min(1).default(".cache/places"),
+  PLACES_PHOTO_CACHE_DIR: z.string().trim().min(1).default(defaultCacheDir("places")),
   /**
    * ElevenLabs (https://elevenlabs.io/app/voice-library — pick a
    * Mexican-Spanish female voice and copy its Voice ID into
@@ -113,7 +115,7 @@ const envSchema = z.object({
   ELEVENLABS_VOICE_ID: optionalSecret,
   ELEVENLABS_MODEL_ID: z.string().trim().min(1).default("eleven_multilingual_v2"),
   /** Disk cache for narration mp3s + their sentence-timing sidecar JSON (see `src/domain/audio/store.ts`), relative to the repo root. */
-  NARRATION_CACHE_DIR: z.string().trim().min(1).default(".cache/narration"),
+  NARRATION_CACHE_DIR: z.string().trim().min(1).default(defaultCacheDir("narration")),
   /** "auto" picks Google when a Google TTS key (or the Places key) exists, else ElevenLabs. */
   NARRATION_PROVIDER: z.enum(["auto", "google", "elevenlabs", "none"]).default("auto"),
   GOOGLE_TTS_API_KEY: optionalSecret,

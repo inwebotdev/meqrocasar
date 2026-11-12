@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 import { FacetsSchema } from "@/domain/kb/taxonomy";
+import { runInBackground } from "@/lib/runtime";
 
 import type { QuizEngine } from "./engine";
 import { TranscriptRefsSchema, TranscriptSchema, type TranscriptEntry } from "./transcript";
@@ -174,9 +175,9 @@ export function schedulePrefetch(
 ): PrefetchScheduled {
   const scheduled = Math.min(request.options.length, MAX_OPTIONS);
 
-  void runPrefetch(request, engine, now, budgetMs)
-    .then((outcome) => onSettled?.(outcome))
-    .catch(() => undefined);
+  runInBackground(
+    runPrefetch(request, engine, now, budgetMs).then((outcome) => onSettled?.(outcome)),
+  );
 
   return { scheduled };
 }

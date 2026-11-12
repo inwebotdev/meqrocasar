@@ -80,7 +80,7 @@ describe("createPlacesAvailability", () => {
   });
 
   it("logs the disable only once even if markFailure is called again while still disabled", () => {
-    let now = 0;
+    const now = 0;
     const log = vi.fn();
     const availability = createPlacesAvailability({
       hasApiKey: () => true,
