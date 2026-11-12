@@ -31,9 +31,12 @@ export function ResultsView({ result }: ResultsViewProps) {
   return (
     <div className="flex flex-col gap-y-space-lg">
       <SectionErrorBoundary title="Resumen de la Propuesta">
-        <HeroCard
+        <HeroCard title={result.conceptTitle} narrative={result.narrative} />
+
+        <NarrativeCard
           title={result.conceptTitle}
           narrative={result.narrative}
+          itineraryHint={result.itineraryHint}
           palette={result.palette}
         />
       </SectionErrorBoundary>
@@ -68,12 +71,6 @@ export function ResultsView({ result }: ResultsViewProps) {
       <SectionErrorBoundary title="Moodboard Oficial de Inspiración">
         <MoodboardCard result={result} />
       </SectionErrorBoundary>
-
-      <NarrativeCard
-        title={result.conceptTitle}
-        narrative={result.narrative}
-        itineraryHint={result.itineraryHint}
-      />
 
       <SectionErrorBoundary title="Sedes para tu Celebración">
         <VenueList venues={result.venues} />

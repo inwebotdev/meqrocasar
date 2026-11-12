@@ -1,12 +1,16 @@
 import { Card, Icon, Pill } from "@/components/ui";
+import type { PaletteColor } from "@/domain/experience/types";
+
+import { PaletteStrip } from "./PaletteStrip";
 
 export interface NarrativeCardProps {
   title: string;
   narrative: string;
   itineraryHint?: string;
+  palette?: readonly PaletteColor[];
 }
 
-export function NarrativeCard({ title, narrative, itineraryHint }: NarrativeCardProps) {
+export function NarrativeCard({ title, narrative, itineraryHint, palette }: NarrativeCardProps) {
   const paragraphs = narrative.split("\n\n").filter(Boolean);
 
   return (
@@ -31,6 +35,11 @@ export function NarrativeCard({ title, narrative, itineraryHint }: NarrativeCard
           </p>
         ))}
       </div>
+      {palette && palette.length > 0 && (
+        <div className="pt-space-xs">
+          <PaletteStrip palette={palette} tone="light" label="Paleta de bodas Querétaro" />
+        </div>
+      )}
       {itineraryHint && (
         <div className="flex flex-wrap items-center gap-space-xs pt-space-xs">
           <Pill tone="secondary-soft" icon="event_available">

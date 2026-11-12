@@ -103,10 +103,10 @@ function describeTranscript(transcript: Transcript): string {
 const EXAMPLE_RESPONSE_JSON = JSON.stringify({
   conceptTitle: "Vendimia Dorada entre Viñedos de Ezequiel Montes",
   colorPalette: [
-    { hex: "#5B1A2B", name: "Vino de Barrica" },
-    { hex: "#C9A227", name: "Oro Vendimia" },
-    { hex: "#D9C7A3", name: "Beige Barrica" },
-    { hex: "#4B5E3A", name: "Verde Viñedo" },
+    { hex: "#812B47", name: "Cereza" },
+    { hex: "#CDBA7B", name: "Arena" },
+    { hex: "#F7F1EB", name: "Papiro" },
+    { hex: "#7A7857", name: "Oliva" },
   ],
   narrative:
     "Imaginen la tarde cayendo sobre las hileras de Viñedos La Redonda: el sol dora las uvas, el aire huele a tierra húmeda y roble, y sus invitados brindan con un tinto joven mientras la Peña de Bernal se recorta al fondo. La ceremonia, íntima, se celebra entre barricas y faroles de hierro, con la cantera del casco como testigo.\n\nAl día siguiente, la celebración sigue en Bodegas De Cote, donde una cata guiada en su cava subterránea convierte el banquete en una conversación entre quesos de la región y vinos de autor. Es una boda pensada para pocas personas y muchos recuerdos, sin estridencias, con el paisaje de Ezequiel Montes como único decorado.",
