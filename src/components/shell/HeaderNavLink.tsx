@@ -3,8 +3,6 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-import { Icon } from "@/components/ui";
-
 /**
  * The header's one navigation link, replacing the old bottom bar: "Recintos"
  * everywhere, flipping to "Quiz" (back to `/`) on the Recintos page itself —
@@ -18,7 +16,6 @@ export function HeaderNavLink() {
 
   const href = onRecintos ? "/" : "/recintos";
   const label = onRecintos ? "Quiz" : "Recintos";
-  const icon = onRecintos ? "style" : "castle";
 
   return (
     <Link
@@ -26,10 +23,7 @@ export function HeaderNavLink() {
       aria-label={label}
       className="inline-flex shrink-0 items-center gap-1.5 font-label-sm text-label-sm font-bold text-primary hover:text-primary/80"
     >
-      <Icon name={icon} size={18} />
-      <span className="hidden sm:inline" aria-hidden>
-        {label}
-      </span>
+      <span>{label}</span>
     </Link>
   );
 }
