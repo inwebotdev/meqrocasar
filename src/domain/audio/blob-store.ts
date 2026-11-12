@@ -57,7 +57,8 @@ export function createBlobNarrationStore(): NarrationStore {
     },
 
     async markPending(hash) {
-      await put(keys(hash).pending, "", {
+      // Vercel Blob rejects empty bodies, so the marker carries a timestamp.
+      await put(keys(hash).pending, JSON.stringify({ startedAt: new Date().toISOString() }), {
         access: "public",
         addRandomSuffix: false,
         allowOverwrite: true,
