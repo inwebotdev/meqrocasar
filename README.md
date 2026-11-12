@@ -345,21 +345,31 @@ renderiza agregando `?debug=1` a la URL de resultados (vía `useSearchParams` en
 lleva la misma meta (`source`, `cached`, `fallbackUsed`, `attempts`) internamente, aunque no se
 muestra en la UI del quiz.
 
-## Despliegue en Vercel (Hobby)
+## Despliegue en Vercel
 
-1. Importa este repositorio de GitHub en Vercel.
-2. Configura las variables de entorno de la tabla anterior en el proyecto de Vercel (al menos
-   `OPENROUTER_API_KEY` y `GOOGLE_PLACES_API_KEY`/`UNSPLASH_ACCESS_KEY` si quieres generación y
-   fotos reales en vez de los fallbacks).
-3. `GET /api/og/moodboard` corre en el runtime de Node (`export const runtime = "nodejs"`) y lee
-   fuentes desde `public/fonts/`; no es compatible con el runtime Edge.
-4. No hay renderizado de video en el servidor: el reel se reproduce íntegramente en el cliente
-   con `@remotion/player`.
-5. El caché del motor del quiz y de las fotos de Places es en memoria/disco por proceso — en un
-   entorno serverless multi-instancia (como Vercel) cada instancia tiene su propio caché, así que
-   el beneficio del prefetch especulativo depende de que la misma instancia atienda ambas
-   llamadas (normal dentro de una sola sesión de usuario, pero no garantizado). Ver "Próximas
-   iteraciones" para la migración a un store compartido.
+1. Importa este repositorio de GitHub en Vercel; framework preset **Next.js** (sin `vercel.json`).
+2. Activa **Fluid compute** en Settings > Functions (mejor concurrencia y `waitUntil` fiable).
+3. Variables de entorno del proyecto:
+   - `OPENROUTER_API_KEY`, `OPENROUTER_MODEL_PRIMARY`/`_FALLBACK`/`_FAST`/`_FAST_FALLBACK`
+   - `GOOGLE_PLACES_API_KEY` (y `UNSPLASH_ACCESS_KEY` si la usas)
+   - `GOOGLE_TTS_API_KEY`, `GOOGLE_TTS_VOICE`, `NARRATION_PROVIDER`
+   - `BLOB_READ_WRITE_TOKEN`: se crea al conectar un **Blob store** al proyecto (Storage); sin él
+     la narración no puede persistirse en Vercel. `NARRATION_STORE=auto|disk|blob` es opcional.
+   - `APP_URL`: la URL del despliegue (p. ej. `https://tu-proyecto.vercel.app`)
+   - `QUIZ_MAX_STEPS`, `QUIZ_STEP_TIMEOUT_MS`, `QUIZ_PREFETCH`, `QUIZ_PREFETCH_BUDGET_MS`
+4. Las rutas de API declaran `maxDuration = 60` (límite de 60 s por función). El trabajo en segundo
+   plano (síntesis de narración, prefetch del quiz) usa `waitUntil` de `@vercel/functions` vía
+   `runInBackground` (`src/lib/runtime.ts`); en local sigue siendo fire-and-forget.
+5. En Vercel no hay disco persistente: las fotos de Places no se guardan en disco (las cachea el
+   CDN con `s-maxage`) y la narración va a Vercel Blob; los cachés en `/tmp` son por instancia.
+6. El caché de pasos del quiz es en memoria por instancia: el prefetch especulativo es de mejor
+   esfuerzo (solo ayuda si la misma instancia atiende ambas llamadas).
+7. `GET /api/og/moodboard` corre en Node y lee las fuentes de `public/fonts/` (incluidas en el
+   bundle con `outputFileTracingIncludes`); no es compatible con Edge.
+8. Los scripts `kb:*` se ejecutan en local y el JSON resultante (`data/kb/*.json`) se commitea; Vercel
+   no los ejecuta.
+9. No hay renderizado de video en el servidor: el reel se reproduce en el cliente con
+   `@remotion/player`.
 
 ## Estructura del proyecto
 
