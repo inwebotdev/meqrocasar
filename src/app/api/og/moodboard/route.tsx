@@ -8,6 +8,7 @@ import { MoodboardTemplate } from "@/domain/moodboard/Template";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+export const maxDuration = 60;
 
 const WIDTH = 1200;
 const HEIGHT = 630;

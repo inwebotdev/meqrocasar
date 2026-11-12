@@ -9,6 +9,7 @@ import { getQuizEngine } from "@/lib/quiz-engine-deps";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+export const maxDuration = 60;
 
 function jsonResponse<T>(body: ApiResponse<T>, status: number): Response {
   return Response.json(body, { status, headers: { "Cache-Control": "no-store" } });

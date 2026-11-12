@@ -10,6 +10,7 @@ import { getExperienceService } from "@/lib/experience-deps";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+export const maxDuration = 60;
 
 /**
  * Accepts either the new transcript-based body (`{ transcript }`, up to 8
